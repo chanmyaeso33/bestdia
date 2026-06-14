@@ -1,0 +1,1563 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>BestDia - MLBB Diamond Top Up</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg"/>
+<link rel="shortcut icon" href="favicon.svg"/>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700;800&family=Noto+Sans+Myanmar:wght@400;600;700&display=swap" rel="stylesheet"/>
+
+<script src="firebase-config.js"></script>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { getFirestore, collection, addDoc, doc, updateDoc, onSnapshot, query, orderBy, getDoc }
+  from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+// Load config from firebase-config.js (defined globally below)
+const app = initializeApp(window.FIREBASE_CONFIG);
+const db  = getFirestore(app);
+window._db = db;
+window._fsLib = { collection, addDoc, doc, updateDoc, onSnapshot, query, orderBy, getDoc };
+window._dbReady = true;
+window.dispatchEvent(new Event('dbReady'));
+</script>
+
+<style>
+:root{--gold:#F5C542;--diamond:#5BE3FF;--diamond2:#00B8D9;--dark:#07090F;--dark2:#0E1220;
+  --panel:#1A2035;--panel2:#1F2840;--text:#E8EAF0;--muted:#7A86A1;
+  --success:#2ECC71;--warn:#F39C12;--danger:#E74C3C;--kbz:#009BDE;--wave:#E91E8C;}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--dark);color:var(--text);font-family:'Noto Sans Myanmar',sans-serif;overflow-x:hidden;min-height:100vh;}
+.bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(91,227,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(91,227,255,0.03) 1px,transparent 1px);
+  background-size:40px 40px;}
+.bg-glow{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 70% 50% at 50% 0%,rgba(91,227,255,0.08) 0%,transparent 70%),
+             radial-gradient(ellipse 40% 30% at 80% 80%,rgba(245,197,66,0.06) 0%,transparent 60%);}
+.env-warning{display:none;position:relative;z-index:101;background:rgba(243,156,18,0.13);border-bottom:1px solid rgba(243,156,18,0.35);color:var(--warn);padding:9px 14px;text-align:center;font-size:0.78rem;}
+.env-warning.show{display:block;}
+nav{position:sticky;top:0;z-index:100;background:rgba(7,9,15,0.92);backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(91,227,255,0.12);padding:0 16px;display:flex;align-items:center;
+  justify-content:space-between;height:58px;gap:8px;}
+.logo{font-family:'Chakra Petch',sans-serif;font-size:1.62rem;font-weight:800;
+  background:linear-gradient(135deg,var(--diamond),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.logo-icon{-webkit-text-fill-color:initial;}
+.nav-tabs{display:flex;gap:3px;}
+.nav-tab{background:none;border:1px solid transparent;border-radius:8px;padding:5px 11px;
+  color:var(--muted);font-family:'Chakra Petch',sans-serif;font-size:0.74rem;cursor:pointer;
+  transition:all 0.2s;white-space:nowrap;letter-spacing:0.04em;}
+.nav-tab:hover{color:var(--text);border-color:rgba(91,227,255,0.2);}
+.nav-tab.active{color:var(--diamond);border-color:rgba(91,227,255,0.3);background:rgba(91,227,255,0.07);}
+.nav-tab.at{color:var(--gold);}
+.nav-tab.at.active{color:var(--gold);border-color:rgba(245,197,66,0.35);background:rgba(245,197,66,0.07);}
+.page{display:none;position:relative;z-index:1;animation:fadeUp 0.35s ease both;}
+.page.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(91,227,255,0.4)}50%{box-shadow:0 0 0 8px rgba(91,227,255,0)}}
+.hero{max-width:1020px;margin:0 auto;padding:54px 18px 42px;display:grid;grid-template-columns:minmax(0,1.08fr) minmax(280px,0.92fr);gap:30px;align-items:center;}
+.hero > .hero-eyebrow,.hero > h1,.hero > .hero-sub,.hero > .hero-stats{display:none;}
+.hero-copy{text-align:left;}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:7px;background:rgba(91,227,255,0.1);border:1px solid rgba(91,227,255,0.24);
+  border-radius:30px;padding:5px 13px;font-size:0.72rem;color:var(--diamond);
+  font-family:'Chakra Petch',sans-serif;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:16px;}
+.hero h1{font-family:'Chakra Petch',sans-serif;font-size:clamp(2rem,5vw,3.25rem);font-weight:800;line-height:1.22;margin-bottom:14px;letter-spacing:0;max-width:620px;}
+.hero h1 span{background:linear-gradient(135deg,var(--diamond),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.hero-sub{font-size:0.95rem;color:var(--muted);margin-bottom:20px;line-height:1.75;max-width:520px;}
+.hero-actions{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;}
+.hero-btn{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:10px 16px;border-radius:10px;
+  font-family:'Chakra Petch',sans-serif;font-size:0.82rem;font-weight:800;text-decoration:none;letter-spacing:0.04em;}
+.hero-btn.primary{background:linear-gradient(135deg,var(--diamond2),var(--diamond));color:var(--dark);}
+.hero-btn.secondary{border:1px solid rgba(91,227,255,0.28);color:var(--diamond);background:rgba(91,227,255,0.06);}
+.hero-stats{display:grid;grid-template-columns:repeat(4,minmax(80px,1fr));gap:8px;max-width:560px;}
+.stat{background:rgba(26,32,53,0.72);border:1px solid rgba(91,227,255,0.09);border-radius:10px;padding:10px 9px;}
+.stat-val{font-family:'Chakra Petch',sans-serif;font-size:0.92rem;font-weight:800;color:var(--gold);}
+.stat-lbl{font-size:0.66rem;color:var(--muted);margin-top:2px;line-height:1.35;}
+.hero-visual{position:relative;min-height:270px;display:flex;align-items:center;justify-content:center;}
+.hero-phone{width:min(100%,340px);border:1px solid rgba(91,227,255,0.17);border-radius:22px;background:linear-gradient(180deg,rgba(26,32,53,0.95),rgba(14,18,32,0.95));
+  padding:18px;box-shadow:0 24px 70px rgba(0,0,0,0.34);}
+.hero-phone-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;font-family:'Chakra Petch',sans-serif;font-size:0.72rem;color:var(--muted);}
+.hero-balance{color:var(--gold);font-weight:800;}
+.hero-product-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.hero-product{background:#0E1220;border:1px solid rgba(91,227,255,0.12);border-radius:12px;padding:12px;text-align:center;cursor:pointer;font:inherit;color:inherit;transition:border-color 0.2s,transform 0.2s;}
+.hero-product:hover{border-color:var(--diamond);transform:translateY(-2px);}
+.hero-product img{height:58px;max-width:100%;object-fit:contain;margin-bottom:8px;filter:drop-shadow(0 8px 12px rgba(91,227,255,0.16));}
+.hero-product b{display:block;font-family:'Chakra Petch',sans-serif;font-size:0.78rem;color:var(--text);line-height:1.25;}
+.hero-product span{display:block;margin-top:3px;font-family:'Chakra Petch',sans-serif;color:var(--gold);font-size:0.76rem;font-weight:800;}
+.hero-payline{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:0.72rem;color:var(--muted);}
+.hero-payline strong{color:var(--success);font-family:'Chakra Petch',sans-serif;}
+.ticker-wrap{background:rgba(91,227,255,0.05);border-top:1px solid rgba(91,227,255,0.07);
+  border-bottom:1px solid rgba(91,227,255,0.07);padding:8px 0;overflow:hidden;margin-bottom:42px;}
+.ticker{display:flex;gap:52px;white-space:nowrap;animation:ticker 22s linear infinite;}
+.ticker-item{font-size:0.74rem;color:var(--muted);display:flex;align-items:center;gap:6px;font-family:'Chakra Petch',sans-serif;}
+.ticker-dot{width:6px;height:6px;border-radius:50%;background:var(--success);}
+.section{padding:0 14px 50px;max-width:900px;margin:0 auto;}
+.section-title{font-family:'Chakra Petch',sans-serif;font-size:0.96rem;color:var(--muted);
+  text-transform:uppercase;letter-spacing:0.13em;margin-bottom:16px;display:flex;align-items:center;gap:10px;}
+.section-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(91,227,255,0.2),transparent);}
+.currency-switch{display:inline-flex;background:#0E1220;border:1px solid rgba(91,227,255,0.18);border-radius:10px;padding:3px;margin:0 0 14px auto;gap:3px;}
+.currency-btn{border:none;border-radius:7px;background:transparent;color:var(--muted);font-family:'Chakra Petch',sans-serif;font-size:0.76rem;font-weight:800;
+  padding:7px 13px;cursor:pointer;min-width:54px;}
+.currency-btn.active{background:linear-gradient(135deg,var(--diamond2),var(--diamond));color:var(--dark);}
+.currency-row{display:flex;justify-content:flex-end;}
+.packages-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:9px;align-items:stretch;}
+.best-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:10px;margin-bottom:18px;}
+.best-card{background:linear-gradient(180deg,rgba(31,40,64,0.98),rgba(14,18,32,0.98));border:1px solid rgba(245,197,66,0.22);border-radius:13px;
+  padding:15px 12px;cursor:pointer;transition:border-color 0.2s,transform 0.2s;position:relative;min-height:166px;text-align:center;display:flex;flex-direction:column;align-items:center;}
+.best-card:hover{border-color:var(--gold);transform:translateY(-3px);}
+.best-badge{position:absolute;top:0;right:0;background:linear-gradient(135deg,var(--gold),#E5A200);color:var(--dark);font-family:'Chakra Petch',sans-serif;font-size:0.58rem;font-weight:800;
+  padding:3px 8px;border-radius:0 13px 0 9px;letter-spacing:0.05em;}
+.best-card img{height:50px;max-width:78px;object-fit:contain;margin:9px 0 8px;filter:drop-shadow(0 6px 12px rgba(91,227,255,0.16));}
+.best-title{font-family:'Chakra Petch',sans-serif;font-size:0.92rem;font-weight:800;color:var(--text);line-height:1.25;}
+.best-price{font-family:'Chakra Petch',sans-serif;color:var(--gold);font-weight:800;margin-top:auto;font-size:0.96rem;}
+.pkg-card{background:var(--panel);border:1px solid rgba(91,227,255,0.1);border-radius:13px;
+  padding:15px 11px;cursor:pointer;transition:border-color 0.2s,transform 0.2s;
+  position:relative;overflow:hidden;text-align:center;min-width:0;min-height:240px;display:flex;flex-direction:column;align-items:center;}
+.pkg-card:hover{border-color:var(--diamond);transform:translateY(-3px);}
+.pkg-card.selected{border-color:var(--gold);background:var(--panel2);box-shadow:0 0 0 1px var(--gold),0 6px 26px rgba(245,197,66,0.14);}
+.pkg-card.popular::after{content:'\101C\1030\1000\103C\102D\102F\1000\103A\1019\103B\102C\1038';position:absolute;top:0;right:0;
+  background:linear-gradient(135deg,var(--gold),#E5A200);color:#07090F;
+  font-size:0.58rem;font-weight:700;font-family:'Chakra Petch',sans-serif;padding:2px 8px;border-radius:0 13px 0 9px;}
+.pkg-img-wrap{height:54px;margin-bottom:6px;display:flex;align-items:center;justify-content:center;}
+.pkg-img{max-width:74px;max-height:54px;object-fit:contain;filter:drop-shadow(0 6px 12px rgba(91,227,255,0.16));}
+.pkg-diamonds{display:none;}
+.pkg-amount{font-family:'Chakra Petch',sans-serif;font-size:1.15rem;font-weight:700;color:var(--diamond);margin-bottom:2px;}
+.pkg-name{font-size:0.68rem;color:var(--muted);margin-bottom:8px;}
+.pkg-first{margin:7px 0 5px;color:var(--text);font-size:0.72rem;font-weight:700;line-height:1.45;}
+.pkg-normal{color:var(--muted);font-size:0.64rem;line-height:1.35;margin-bottom:8px;}
+.pkg-price{font-family:'Chakra Petch',sans-serif;font-size:clamp(0.86rem,3.4vw,1rem);font-weight:700;color:var(--gold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;margin-top:auto;}
+.order-box{background:var(--panel);border:1px solid rgba(91,227,255,0.14);border-radius:18px;padding:24px;}
+.form-row{margin-bottom:15px;}
+.form-label{display:block;font-size:0.76rem;color:var(--muted);margin-bottom:6px;font-family:'Chakra Petch',sans-serif;letter-spacing:0.06em;text-transform:uppercase;}
+.form-input{width:100%;background:#0E1220;border:1px solid rgba(91,227,255,0.14);border-radius:9px;
+  padding:10px 14px;color:var(--text);font-family:'Noto Sans Myanmar',sans-serif;font-size:0.9rem;
+  transition:border-color 0.2s,box-shadow 0.2s;outline:none;}
+.form-input:focus{border-color:var(--diamond);box-shadow:0 0 0 3px rgba(91,227,255,0.09);}
+.form-input::placeholder{color:rgba(122,134,161,0.42);}
+.lookup-hint{margin-top:7px;font-size:0.74rem;color:var(--muted);min-height:1.35em;}
+.lookup-hint.ok{color:var(--success);}
+.lookup-hint.warn{color:var(--warn);}
+.slip-field{background:#0E1220;border:1px dashed rgba(91,227,255,0.25);border-radius:11px;padding:12px;margin-top:11px;}
+.slip-input{width:100%;font-size:0.76rem;color:var(--muted);}
+.slip-preview{display:none;margin-top:10px;align-items:center;gap:10px;}
+.slip-preview.show{display:flex;}
+.slip-preview img{width:58px;height:58px;border-radius:8px;object-fit:cover;border:1px solid rgba(91,227,255,0.18);}
+.slip-preview span{font-size:0.74rem;color:var(--muted);}
+.slip-admin-img{display:block;width:100%;max-width:260px;border-radius:10px;border:1px solid rgba(91,227,255,0.18);margin-top:8px;}
+.payment-methods{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.pay-btn{background:#0E1220;border:2px solid rgba(91,227,255,0.11);border-radius:11px;padding:12px;cursor:pointer;
+  transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:7px;
+  font-family:'Chakra Petch',sans-serif;font-size:0.86rem;font-weight:700;color:var(--text);}
+.pay-dot{width:9px;height:9px;border-radius:50%;}
+.pay-btn.kbz{border-color:rgba(0,155,222,0.25);}.pay-btn.kbz .pay-dot{background:var(--kbz);}
+.pay-btn.kbz:hover,.pay-btn.kbz.active{border-color:var(--kbz);background:rgba(0,155,222,0.09);color:#5BC8FF;}
+.pay-btn.wave{border-color:rgba(233,30,140,0.25);}.pay-btn.wave .pay-dot{background:var(--wave);}
+.pay-btn.wave:hover,.pay-btn.wave.active{border-color:var(--wave);background:rgba(233,30,140,0.09);color:#FF72C0;}
+.pay-info{background:#0E1220;border:1px solid rgba(91,227,255,0.09);border-radius:11px;padding:14px 16px;margin-top:11px;font-size:0.84rem;display:none;}
+.pay-info.show{display:block;}
+.pay-info-row{display:flex;justify-content:space-between;margin-bottom:5px;}
+.pay-info-key{color:var(--muted);}
+.pay-info-val{font-family:'Chakra Petch',sans-serif;font-weight:700;color:var(--gold);cursor:pointer;user-select:all;}
+.pay-note{font-size:0.7rem;color:var(--muted);margin-top:9px;line-height:1.6;}
+.summary-box{background:linear-gradient(135deg,rgba(91,227,255,0.05),rgba(245,197,66,0.04));
+  border:1px solid rgba(245,197,66,0.18);border-radius:13px;padding:15px;margin:14px 0;display:none;}
+.summary-box.show{display:block;}
+.summary-row{display:flex;justify-content:space-between;font-size:0.84rem;margin-bottom:6px;}
+.summary-key{color:var(--muted);}
+.summary-val{font-family:'Chakra Petch',sans-serif;font-weight:700;color:var(--text);}
+.summary-total .summary-val{color:var(--gold);font-size:1.05rem;}
+.summary-divider{border:none;border-top:1px solid rgba(91,227,255,0.09);margin:8px 0;}
+.btn-submit{width:100%;padding:14px;background:linear-gradient(135deg,var(--diamond2),var(--diamond));
+  border:none;border-radius:11px;color:var(--dark);font-family:'Chakra Petch',sans-serif;
+  font-size:0.96rem;font-weight:800;letter-spacing:0.05em;cursor:pointer;transition:opacity 0.2s;
+  margin-top:5px;animation:pulse 2s infinite;}
+.btn-submit:hover{opacity:0.9;}
+.btn-submit:disabled{opacity:0.5;cursor:not-allowed;animation:none;}
+.features{display:grid;grid-template-columns:repeat(auto-fill,minmax(188px,1fr));gap:9px;margin-bottom:50px;}
+.feat{background:var(--panel);border:1px solid rgba(91,227,255,0.07);border-radius:13px;padding:17px 14px;text-align:center;}
+.feat-icon{font-size:1.6rem;margin-bottom:8px;}
+.feat-title{font-family:'Chakra Petch',sans-serif;font-size:0.84rem;font-weight:700;color:var(--diamond);margin-bottom:5px;}
+.feat-desc{font-size:0.74rem;color:var(--muted);line-height:1.6;}
+.proof-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-bottom:18px;}
+.proof-card{background:var(--panel);border:1px solid rgba(91,227,255,0.1);border-radius:13px;padding:15px;}
+.proof-quote{font-size:0.78rem;line-height:1.7;color:var(--text);margin-bottom:10px;}
+.proof-name{font-family:'Chakra Petch',sans-serif;color:var(--gold);font-size:0.76rem;font-weight:800;}
+.social-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(126px,1fr));gap:9px;}
+.social-link{display:flex;align-items:center;justify-content:center;gap:7px;background:#0E1220;border:1px solid rgba(91,227,255,0.14);border-radius:10px;
+  padding:11px;text-decoration:none;color:var(--text);font-family:'Chakra Petch',sans-serif;font-size:0.78rem;font-weight:800;transition:border-color 0.2s,transform 0.2s;}
+.social-link:hover{border-color:var(--diamond);transform:translateY(-2px);}
+/* STATUS */
+.status-box{background:var(--panel);border:1px solid rgba(91,227,255,0.13);border-radius:18px;padding:26px;margin-bottom:20px;}
+.s-row{display:flex;gap:9px;}
+.status-result{background:var(--panel);border:1px solid rgba(91,227,255,0.11);border-radius:15px;padding:20px;display:none;}
+.status-result.show{display:block;}
+.order-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;gap:9px;}
+.order-id-big{font-family:'Chakra Petch',sans-serif;font-size:1.25rem;font-weight:800;color:var(--gold);}
+.order-id-lbl{font-size:0.68rem;color:var(--muted);margin-bottom:3px;}
+.status-badge{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;
+  font-family:'Chakra Petch',sans-serif;font-size:0.76rem;font-weight:700;}
+.status-badge.pending{background:rgba(243,156,18,0.14);border:1px solid rgba(243,156,18,0.32);color:var(--warn);}
+.status-badge.processing{background:rgba(91,227,255,0.1);border:1px solid rgba(91,227,255,0.28);color:var(--diamond);}
+.status-badge.completed{background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.28);color:var(--success);}
+.status-badge.cancelled{background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.28);color:var(--danger);}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.detail-item{background:#0E1220;border-radius:9px;padding:11px 13px;}
+.detail-lbl{font-size:0.68rem;color:var(--muted);margin-bottom:3px;font-family:'Chakra Petch',sans-serif;text-transform:uppercase;letter-spacing:0.05em;}
+.detail-val{font-size:0.86rem;font-weight:600;color:var(--text);}
+.tl-title{font-family:'Chakra Petch',sans-serif;font-size:0.76rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px;}
+.t-step{display:flex;gap:12px;}
+.t-line-wrap{display:flex;flex-direction:column;align-items:center;flex-shrink:0;}
+.t-dot{width:13px;height:13px;border-radius:50%;margin-top:2px;}
+.t-dot.done{background:var(--success);}
+.t-dot.active{background:var(--diamond);box-shadow:0 0 0 4px rgba(91,227,255,0.18);}
+.t-dot.idle{background:var(--panel2);border:2px solid rgba(91,227,255,0.13);}
+.t-connector{width:2px;flex:1;min-height:20px;background:rgba(91,227,255,0.09);margin:3px 0;}
+.t-content{padding-bottom:16px;}
+.t-label{font-size:0.84rem;font-weight:600;}
+.t-label.done{color:var(--success);}.t-label.active{color:var(--diamond);}.t-label.idle{color:var(--muted);}
+.t-time{font-size:0.68rem;color:var(--muted);margin-top:2px;font-family:'Chakra Petch',sans-serif;}
+.nf-box{text-align:center;padding:32px;color:var(--muted);}
+/* ADMIN */
+.admin-lock{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:58vh;text-align:center;padding:36px 20px;}
+.admin-lock-icon{font-size:2.8rem;margin-bottom:14px;}
+.admin-lock h2{font-family:'Chakra Petch',sans-serif;font-size:1.3rem;font-weight:800;color:var(--gold);margin-bottom:9px;}
+.admin-lock p{color:var(--muted);font-size:0.85rem;margin-bottom:20px;}
+.lock-form{display:flex;gap:8px;width:100%;max-width:320px;}
+.admin-dash{display:none;}
+.admin-dash.show{display:block;}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:9px;margin-bottom:20px;}
+.kpi-card{background:var(--panel);border:1px solid rgba(91,227,255,0.09);border-radius:13px;padding:16px 15px;}
+.kpi-lbl{font-size:0.7rem;color:var(--muted);font-family:'Chakra Petch',sans-serif;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:7px;}
+.kpi-val{font-family:'Chakra Petch',sans-serif;font-size:1.55rem;font-weight:800;}
+.kpi-val.gold{color:var(--gold);}.kpi-val.blue{color:var(--diamond);}.kpi-val.green{color:var(--success);}.kpi-val.warn{color:var(--warn);}
+.kpi-sub{font-size:0.68rem;color:var(--muted);margin-top:3px;}
+.toolbar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;}
+.f-btn{background:var(--panel);border:1px solid rgba(91,227,255,0.11);border-radius:8px;padding:6px 13px;
+  color:var(--muted);font-family:'Chakra Petch',sans-serif;font-size:0.73rem;cursor:pointer;transition:all 0.2s;}
+.f-btn:hover,.f-btn.active{color:var(--diamond);border-color:rgba(91,227,255,0.28);}
+.f-btn.fp.active{color:var(--warn);border-color:rgba(243,156,18,0.32);}
+.f-btn.fc.active{color:var(--success);border-color:rgba(46,204,113,0.32);}
+.notify-btn{margin-left:auto;position:relative;background:rgba(245,197,66,0.1);border:1px solid rgba(245,197,66,0.28);
+  border-radius:8px;padding:6px 13px;color:var(--gold);font-family:'Chakra Petch',sans-serif;font-size:0.73rem;cursor:pointer;}
+.n-count{position:absolute;top:-7px;right:-7px;background:var(--danger);color:#fff;border-radius:50%;
+  width:17px;height:17px;font-size:0.6rem;display:flex;align-items:center;justify-content:center;font-family:'Chakra Petch',sans-serif;font-weight:800;}
+.tbl-wrap{background:var(--panel);border:1px solid rgba(91,227,255,0.09);border-radius:14px;overflow:hidden;overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+th{text-align:left;font-family:'Chakra Petch',sans-serif;font-size:0.68rem;color:var(--muted);
+  text-transform:uppercase;letter-spacing:0.07em;padding:9px 11px;border-bottom:1px solid rgba(91,227,255,0.09);}
+td{padding:11px 11px;border-bottom:1px solid rgba(91,227,255,0.05);font-size:0.81rem;vertical-align:middle;}
+tr:hover td{background:rgba(91,227,255,0.025);}
+.oid{font-family:'Chakra Petch',sans-serif;font-weight:700;color:var(--gold);font-size:0.79rem;}
+.act-wrap{display:flex;gap:5px;}
+.ab{border:none;border-radius:6px;padding:4px 10px;font-family:'Chakra Petch',sans-serif;font-size:0.68rem;font-weight:700;cursor:pointer;transition:opacity 0.2s;}
+.ab:hover{opacity:0.78;}
+.ab-view{background:rgba(91,227,255,0.12);color:var(--diamond);}
+.ab-proc{background:rgba(91,227,255,0.15);color:var(--diamond);}
+.ab-comp{background:rgba(46,204,113,0.13);color:var(--success);}
+.ab-canc{background:rgba(231,76,60,0.11);color:var(--danger);}
+.empty-row{text-align:center;padding:36px;color:var(--muted);font-size:0.85rem;}
+/* DB status indicator */
+.db-status{display:inline-flex;align-items:center;gap:5px;font-size:0.68rem;color:var(--muted);
+  font-family:'Chakra Petch',sans-serif;padding:3px 9px;border-radius:12px;background:rgba(255,255,255,0.04);}
+.db-dot{width:6px;height:6px;border-radius:50%;background:var(--warn);}
+.db-dot.ok{background:var(--success);}
+/* MODALS */
+.modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(7,9,15,0.88);backdrop-filter:blur(8px);
+  display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s;padding:14px;}
+.modal-overlay.show{opacity:1;pointer-events:all;}
+.modal{background:var(--panel);border:1px solid rgba(91,227,255,0.18);border-radius:20px;padding:26px;
+  max-width:400px;width:100%;transform:scale(0.9);transition:transform 0.3s;}
+.modal-overlay.show .modal{transform:scale(1);}
+.modal.wide{max-width:460px;}
+.modal-icon{font-size:2.8rem;margin-bottom:11px;text-align:center;}
+.modal-title{font-family:'Chakra Petch',sans-serif;font-size:1.25rem;font-weight:800;color:var(--gold);margin-bottom:9px;text-align:center;}
+.modal-body{font-size:0.84rem;color:var(--muted);line-height:1.75;margin-bottom:18px;text-align:center;}
+.modal-close{display:block;width:100%;background:linear-gradient(135deg,var(--gold),#E5A200);border:none;
+  border-radius:9px;padding:11px;color:var(--dark);font-family:'Chakra Petch',sans-serif;font-size:0.88rem;font-weight:800;cursor:pointer;}
+.vm-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(91,227,255,0.06);font-size:0.82rem;}
+.vm-row:last-of-type{border-bottom:none;}
+.vm-k{color:var(--muted);}.vm-v{font-weight:600;color:var(--text);text-align:right;}
+.vm-v.gold{color:var(--gold);font-family:'Chakra Petch',sans-serif;}
+.vm-acts{display:flex;gap:7px;margin-top:16px;}
+.vm-acts .ab{flex:1;padding:9px;font-size:0.76rem;}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(55px);
+  background:var(--success);color:#fff;font-family:'Chakra Petch',sans-serif;font-size:0.8rem;font-weight:700;
+  padding:9px 20px;border-radius:28px;z-index:300;transition:transform 0.3s,opacity 0.3s;opacity:0;white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+.toast.warn{background:var(--warn);}
+footer{position:relative;z-index:1;border-top:1px solid rgba(91,227,255,0.07);padding:24px;text-align:center;font-size:0.74rem;color:var(--muted);line-height:1.8;}
+footer strong{background:linear-gradient(135deg,var(--diamond),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-family:'Chakra Petch',sans-serif;}
+@media(max-width:480px){
+  .hero{grid-template-columns:1fr;padding:40px 14px 34px;gap:22px;}
+  .hero-copy{text-align:center;}
+  .hero h1{line-height:1.28;margin-left:auto;margin-right:auto;}
+  .hero-sub{margin-left:auto;margin-right:auto;}
+  .hero-actions{justify-content:center;}
+  .hero-stats{grid-template-columns:repeat(2,1fr);}
+  .hero-visual{min-height:0;}
+  .hero-phone{width:100%;padding:14px;}
+  .hero-product-grid{gap:8px;}
+  .hero-product{padding:10px 8px;}
+  .hero-product img{height:46px;}
+  .best-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .packages-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .pkg-card{min-height:230px;}
+  .detail-grid{grid-template-columns:1fr;}
+  th:nth-child(3),td:nth-child(3){display:none;}
+}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div><div class="bg-glow"></div>
+<div class="env-warning" id="envWarning">Launch features need the deployed site or Cloudflare Pages local server. Plain file preview cannot run nickname lookup, admin login, or Telegram bot functions.</div>
+
+<nav>
+  <div class="logo">BestDia</div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <span class="db-status"><span class="db-dot" id="dbDot"></span><span id="dbTxt">Connecting...</span></span>
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="showPage('shop',this)">Shop</button>
+      <button class="nav-tab" onclick="showPage('status',this)">Order Status</button>
+    </div>
+  </div>
+</nav>
+
+<!-- SHOP -->
+<div class="page active" id="page-shop">
+  <div class="hero">
+    <div class="hero-copy">
+      <div class="hero-eyebrow">BestDia Game Store</div>
+      <h1>Buy MLBB Diamonds <span>fast, simple, and secure</span></h1>
+      <p class="hero-sub">Pay with KBZPay or Wave Money, upload your payment slip, and BestDia will process your diamond order quickly.</p>
+      <div class="hero-actions">
+        <a class="hero-btn primary" href="#packages">Buy now</a>
+        <a class="hero-btn secondary" href="#page-status" onclick="showPage('status')">Check order</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><div class="stat-val">KBZ / Wave</div><div class="stat-lbl">Payment</div></div>
+        <div class="stat"><div class="stat-val">Slip Upload</div><div class="stat-lbl">Proof required</div></div>
+        <div class="stat"><div class="stat-val">Name Check</div><div class="stat-lbl">ID verification</div></div>
+        <div class="stat"><div class="stat-val">24/7</div><div class="stat-lbl">Support</div></div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-phone">
+        <div class="hero-phone-top"><span>Popular packages</span><span class="hero-balance">Ks</span></div>
+        <div class="hero-product-grid">
+          <button class="hero-product" type="button" onclick="selectHeroPkg(11)"><img src="https://cdn.unipin.com/images/denom_group/ml-diamonds.png" alt=""/><b>86 Diamonds</b><span>5,800 Ks</span></button>
+          <button class="hero-product" type="button" onclick="selectHeroPkg(7)"><img src="https://cdn.unipin.com/images/denom_group/ml-weekly.png" alt=""/><b>Weekly Diamond Pass</b><span>7,200 Ks</span></button>
+          <button class="hero-product" type="button" onclick="selectHeroPkg(10)"><img src="https://cdn.unipin.com/images/denom_group/ml-twilight.png" alt=""/><b>Twilight Pass</b><span>38,000 Ks</span></button>
+          <button class="hero-product" type="button" onclick="selectHeroPkg(5)"><img src="https://cdn.unipin.com/images/denom_group/ml-weeklyeb.png" alt=""/><b>Elite Bundle</b><span>3,800 Ks</span></button>
+        </div>
+        <div class="hero-payline"><span>Payment slip required</span><strong>Secure order</strong></div>
+      </div>
+    </div>
+    <div class="hero-eyebrow">Myanmar MLBB Diamond Store</div>
+    <h1>MLBB Diamond<br/><span>Top Up Store</span></h1>
+    <p class="hero-sub">Affordable packages, fast delivery, and simple order tracking for Myanmar players.<br/>Send your slip and keep your Order ID.</p>
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-val" id="heroTotal">5,200+</div><div class="stat-lbl">Orders</div></div>
+      <div class="stat"><div class="stat-val">&lt;5 min</div><div class="stat-lbl">Typical delivery</div></div>
+      <div class="stat"><div class="stat-val">20%</div><div class="stat-lbl">Bonus value</div></div>
+      <div class="stat"><div class="stat-val">24/7</div><div class="stat-lbl">Support</div></div>
+    </div>
+  </div>
+  <div class="ticker-wrap"><div class="ticker" id="ticker"></div></div>
+  <div class="section">
+    <div class="section-title">Best-selling packages</div>
+    <div class="currency-row">
+      <div class="currency-switch" role="group" aria-label="Currency selector">
+        <button class="currency-btn active" type="button" data-currency="ks" onclick="setCurrency('ks')">Ks</button>
+        <button class="currency-btn" type="button" data-currency="thb" onclick="setCurrency('thb')">THB</button>
+      </div>
+    </div>
+    <div class="best-grid" id="bestSellers"></div>
+  </div>
+  <div class="section">
+    <div class="section-title">Choose a package</div>
+    <div class="packages-grid" id="packages"></div>
+  </div>
+  <div class="section">
+    <div class="section-title">Place an order</div>
+    <div class="order-box">
+      <div class="form-row">
+        <label class="form-label">MLBB User ID</label>
+        <input class="form-input" id="userId" type="text" placeholder="Example - 123456789"/>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Zone ID</label>
+        <input class="form-input" id="zoneId" type="text" placeholder="&#x1025;&#x1015;&#x1019;&#x102C; - 12345"/>
+        <div class="lookup-hint" id="ignHint">User ID &#x1014;&#x103E;&#x1004;&#x1037;&#x103A; Zone ID &#x1016;&#x103C;&#x100A;&#x1037;&#x103A;&#x1015;&#x103C;&#x102E;&#x1038;&#x1015;&#x102B;&#x1000; &#x1002;&#x102D;&#x1019;&#x103A;&#x1038;&#x1014;&#x102C;&#x1019;&#x100A;&#x103A;&#x1000;&#x102D;&#x102F; &#x1012;&#x102E;&#x1014;&#x1031;&#x101B;&#x102C;&#x1019;&#x103E;&#x102C; &#x1015;&#x103C;&#x1015;&#x102B;&#x1019;&#x100A;&#x103A;&#x104B;</div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">&#x1006;&#x1000;&#x103A;&#x101E;&#x103D;&#x101A;&#x103A;&#x101B;&#x1014;&#x103A; &#x1016;&#x102F;&#x1014;&#x103A;&#x1038; / Telegram</label>
+        <input class="form-input" id="contact" type="text" placeholder="09xxxxxxxx"/>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Payment method</label>
+        <div class="payment-methods">
+          <button class="pay-btn kbz" onclick="selectPay('kbz',this)"><span class="pay-dot"></span>KBZPay</button>
+          <button class="pay-btn wave" onclick="selectPay('wave',this)"><span class="pay-dot"></span>Wave Money</button>
+        </div>
+        <div class="pay-info" id="payInfo"></div>
+        <div class="slip-field">
+          <label class="form-label" for="paymentSlip">Payment slip screenshot</label>
+          <input class="slip-input" id="paymentSlip" type="file" accept="image/*"/>
+          <div class="slip-preview" id="slipPreview"><img alt="Payment slip preview"/><span id="slipName"></span></div>
+        </div>
+      </div>
+      <div class="summary-box" id="summary"></div>
+      <button class="btn-submit" id="submitBtn" onclick="submitOrder()">Confirm order</button>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-title">Why choose BestDia?</div>
+    <div class="features">
+      <div class="feat"><div class="feat-icon">01</div><div class="feat-title">Fast delivery</div><div class="feat-desc">We process orders quickly after checking your payment slip.</div></div>
+      <div class="feat"><div class="feat-icon">02</div><div class="feat-title">Fair pricing</div><div class="feat-desc">Packages are priced for Myanmar players with clear totals.</div></div>
+      <div class="feat"><div class="feat-icon">03</div><div class="feat-title">Secure process</div><div class="feat-desc">We verify your MLBB ID and payment details before delivery.</div></div>
+      <div class="feat"><div class="feat-icon">04</div><div class="feat-title">Telegram support</div><div class="feat-desc">Contact us anytime through Telegram for order help.</div></div>
+    </div>
+  </div>
+</div>
+
+  <div class="section" id="customerTrust">
+    <div class="section-title">Trusted by players</div>
+    <div class="proof-grid">
+      <div class="proof-card"><div class="proof-quote">"My order was checked fast and the diamonds arrived quickly."</div><div class="proof-name">ShadowX - 86 Diamonds</div></div>
+      <div class="proof-card"><div class="proof-quote">"I always buy my Weekly Pass from BestDia. The support is reliable."</div><div class="proof-name">MiyaQueen - Weekly Pass</div></div>
+      <div class="proof-card"><div class="proof-quote">"The order status page makes it easy to follow my payment and delivery."</div><div class="proof-name">KoHtet7 - 257 Diamonds</div></div>
+    </div>
+    <div class="social-row">
+      <a class="social-link" href="https://t.me/BestDiaa" target="_blank" rel="noopener">Telegram</a>
+    </div>
+  </div>
+
+<!-- ORDER STATUS -->
+<div class="page" id="page-status">
+  <div class="section" style="padding-top:34px;">
+    <div class="section-title">Order Status</div>
+    <div class="status-box">
+      <p style="font-size:0.82rem;color:var(--muted);margin-bottom:14px;">Enter your Order ID, for example BD294857, to check the latest status.</p>
+      <div class="s-row">
+        <input class="form-input" id="searchId" placeholder="Enter Order ID..." style="flex:1;" onkeydown="if(event.key==='Enter')searchOrder()"/>
+        <button onclick="searchOrder()" style="background:linear-gradient(135deg,var(--diamond2),var(--diamond));border:none;border-radius:9px;padding:10px 18px;color:var(--dark);font-family:'Chakra Petch',sans-serif;font-size:0.85rem;font-weight:800;cursor:pointer;flex-shrink:0;">Check</button>
+      </div>
+    </div>
+    <div class="status-result" id="statusResult"></div>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div class="page" id="page-admin">
+  <div class="section" style="padding-top:34px;">
+    <div class="admin-lock" id="adminLock">
+      <div class="admin-lock-icon">ADMIN</div>
+      <h2>Admin Panel</h2>
+      <p>Enter BestDia admin password</p>
+      <div class="lock-form">
+        <input class="form-input" id="adminPw" type="password" placeholder="Password..." onkeydown="if(event.key==='Enter')unlockAdmin()"/>
+        <button onclick="unlockAdmin()" style="background:linear-gradient(135deg,var(--gold),#E5A200);border:none;border-radius:9px;padding:10px 16px;color:var(--dark);font-family:'Chakra Petch',sans-serif;font-size:0.83rem;font-weight:800;cursor:pointer;flex-shrink:0;">Login</button>
+      </div>
+    </div>
+    <div class="admin-dash" id="adminDash">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+        <div class="section-title" style="margin-bottom:0;flex:1;">Dashboard <span style="font-size:0.7rem;color:var(--success);margin-left:8px;">Live</span></div>
+        <button onclick="logoutAdmin()" style="background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.25);border-radius:8px;padding:5px 12px;color:var(--danger);font-family:'Chakra Petch',sans-serif;font-size:0.72rem;cursor:pointer;">Logout</button>
+      </div>
+      <div class="kpi-row" id="kpiRow"></div>
+      <div class="section-title" style="margin-top:6px;">Orders</div>
+      <div class="toolbar">
+        <button class="f-btn active" onclick="filterOrders('all',this)">All</button>
+        <button class="f-btn fp" onclick="filterOrders('pending',this)">Pending</button>
+        <button class="f-btn" onclick="filterOrders('processing',this)">Processing</button>
+        <button class="f-btn fc" onclick="filterOrders('completed',this)">Completed</button>
+        <button class="f-btn" onclick="filterOrders('cancelled',this)">Cancelled</button>
+        <button class="f-btn" onclick="resetAdminData()">Reset</button>
+        <button class="notify-btn" id="notifyBtn" onclick="showPendingAlert()">Pending <span class="n-count" id="nCount">0</span></button>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Order ID</th><th>Package</th><th>User ID</th><th>Payment</th><th>Net</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+        <div id="emptyOrders" style="display:none;" class="empty-row">No orders yet</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="orderModal">
+  <div class="modal">
+    <div class="modal-icon">OK</div>
+    <div class="modal-title">Order confirmed</div>
+    <div class="modal-body" id="modalBody"></div>
+    <button class="modal-close" onclick="closeModal('orderModal')">Close</button>
+  </div>
+</div>
+<div class="modal-overlay" id="viewModal">
+  <div class="modal wide">
+    <div class="modal-title" id="vmTitle" style="text-align:left;font-size:1rem;margin-bottom:12px;"></div>
+    <div id="vmBody"></div>
+    <div class="vm-acts" id="vmActs"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<footer>
+  <strong>BestDia</strong> - Myanmar MLBB Diamond Store<br/>
+  Contact: <a href="https://t.me/BestDiaa" style="color:var(--diamond);text-decoration:none;">@BestDiaa</a> &nbsp;|&nbsp;
+  Fast MLBB diamond top-up with KBZPay and Wave Money support<br/><br/>
+  <span style="font-size:0.65rem;opacity:0.42;">Copyright 2026 BestDia - MLBB Diamond Top Up Store - MLBB is a trademark of Moonton</span>
+</footer>
+
+<script type="module">
+// BestDia main app (Firebase + Telegram)
+import { getFirestore, collection, addDoc, doc, updateDoc, onSnapshot, query, orderBy, getDoc, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+import { getApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { getStorage, ref as storageRef, uploadString, getDownloadURL }
+  from "https://www.gstatic.com/firebasejs/11.0.0/firebase-storage.js";
+
+const db  = getFirestore(getApp());
+const storage = getStorage(getApp());
+const COL = "orders";
+const TELE = "@BestDiaa";
+const sLabel = {pending:"Pending",processing:"Processing",completed:"Completed",cancelled:"Cancelled"};
+
+const PKG_IMG={
+  diamonds:"https://cdn.unipin.com/images/denom_group/ml-diamonds.png",
+  weekly:"https://cdn.unipin.com/images/denom_group/ml-weekly.png",
+  twilight:"https://cdn.unipin.com/images/denom_group/ml-twilight.png",
+  weeklyElite:"https://cdn.unipin.com/images/denom_group/ml-weeklyeb.png",
+  monthlyEpic:"https://cdn.unipin.com/images/denom_group/ml-monthlyeb.png"
+};
+
+const PKGS=[
+  {id:1,title:"50+5 Diamonds",name:"Special Bonus",diamonds:55,baseDiamonds:50,regularBonus:5,firstBonus:50,supplierPriceThb:26.13,price:3900,img:PKG_IMG.diamonds,popular:true},
+  {id:2,title:"150+15 Diamonds",name:"Special Bonus",diamonds:165,baseDiamonds:150,regularBonus:15,firstBonus:150,supplierPriceThb:78.32,price:11500,img:PKG_IMG.diamonds},
+  {id:3,title:"250+25 Diamonds",name:"Special Bonus",diamonds:275,baseDiamonds:250,regularBonus:25,firstBonus:250,supplierPriceThb:125.63,price:18500,img:PKG_IMG.diamonds},
+  {id:4,title:"500+65 Diamonds",name:"Special Bonus",diamonds:565,baseDiamonds:500,regularBonus:65,firstBonus:500,supplierPriceThb:257.95,price:37000,img:PKG_IMG.diamonds,popular:true},
+  {id:5,title:"Weekly Elite Bundle",name:"Bundle",supplierPriceThb:25.74,price:3800,img:PKG_IMG.weeklyElite,popular:true},
+  {id:6,title:"Monthly Epic Bundle",name:"Bundle",supplierPriceThb:127.92,price:19000,img:PKG_IMG.monthlyEpic},
+  {id:7,title:"Weekly Diamond Pass",name:"Pass",supplierPriceThb:49.40,price:7200,img:PKG_IMG.weekly,popular:true},
+  {id:8,title:"Weekly Diamond Pass x2",name:"Pass",supplierPriceThb:98.80,price:14500,img:PKG_IMG.weekly},
+  {id:9,title:"Weekly Diamond Pass x3",name:"Pass",supplierPriceThb:148.20,price:22000,img:PKG_IMG.weekly},
+  {id:10,title:"Twilight Pass",name:"Pass",supplierPriceThb:261.63,price:38000,img:PKG_IMG.twilight,popular:true},
+  {id:11,title:"86 Diamonds",name:"78 + 8 Bonus",diamonds:86,supplierPriceThb:39.38,price:5800,img:PKG_IMG.diamonds,popular:true},
+  {id:12,title:"172 Diamonds",name:"156 + 16 Bonus",diamonds:172,supplierPriceThb:78.08,price:11500,img:PKG_IMG.diamonds},
+  {id:13,title:"257 Diamonds",name:"234 + 23 Bonus",diamonds:257,supplierPriceThb:113.09,price:16500,img:PKG_IMG.diamonds},
+  {id:14,title:"343 Diamonds",name:"312 + 31 Bonus",diamonds:343,supplierPriceThb:152.45,price:22000,img:PKG_IMG.diamonds},
+  {id:15,title:"429 Diamonds",name:"390 + 39 Bonus",diamonds:429,supplierPriceThb:191.17,price:27500,img:PKG_IMG.diamonds},
+  {id:16,title:"600 Diamonds",name:"546 + 54 Bonus",diamonds:600,supplierPriceThb:265.54,price:38000,img:PKG_IMG.diamonds},
+  {id:17,title:"706 Diamonds",name:"625 + 81 Bonus",diamonds:706,supplierPriceThb:307.2,price:44000,img:PKG_IMG.diamonds},
+  {id:18,title:"792 Diamonds",name:"703 + 89 Bonus",diamonds:792,supplierPriceThb:346.56,price:50000,img:PKG_IMG.diamonds},
+  {id:19,title:"1049 Diamonds",name:"937 + 112 Bonus",diamonds:1049,supplierPriceThb:459.65,price:66000,img:PKG_IMG.diamonds},
+  {id:20,title:"1135 Diamonds",name:"1015 + 120 Bonus",diamonds:1135,supplierPriceThb:498.37,price:72000,img:PKG_IMG.diamonds},
+  {id:21,title:"2195 Diamonds",name:"1860 + 335 Bonus",diamonds:2195,supplierPriceThb:929.92,price:129000,img:PKG_IMG.diamonds,popular:true},
+  {id:22,title:"3688 Diamonds",name:"3099 + 589 Bonus",diamonds:3688,supplierPriceThb:1541.66,price:214000,img:PKG_IMG.diamonds},
+  {id:23,title:"5532 Diamonds",name:"4649 + 883 Bonus",diamonds:5532,supplierPriceThb:2322.15,price:323000,img:PKG_IMG.diamonds},
+  {id:24,title:"9288 Diamonds",name:"7740 + 1548 Bonus",diamonds:9288,supplierPriceThb:3844.36,price:535000,img:PKG_IMG.diamonds}
+];
+const PAY={kbz:{name:"KBZPay",number:"09752588797",holder:"MayThet Wai"},
+           wave:{name:"Wave Money",number:"09752588797",holder:"MayThet Wai"}};
+const THB_TO_KS=133.5;
+const PAYMENT_FEE_RATE=0;
+const priceMarginByThb=thb=>thb<150?0.05:(thb<500?0.03:0.02);
+const roundKsToLast2=ks=>Math.round(ks/100)*100;
+const packagePriceThb=p=>{
+  const thb=Number(p?.supplierPriceThb||0);
+  return Math.round(thb*(1+priceMarginByThb(thb)));
+};
+const packagePriceKs=p=>roundKsToLast2(Number(p.supplierPriceThb||0)*THB_TO_KS*(1+priceMarginByThb(Number(p.supplierPriceThb||0))));
+PKGS.forEach(p=>{p.price=packagePriceKs(p);});
+
+let allOrders=[],sPkg=null,sPay=null,filterState='all',adminUnlocked=false,adminPasswordCache='',unsubscribe=null,publicTickerUnsubscribe=null;
+let currentIgn='',slipDataUrl='',slipFileName='',lookupTimer=null,lookupSeq=0;
+let publicTickerOrders=[];
+let displayCurrency='ks';
+const fmt=n=>Number(n).toLocaleString();
+const priceDisplay=p=>displayCurrency==='thb'
+  ? `${fmt(packagePriceThb(p))} \u1018\u1010\u103A`
+  : `${fmt(Number(p?.price||0))} Ks`;
+const pkgTitle=p=>p?.title||`${fmt(p?.diamonds||0)} Diamonds`;
+const pkgPurchaseTitle=p=>p?.firstBonus?`${fmt(p.baseDiamonds)}+${fmt(p.firstBonus)} Diamonds`:pkgTitle(p);
+const pkgDetail=p=>p?.firstBonus?pkgPurchaseTitle(p):(p?.diamonds?`${fmt(p.diamonds)} Diamonds`:pkgTitle(p));
+const pkgSummary=p=>p?.firstBonus?`${pkgPurchaseTitle(p)} - First Purchase Bonus`:`${pkgTitle(p)}${p?.name?' - '+p.name:''}`;
+const currentPkgById=id=>PKGS.find(p=>String(p.id)===String(id))||{};
+const supplierThb=o=>Number(o?.pkg?.supplierPriceThb??currentPkgById(o?.pkg?.id).supplierPriceThb??0);
+const hasSupplierCost=o=>supplierThb(o)>0;
+const exchangeRateKs=o=>Number(o?.pkg?.exchangeRateThbToKs||THB_TO_KS);
+const supplierCostKs=o=>Math.round(supplierThb(o)*exchangeRateKs(o));
+const paymentFeeKs=o=>Math.round(Number(o?.pkg?.price||0)*PAYMENT_FEE_RATE);
+const netProfitKs=o=>Number(o?.pkg?.price||0)-supplierCostKs(o)-paymentFeeKs(o);
+const netLabel=o=>hasSupplierCost(o)?`${fmt(netProfitKs(o))} Ks`:'Set cost';
+const mxTopupText=o=>{
+  const t=o?.mxshopTopup;
+  if(!t)return 'Not sent';
+  if(t.status==='success')return 'Sent';
+  if(t.status==='sending')return 'Sending';
+  if(t.status==='skipped')return 'Skipped';
+  if(t.status==='failed')return 'Check supplier';
+  return t.status||'Unknown';
+};
+const hasMxAttempt=o=>Boolean(o?.mxshopTopup);
+const canSendMxTopup=o=>o?.status==='processing'&&!hasMxAttempt(o);
+const canCompleteOrder=o=>o?.status==='processing'&&hasMxAttempt(o)&&o.mxshopTopup?.status!=='sending';
+const slipUrl=o=>o?.slip?.url||o?.slip?.dataUrl||'';
+const savedCustomerKey='bestdia_customer';
+const fmtT=ts=>{if(!ts)return'-';const d=ts.toDate?ts.toDate():new Date(ts);
+  return d.toLocaleDateString('my-MM',{day:'2-digit',month:'short'})+' '+d.toLocaleTimeString('my-MM',{hour:'2-digit',minute:'2-digit'});};
+
+// DB status indicator
+document.getElementById('dbDot').classList.add('ok');
+document.getElementById('dbTxt').textContent='Live';
+
+// Telegram notify
+async function tgNotify(msg,extra={}){
+  window._lastTelegramError='';
+  try{
+    const res=await fetch('/api/telegram-notify',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({text:msg,...extra})
+    });
+    if(res.ok)return true;
+    const errorText=await res.text();
+    window._lastTelegramError=errorText.trim().startsWith('<!DOCTYPE')
+      ? 'Cloudflare Pages Function is not deployed. Check the functions/api route and redeploy.'
+      : errorText;
+    console.warn('Telegram function failed:',errorText);
+    return false;
+  }catch(e){window._lastTelegramError=e.message;console.warn('Telegram notify failed:',e);return false;}
+}
+
+// Helpers
+window.showPage=function(p,el){
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(x=>x.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  if(el)el.classList.add('active');
+};
+window.closeModal=function(id){document.getElementById(id).classList.remove('show');};
+window.copyText=function(t){navigator.clipboard.writeText(t).then(()=>showToast('Copied!'));};
+function showToast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast'+(type?' '+type:'');
+  void t.offsetWidth;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2600);
+}
+function loadSavedCustomer(){
+  try{
+    const saved=JSON.parse(localStorage.getItem(savedCustomerKey)||'{}');
+    if(saved.userId)document.getElementById('userId').value=saved.userId;
+    if(saved.zoneId)document.getElementById('zoneId').value=saved.zoneId;
+    if(saved.contact)document.getElementById('contact').value=saved.contact;
+  }catch{}
+  scheduleIgnLookup();
+}
+function saveCustomer(){
+  const data={
+    userId:document.getElementById('userId').value.trim(),
+    zoneId:document.getElementById('zoneId').value.trim(),
+    contact:document.getElementById('contact').value.trim()
+  };
+  localStorage.setItem(savedCustomerKey,JSON.stringify(data));
+}
+function bindCustomerMemory(){
+  ['userId','zoneId','contact'].forEach(id=>{
+    const el=document.getElementById(id);
+    el.addEventListener('input',()=>{
+      saveCustomer();
+      if(id!=='contact')scheduleIgnLookup();
+    });
+  });
+}
+function setIgnHint(text,type=''){
+  const hint=document.getElementById('ignHint');
+  hint.textContent=text;
+  hint.className='lookup-hint'+(type?' '+type:'');
+}
+function isValidIgnName(value){
+  const text=String(value||'').trim();
+  if(!text||text.length<2||text.length>40)return false;
+  if(/^(not found|error|failed|invalid|undefined|null)$/i.test(text))return false;
+  if(/\berror\s*(code|:)/i.test(text))return false;
+  if(/\b(code|status)\s*[:=]\s*\d{3,}/i.test(text))return false;
+  if(/^[\d\s:._-]+$/.test(text))return false;
+  return true;
+}
+function scheduleIgnLookup(){
+  clearTimeout(lookupTimer);
+  lookupTimer=setTimeout(lookupIgn,650);
+}
+async function lookupIgn(){
+  const uid=document.getElementById('userId').value.trim();
+  const zid=document.getElementById('zoneId').value.trim();
+  currentIgn='';
+  if(!uid||!zid){setIgnHint('User ID \u1014\u103E\u1004\u1037\u103A Zone ID \u1016\u103C\u100A\u1037\u103A\u1015\u103C\u102E\u1038\u1015\u102B\u1000 \u1002\u102D\u1019\u103A\u1038\u1014\u102C\u1019\u100A\u103A\u1000\u102D\u102F \u1012\u102E\u1014\u1031\u101B\u102C\u1019\u103E\u102C \u1015\u103C\u1015\u102B\u1019\u100A\u103A\u104B');return;}
+  const seq=++lookupSeq;
+  setIgnHint('\u1002\u102D\u1019\u103A\u1038\u1014\u102C\u1019\u100A\u103A \u1005\u1005\u103A\u1014\u1031\u101E\u100A\u103A...');
+  try{
+    const res=await fetch('/api/mlbb-lookup',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({userId:uid,zoneId:zid})
+    });
+    const data=await res.json().catch(()=>({}));
+    if(seq!==lookupSeq)return;
+    if(res.ok&&isValidIgnName(data.nickname)){
+      currentIgn=String(data.nickname).trim();
+      setIgnHint(`In-game name: ${currentIgn}`,'ok');
+    }else{
+      setIgnHint(data.error||'Could not verify in-game name. Please check the User ID and Zone ID, or continue manually.','warn');
+    }
+  }catch{
+    if(seq===lookupSeq){
+      const msg=location.protocol==='file:'
+        ? 'Nickname lookup needs the deployed site or a local Cloudflare Pages server. It will not run from file preview.'
+        : 'Nickname lookup is unavailable right now. You can still place the order.';
+      setIgnHint(msg,'warn');
+    }
+  }
+}
+function bindSlipUpload(){
+  const input=document.getElementById('paymentSlip');
+  input.addEventListener('change',async()=>{
+    const file=input.files&&input.files[0];
+    slipDataUrl='';slipFileName='';
+    document.getElementById('slipPreview').classList.remove('show');
+    if(!file)return;
+    if(!file.type.startsWith('image/')){showToast('Please upload an image slip.','warn');input.value='';return;}
+    if(file.size>6*1024*1024){showToast('Slip image is too large. Please upload under 6MB.','warn');input.value='';return;}
+    slipFileName=file.name;
+    slipDataUrl=await compressSlip(file);
+    document.querySelector('#slipPreview img').src=slipDataUrl;
+    document.getElementById('slipName').textContent=file.name;
+    document.getElementById('slipPreview').classList.add('show');
+  });
+}
+function compressSlip(file){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>{
+      const img=new Image();
+      img.onload=()=>{
+        let max=1200,quality=0.82,out='';
+        const canvas=document.createElement('canvas');
+        const ctx=canvas.getContext('2d');
+        do{
+          const scale=Math.min(1,max/Math.max(img.width,img.height));
+          canvas.width=Math.round(img.width*scale);canvas.height=Math.round(img.height*scale);
+          ctx.clearRect(0,0,canvas.width,canvas.height);
+          ctx.drawImage(img,0,0,canvas.width,canvas.height);
+          out=canvas.toDataURL('image/jpeg',quality);
+          max=Math.round(max*0.85);
+          quality=Math.max(0.58,quality-0.08);
+        }while(out.length>850000&&max>520);
+        resolve(out);
+      };
+      img.onerror=reject;
+      img.src=reader.result;
+    };
+    reader.onerror=reject;
+    reader.readAsDataURL(file);
+  });
+}
+async function uploadSlip(oid){
+  if(!slipDataUrl)return null;
+  const path=`payment-slips/${oid}-${Date.now()}.jpg`;
+  const ref=storageRef(storage,path);
+  await withTimeout(uploadString(ref,slipDataUrl,'data_url',{contentType:'image/jpeg'}),20000,'Payment slip upload timed out');
+  return {
+    name:slipFileName,
+    path,
+    url:await withTimeout(getDownloadURL(ref),10000,'Payment slip URL timed out')
+  };
+}
+function withTimeout(promise,ms,message){
+  let timer;
+  const timeout=new Promise((_,reject)=>{
+    timer=setTimeout(()=>reject(new Error(message)),ms);
+  });
+  return Promise.race([promise,timeout]).finally(()=>clearTimeout(timer));
+}
+function fallbackSlip(error){
+  console.warn('Payment slip storage upload failed; saving slip with order instead:',error);
+  return {
+    name:slipFileName||'payment-slip.jpg',
+    dataUrl:slipDataUrl,
+    uploadError:error?.message||String(error||'Unknown upload error')
+  };
+}
+
+// Packages
+function renderPackages(){
+  document.getElementById('packages').innerHTML=PKGS.map((p,i)=>{
+    const firstBonus=p.firstBonus
+      ? `<div class="pkg-first">\u1015\u1011\u1019\u1006\u102F\u1036\u1038\u101D\u101A\u103A\u101A\u1030\u1019\u103E\u102F: ${fmt(p.baseDiamonds)}+${fmt(p.firstBonus)} Diamonds</div>
+         <div class="pkg-normal">\u1014\u1031\u102C\u1000\u103A\u1015\u102D\u102F\u1004\u103A\u1038: ${fmt(p.baseDiamonds)}+${fmt(p.regularBonus)} Diamonds</div>`
+      : `<div class="pkg-name">${p.name}</div>`;
+    return `<div class="pkg-card${p.popular?' popular':''}" style="animation-delay:${i*0.05}s" onclick="selPkg(${p.id})" id="pk${p.id}">
+      <div class="pkg-img-wrap"><img class="pkg-img" src="${p.img}" alt="${pkgPurchaseTitle(p)}" loading="lazy" onerror="this.style.display='none';"></div>
+      <div class="pkg-diamonds">DIA</div>
+      <div class="pkg-amount">${pkgPurchaseTitle(p)}</div>
+      ${firstBonus}
+      <div class="pkg-price">${priceDisplay(p)}</div>
+    </div>`;
+  }).join('');
+}
+function renderBestSellers(){
+  const bestIds=[11,12,13,7,5,10];
+  const best=bestIds.map(id=>currentPkgById(id)).filter(p=>p.id);
+  document.getElementById('bestSellers').innerHTML=best.map(p=>`
+    <button class="best-card" type="button" onclick="selPkg(${p.id})">
+      <span class="best-badge">\u1021\u101B\u1031\u102C\u1004\u103A\u1038\u101B\u1006\u102F\u1036\u1038</span>
+      <img src="${p.img}" alt="${pkgPurchaseTitle(p)}" loading="lazy" onerror="this.style.display='none';">
+      <div class="best-title">${pkgPurchaseTitle(p)}</div>
+      <div class="best-price">${priceDisplay(p)}</div>
+    </button>`).join('');
+}
+function localizeStaticContent(){
+  const setText=(selector,text)=>{const el=document.querySelector(selector);if(el)el.textContent=text;};
+  const setHtml=(selector,html)=>{const el=document.querySelector(selector);if(el)el.innerHTML=html;};
+  setText('#dbTxt','Live');
+  const nav=document.querySelectorAll('.nav-tab');
+  if(nav[0])nav[0].textContent='\u1008\u1031\u1038\u1006\u102D\u102F\u1004\u103A';
+  if(nav[1])nav[1].textContent='Order \u1005\u1005\u103A\u101B\u1014\u103A';
+  const currencyBtns=document.querySelectorAll('.currency-btn');
+  if(currencyBtns[0])currencyBtns[0].textContent='\u1000\u103B\u1015\u103A';
+  if(currencyBtns[1])currencyBtns[1].textContent='\u1018\u1010\u103A';
+  setText('.hero-actions .primary','\u101D\u101A\u103A\u101A\u1030\u1019\u100A\u103A');
+  setText('.hero-actions .secondary','Order \u1005\u1005\u103A\u1019\u100A\u103A');
+  const sections=document.querySelectorAll('#page-shop > .section > .section-title');
+  if(sections[0])sections[0].textContent='\u1021\u101B\u1031\u102C\u1004\u103A\u1038\u101B\u1006\u102F\u1036\u1038 Package \u1019\u103B\u102C\u1038';
+  if(sections[1])sections[1].textContent='Package \u101B\u103D\u1031\u1038\u101B\u1014\u103A';
+  if(sections[2])sections[2].textContent='\u1019\u103E\u102C\u101A\u1030\u101B\u1014\u103A';
+  if(sections[3])sections[3].textContent='BestDia \u1000\u102D\u102F \u1018\u102C\u1000\u103C\u1031\u102C\u1004\u1037\u103A \u101B\u103D\u1031\u1038\u101E\u1004\u1037\u103A\u101C\u1032';
+  setText('#customerTrust .section-title','\u101D\u101A\u103A\u101E\u1030\u101A\u102F\u1036\u1000\u103C\u100A\u103A\u1019\u103E\u102F');
+  setText('#page-status .section-title','Order Status');
+  setText('#page-status .status-box p','Enter your Order ID, for example BD294857, to check the latest status.');
+  setText('#page-status .s-row button','Check');
+  const formLabels=document.querySelectorAll('#page-shop .order-box .form-label');
+  if(formLabels[0])formLabels[0].textContent='MLBB User ID';
+  if(formLabels[1])formLabels[1].textContent='Zone ID';
+  if(formLabels[2])formLabels[2].textContent='\u1006\u1000\u103A\u101E\u103D\u101A\u103A\u101B\u1014\u103A \u1016\u102F\u1014\u103A\u1038 / Telegram';
+  if(formLabels[3])formLabels[3].textContent='\u1004\u103D\u1031\u1015\u1031\u1038\u1001\u103B\u1031\u1019\u103E\u102F \u1014\u100A\u103A\u1038\u101C\u1019\u103A\u1038';
+  setText('label[for="paymentSlip"]','\u1004\u103D\u1031\u101C\u103D\u103E\u1032 slip screenshot');
+  const userId=document.getElementById('userId');
+  const zoneId=document.getElementById('zoneId');
+  const searchId=document.getElementById('searchId');
+  if(userId)userId.placeholder='\u1025\u1015\u1019\u102C - 123456789';
+  if(zoneId)zoneId.placeholder='\u1025\u1015\u1019\u102C - 12345';
+  if(searchId)searchId.placeholder='Enter Order ID...';
+  setText('#ignHint','User ID \u1014\u103E\u1004\u1037\u103A Zone ID \u1016\u103C\u100A\u1037\u103A\u1015\u103C\u102E\u1038\u1015\u102B\u1000 \u1002\u102D\u1019\u103A\u1038\u1014\u102C\u1019\u100A\u103A\u1000\u102D\u102F \u1012\u102E\u1014\u1031\u101B\u102C\u1019\u103E\u102C \u1015\u103C\u1015\u102B\u1019\u100A\u103A\u104B');
+  setText('#submitBtn','\u1021\u1010\u100A\u103A\u1015\u103C\u102F \u1019\u103E\u102C\u101A\u1030\u1019\u100A\u103A');
+  const featureTitles=['\u1019\u103C\u1014\u103A\u1006\u1014\u103A\u1005\u103D\u102C \u1015\u102D\u102F\u1037\u1015\u1031\u1038\u101E\u100A\u103A','\u101E\u1000\u103A\u101E\u102C\u101E\u1031\u102C \u1005\u103B\u1031\u1038\u1014\u103E\u102F\u1014\u103A\u1038','\u1005\u102D\u1010\u103A\u1001\u103B\u101B\u101E\u1031\u102C \u101D\u1014\u103A\u1006\u1031\u102C\u1004\u103A\u1019\u103E\u102F','24/7 Telegram Support'];
+  const featureDescs=['Order \u1010\u1004\u103A\u1015\u103C\u102E\u1038 1-5 \u1019\u102D\u1014\u1005\u103A\u1021\u1010\u103D\u1004\u103A\u1038 Diamond \u101B\u1031\u102C\u1000\u103A\u101B\u103E\u102D\u101B\u1014\u103A \u1000\u103C\u102D\u102F\u1038\u1005\u102C\u1038\u1015\u1031\u1038\u101E\u100A\u103A\u104B','\u1019\u103C\u1014\u103A\u1019\u102C\u101D\u101A\u103A\u101E\u1030\u1019\u103B\u102C\u1038\u1021\u1010\u103D\u1000\u103A \u101E\u1004\u1037\u103A\u1010\u1031\u102C\u103A\u101E\u1031\u102C \u1005\u103B\u1031\u1038\u1014\u103E\u102F\u1014\u103A\u1038\u1019\u103B\u102C\u1038\u1016\u103C\u1004\u1037\u103A \u101B\u1031\u102C\u1004\u103A\u1038\u1001\u103B\u1015\u1031\u1038\u101E\u100A\u103A\u104B','KBZPay / Wave Money slip \u1005\u1005\u103A\u1006\u1031\u1038\u1015\u103C\u102E\u1038 Order \u1015\u103C\u102F\u101C\u102F\u1015\u103A\u1015\u1031\u1038\u101E\u100A\u103A\u104B','\u1021\u1001\u103B\u102D\u1014\u103A\u1019\u101B\u103D\u1031\u1038 Telegram \u1019\u103E \u1006\u1000\u103A\u101E\u103D\u101A\u103A\u1014\u102D\u102F\u1004\u103A\u101E\u100A\u103A\u104B'];
+  document.querySelectorAll('.feat').forEach((feat,i)=>{
+    const icon=feat.querySelector('.feat-icon');
+    const title=feat.querySelector('.feat-title');
+    const desc=feat.querySelector('.feat-desc');
+    if(icon)icon.textContent=String(i+1).padStart(2,'0');
+    if(title)title.textContent=featureTitles[i]||title.textContent;
+    if(desc)desc.textContent=featureDescs[i]||desc.textContent;
+  });
+  const proofs=document.querySelectorAll('#customerTrust .proof-card');
+  const proofData=[
+    ['Order \u1010\u1004\u103A\u1015\u103C\u102E\u1038 \u1019\u102D\u1014\u1005\u103A\u1015\u102D\u102F\u1004\u103A\u1038\u1021\u1010\u103D\u1004\u103A\u1038 Dia \u101B\u1031\u102C\u1000\u103A\u1015\u102B\u1010\u101A\u103A\u104B Slip \u1005\u1005\u103A\u1010\u102C\u101C\u100A\u103A\u1038 \u1019\u103C\u1014\u103A\u1010\u101A\u103A\u104B','ShadowX - 86 Diamonds'],
+    ['Weekly Pass \u1000\u102D\u102F \u1021\u1019\u103C\u1032 BestDia \u1000\u1015\u1032 \u101A\u1030\u1010\u101A\u103A\u104B \u1005\u103B\u1031\u1038\u101C\u100A\u103A\u1038\u1000\u1031\u102C\u1004\u103A\u1038\u1010\u101A\u103A\u104B','MiyaQueen - Weekly Pass'],
+    ['Order status \u1000\u103C\u100A\u1037\u103A\u101C\u102D\u102F\u1037\u101B\u1010\u102C\u1000\u103C\u1031\u102C\u1004\u1037\u103A \u1004\u103D\u1031\u101C\u103D\u103E\u1032\u1015\u103C\u102E\u1038\u1014\u1031\u102C\u1000\u103A \u1005\u102D\u1010\u103A\u1001\u103B\u101B\u1015\u102B\u1010\u101A\u103A\u104B','KoHtet7 - 257 Diamonds']
+  ];
+  proofs.forEach((card,i)=>{
+    const q=card.querySelector('.proof-quote');
+    const n=card.querySelector('.proof-name');
+    if(q)q.textContent='"'+proofData[i][0]+'"';
+    if(n)n.textContent=proofData[i][1];
+  });
+  setText('#customerTrust .social-link','Telegram');
+  const footer=document.querySelector('footer');
+  if(footer)footer.innerHTML='<strong>BestDia</strong> - Myanmar MLBB Diamond Store<br/>Contact: <a href="https://t.me/BestDiaa" style="color:var(--diamond);text-decoration:none;">@BestDiaa</a><br/>\u1019\u102D\u1014\u1005\u103A\u1015\u102D\u102F\u1004\u103A\u1038\u1021\u1010\u103D\u1004\u103A\u1038 MLBB Diamond \u1019\u103B\u102C\u1038 \u101D\u101A\u103A\u101A\u1030\u1014\u102D\u102F\u1004\u103A\u101E\u1031\u102C \u1005\u102D\u1010\u103A\u1001\u103B\u101B\u101E\u1031\u102C \u1006\u102D\u102F\u1004\u103A\u104B<br/><br/><span style="font-size:0.65rem;opacity:0.42;">2026 BestDia - MLBB Diamond Top Up Store</span>';
+}
+function refreshHeroContent(){
+  const h=document.querySelector('.hero-copy h1');
+  const sub=document.querySelector('.hero-copy .hero-sub');
+  const eyebrow=document.querySelector('.hero-copy .hero-eyebrow');
+  const phoneTop=document.querySelector('.hero-phone-top span:first-child');
+  const payline=document.querySelector('.hero-payline span');
+  const paylineStrong=document.querySelector('.hero-payline strong');
+  if(eyebrow)eyebrow.textContent='BestDia \u1002\u102D\u1019\u103A\u1038\u1005\u1010\u102D\u102F\u1038';
+  if(h)h.textContent='Dia\u1019\u103B\u102C\u1038\u1000\u102D\u102F \u1005\u103B\u1031\u1038\u101E\u1000\u103A\u101E\u102C\u1005\u103D\u102C \u101D\u101A\u103A\u101A\u1030\u1014\u102D\u102F\u1004\u103A\u1015\u102B\u1015\u103C\u102E';
+  if(sub)sub.textContent='1-5 \u1019\u102D\u1014\u1005\u103A\u1021\u1010\u103D\u1004\u103A\u1038 \u1015\u102D\u102F\u1037\u1015\u1031\u1038\u1015\u103C\u102E\u1038 KBZPay / Wave Money \u1016\u103C\u1004\u1037\u103A slip \u1005\u1005\u103A\u1006\u1031\u1038\u1000\u102C \u1005\u102D\u1010\u103A\u1001\u103B\u1005\u103D\u102C\u101D\u101A\u103A\u101A\u1030\u1014\u102D\u102F\u1004\u103A\u1015\u102B\u101E\u100A\u103A\u104B';
+  if(phoneTop)phoneTop.textContent='\u101C\u1030\u101D\u101A\u103A\u1019\u103B\u102C\u1038\u101E\u1031\u102C Package \u1019\u103B\u102C\u1038';
+  if(payline)payline.textContent='\u1004\u103D\u1031\u101C\u103D\u103E\u1032 slip \u101C\u102D\u102F\u1021\u1015\u103A\u1015\u102B\u101E\u100A\u103A';
+  if(paylineStrong)paylineStrong.textContent='\u1005\u102D\u1010\u103A\u1001\u103B\u101B\u101E\u1031\u102C Order';
+  const statVals=['500+','98%','1-5 \u1019\u102D\u1014\u1005\u103A','24/7'];
+  const statLbls=['\u1021\u1031\u102C\u1004\u103A\u1019\u103C\u1004\u103A\u1015\u103C\u102E\u1038 Order \u1019\u103B\u102C\u1038','\u101D\u101A\u103A\u101E\u1030\u1000\u103B\u1031\u1014\u1015\u103A\u1019\u103E\u102F','\u1015\u103B\u1019\u103A\u1038\u1019\u103B\u103E\u1015\u102D\u102F\u1037\u1001\u103B\u102D\u1014\u103A','Telegram Support'];
+  document.querySelectorAll('.hero-copy .stat').forEach((stat,i)=>{
+    const val=stat.querySelector('.stat-val');
+    const lbl=stat.querySelector('.stat-lbl');
+    if(val)val.textContent=statVals[i]||val.textContent;
+    if(lbl)lbl.textContent=statLbls[i]||lbl.textContent;
+  });
+  [11,7,10,5].forEach((id,i)=>{
+    const p=currentPkgById(id);
+    const price=document.querySelectorAll('.hero-product span')[i];
+    if(p&&price)price.textContent=priceDisplay(p);
+  });
+}
+window.setCurrency=function(currency){
+  displayCurrency=currency==='thb'?'thb':'ks';
+  document.querySelectorAll('.currency-btn').forEach(btn=>{
+    btn.classList.toggle('active',btn.dataset.currency===displayCurrency);
+  });
+  renderPackages();
+  renderBestSellers();
+  refreshHeroContent();
+  if(sPkg){
+    document.querySelectorAll('.pkg-card').forEach(c=>c.classList.remove('selected'));
+    const selected=document.getElementById('pk'+sPkg.id);
+    if(selected)selected.classList.add('selected');
+    updSummary();
+  }
+};
+function relocateTrustSection(){
+  const shop=document.getElementById('page-shop');
+  const trust=document.getElementById('customerTrust');
+  if(shop&&trust&&trust.parentElement!==shop)shop.appendChild(trust);
+}
+window.selPkg=function(id){
+  sPkg=PKGS.find(p=>p.id===id);
+  document.querySelectorAll('.pkg-card').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('pk'+id).classList.add('selected');
+  updSummary();
+  document.querySelector('.order-box').scrollIntoView({behavior:'smooth',block:'nearest'});
+};
+window.selectHeroPkg=function(id){
+  showPage('shop');
+  const pkgEl=document.getElementById('pk'+id);
+  if(pkgEl){
+    selPkg(id);
+  }else{
+    document.getElementById('packages').scrollIntoView({behavior:'smooth',block:'start'});
+  }
+};
+window.selectPay=function(type,el){
+  sPay=type;
+  document.querySelectorAll('.pay-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  const d=PAY[type];
+  document.getElementById('payInfo').innerHTML=`
+    <div class="pay-info-row"><span class="pay-info-key">\u1014\u100A\u103A\u1038\u101C\u1019\u103A\u1038</span><span class="pay-info-val">${d.name}</span></div>
+    <div class="pay-info-row"><span class="pay-info-key">\u1016\u102F\u1014\u103A\u1038\u1014\u1036\u1015\u102B\u1010\u103A</span><span class="pay-info-val" onclick="copyText('${d.number}')">${d.number}</span></div>
+    <div class="pay-info-row"><span class="pay-info-key">\u1014\u102C\u1019\u100A\u103A</span><span class="pay-info-val">${d.holder}</span></div>
+    <p class="pay-note">\u1004\u103D\u1031\u101C\u103D\u103E\u1032 slip \u1000\u102D\u102F \u1021\u1031\u102C\u1000\u103A\u1000 field \u1019\u103E\u102C upload \u1010\u1004\u103A\u1015\u102B\u104B</p>`;
+  document.getElementById('payInfo').classList.add('show');
+  updSummary();
+};
+function updSummary(){
+  if(!sPkg)return;
+  const b=document.getElementById('summary');
+  const bonusNote=sPkg.firstBonus
+    ? `<div class="summary-row"><span class="summary-key">\u1014\u1031\u102C\u1000\u103A\u1015\u102D\u102F\u1004\u103A\u1038 Bonus</span><span class="summary-val">\u1015\u1011\u1019\u1006\u102F\u1036\u1038\u101D\u101A\u103A\u1015\u103C\u102E\u1038\u1014\u1031\u102C\u1000\u103A ${fmt(sPkg.baseDiamonds)}+${fmt(sPkg.regularBonus)} Diamonds</span></div>`
+    : '';
+  b.innerHTML=`
+    <div class="summary-row"><span class="summary-key">\u101B\u103D\u1031\u1038\u1011\u102C\u1038\u101E\u1031\u102C Package</span><span class="summary-val">${pkgSummary(sPkg)}</span></div>
+    <div class="summary-row"><span class="summary-key">\u1015\u103C\u1011\u102C\u1038\u101E\u1031\u102C \u1005\u103B\u1031\u1038</span><span class="summary-val">${priceDisplay(sPkg)}</span></div>
+    ${bonusNote}
+    <div class="summary-row"><span class="summary-key">\u1004\u103D\u1031\u1015\u1031\u1038\u1001\u103B\u1031\u1019\u103E\u102F</span><span class="summary-val">${sPay?PAY[sPay].name:'-'}</span></div>
+    <hr class="summary-divider"/>
+    <div class="summary-row summary-total"><span class="summary-key">\u1015\u1031\u1038\u101B\u1019\u100A\u1037\u103A\u1004\u103D\u1031</span><span class="summary-val">${fmt(sPkg.price)} Ks</span></div>`;
+  b.classList.add('show');
+}
+
+// Submit order to Firestore
+window.submitOrder=async function(){
+  const uid=document.getElementById('userId').value.trim();
+  const zid=document.getElementById('zoneId').value.trim();
+  const con=document.getElementById('contact').value.trim();
+  if(!sPkg){showToast('Package \u101B\u103D\u1031\u1038\u1015\u102B','warn');return;}
+  if(!uid){showToast('User ID \u1011\u100A\u1037\u103A\u1015\u102B','warn');return;}
+  if(!zid){showToast('Zone ID \u1011\u100A\u1037\u103A\u1015\u102B','warn');return;}
+  if(!con){showToast('\u1006\u1000\u103A\u101E\u103D\u101A\u103A\u101B\u1014\u103A \u1016\u102F\u1014\u103A\u1038\u1014\u1036\u1015\u102B\u1010\u103A \u1011\u100A\u1037\u103A\u1015\u102B','warn');return;}
+  if(!sPay){showToast('\u1004\u103D\u1031\u1015\u1031\u1038\u1001\u103B\u1031\u1019\u103E\u102F \u1014\u100A\u103A\u1038\u101C\u1019\u103A\u1038 \u101B\u103D\u1031\u1038\u1015\u102B','warn');return;}
+  if(!slipDataUrl){showToast('Upload your payment slip screenshot','warn');return;}
+
+  const btn=document.getElementById('submitBtn');
+  btn.disabled=true; btn.textContent='\u1019\u103E\u102C\u101A\u1030\u1019\u103E\u102F \u1010\u1004\u103A\u1014\u1031\u101E\u100A\u103A...';
+
+  const oid='BD'+Date.now().toString().slice(-6);
+  try{
+    saveCustomer();
+    let slip=null;
+    try{
+      slip=await uploadSlip(oid);
+    }catch(uploadError){
+      slip=fallbackSlip(uploadError);
+    }
+    await addDoc(collection(db,COL),{
+      id:oid, userId:uid, zoneId:zid, contact:con,
+      ign:currentIgn,
+      pkg:{
+        id:sPkg.id,name:sPkg.name,title:sPkg.title,diamonds:sPkg.diamonds||0,price:sPkg.price,img:sPkg.img,
+        baseDiamonds:sPkg.baseDiamonds||0,regularBonus:sPkg.regularBonus||0,firstBonus:sPkg.firstBonus||0,
+        supplierPriceThb:sPkg.supplierPriceThb||0,exchangeRateThbToKs:THB_TO_KS
+      },
+      payment:PAY[sPay].name, payKey:sPay,
+      paymentReference:oid,
+      paymentStatus:'slip_uploaded',
+      slip,
+      status:'pending',
+      createdAt:serverTimestamp(), updatedAt:serverTimestamp(),
+      timeline:[{status:'pending',time:Date.now()}]
+    });
+
+    // Telegram notify
+    const notified=await tgNotify(
+      `<b>[New Order]</b>\n`+
+      `Order ID: <code>${oid}</code>\n`+
+      `Package: ${pkgSummary(sPkg)}\n`+
+      `Amount: ${fmt(sPkg.price)} Ks\n`+
+      `User ID: ${uid} (Zone ${zid})\n`+
+      `In-game name: ${currentIgn||'Not verified'}\n`+
+      `Contact: ${con}\n`+
+      `Payment: ${PAY[sPay].name}\n`+
+      `Time: ${new Date().toLocaleString('en-US')}`
+      ,{slipDataUrl,slipFileName}
+    );
+
+    if(!notified){
+      const detail=window._lastTelegramError?' Check Telegram setup.':'';
+      showToast('Order saved, but Telegram bot notification failed.'+detail,'warn');
+    }
+
+    document.getElementById('modalBody').innerHTML=`
+      <b style="color:var(--success);">Order confirmed.</b><br/><br/>
+      Your order ID is <b style="color:var(--gold);font-family:'Chakra Petch',sans-serif;">${oid}</b>.<br/><br/>
+      Package: <b>${pkgDetail(sPkg)}</b><br/>
+      User: <b>${uid}</b> (Zone ${zid})<br/>
+      Amount: <b style="color:var(--gold);">${fmt(sPkg.price)} Ks</b><br/><br/>
+      We received your payment slip. Please keep your Order ID and check the Order Status page for live updates.<br/>
+      <span style="font-size:0.76rem;color:var(--muted);">Order ID: <b style="color:var(--gold)">${oid}</b></span>`;
+    document.getElementById('orderModal').classList.add('show');
+
+    document.querySelectorAll('.pkg-card').forEach(c=>c.classList.remove('selected'));
+    document.querySelectorAll('.pay-btn').forEach(b=>b.classList.remove('active'));
+    document.getElementById('payInfo').classList.remove('show');
+    document.getElementById('summary').classList.remove('show');
+    document.getElementById('paymentSlip').value='';
+    document.getElementById('slipPreview').classList.remove('show');
+    slipDataUrl='';slipFileName='';
+    sPkg=null; sPay=null;
+  }catch(e){
+    showToast('Error: '+e.message,'warn');
+  }finally{
+    btn.disabled=false; btn.textContent='\u1021\u1010\u100A\u103A\u1015\u103C\u102F \u1019\u103E\u102C\u101A\u1030\u1019\u100A\u103A';
+  }
+};
+
+// Order status search (Firestore)
+window.searchOrder=async function(){
+  const id=document.getElementById('searchId').value.trim().toUpperCase();
+  const res=document.getElementById('statusResult');
+  if(!id){showToast('Enter your Order ID','warn');return;}
+  res.innerHTML=`<div class="nf-box">Checking order...</div>`;
+  res.classList.add('show');
+  try{
+    const q=query(collection(db,COL));
+    const snap=await new Promise((resolve)=>{
+      const unsub=onSnapshot(q,s=>{unsub();resolve(s);});
+    });
+    const oDoc=snap.docs.find(d=>d.data().id===id);
+    if(!oDoc){
+      res.innerHTML=`<div class="nf-box"><div style="font-size:2rem;margin-bottom:10px;">?</div>
+        <div style="font-size:0.9rem;">Order not found</div>
+        <div style="font-size:0.76rem;margin-top:5px;">Please check your Order ID and try again.</div></div>`;
+      return;
+    }
+    const o=oDoc.data();
+    renderStatusResult(o);
+  }catch(e){
+    res.innerHTML=`<div class="nf-box">Error: ${e.message}</div>`;
+  }
+};
+
+function renderStatusResult(o){
+  const res=document.getElementById('statusResult');
+  const steps=[
+    {key:'pending',  label:'Order received',desc:'Waiting for payment slip review'},
+    {key:'processing',label:'Processing',    desc:'Admin is checking your order'},
+    {key:'completed',label:'Diamonds delivered', desc:'Top-up completed'},
+  ];
+  const ord=['pending','processing','completed','cancelled'];
+  const ci=ord.indexOf(o.status);
+  const tlHTML=steps.map((s,i)=>{
+    const si=ord.indexOf(s.key);
+    let dc='idle',lc='idle';
+    if(o.status==='cancelled'&&i===0){dc='done';lc='done';}
+    else if(si<ci){dc='done';lc='done';}
+    else if(si===ci){dc='active';lc='active';}
+    const te=o.timeline?.find(t=>t.status===s.key);
+    return `<div class="t-step">
+      <div class="t-line-wrap">
+        <div class="t-dot ${dc}"></div>
+        ${i<steps.length-1?'<div class="t-connector"></div>':''}
+      </div>
+      <div class="t-content">
+        <div class="t-label ${lc}">${s.label}</div>
+        <div class="t-time">${te?fmtT(te.time):s.desc}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  res.innerHTML=`
+    <div class="order-header">
+      <div><div class="order-id-lbl">Order ID</div><div class="order-id-big">${o.id}</div></div>
+      <span class="status-badge ${o.status}">${sLabel[o.status]}</span>
+    </div>
+    <div class="detail-grid">
+      <div class="detail-item"><div class="detail-lbl">Package</div><div class="detail-val">${pkgSummary(o.pkg)}</div></div>
+      <div class="detail-item"><div class="detail-lbl">Amount</div><div class="detail-val" style="color:var(--gold);font-family:'Chakra Petch',sans-serif;">${fmt(o.pkg.price)} Ks</div></div>
+      <div class="detail-item"><div class="detail-lbl">User ID</div><div class="detail-val">${o.userId} (Zone ${o.zoneId})</div></div>
+      <div class="detail-item"><div class="detail-lbl">In-game name</div><div class="detail-val">${o.ign||'Not verified'}</div></div>
+      <div class="detail-item"><div class="detail-lbl">Payment</div><div class="detail-val">${o.payment}</div></div>
+      <div class="detail-item"><div class="detail-lbl">Ordered at</div><div class="detail-val">${fmtT(o.createdAt)}</div></div>
+      <div class="detail-item"><div class="detail-lbl">Contact</div><div class="detail-val">${o.contact}</div></div>
+    </div>
+    ${slipUrl(o)?`<div class="detail-item" style="margin-bottom:16px;"><div class="detail-lbl">Payment slip</div><img class="slip-admin-img" src="${slipUrl(o)}" alt="Payment slip"/></div>`:''}
+    ${o.status==='cancelled'?`<div style="background:rgba(231,76,60,0.09);border:1px solid rgba(231,76,60,0.24);border-radius:9px;padding:11px 13px;font-size:0.8rem;color:var(--danger);margin-bottom:14px;">Order cancelled. Please contact ${TELE} for help.</div>`:''}
+    <div><div class="tl-title">Order Progress</div>${tlHTML}</div>`;
+}
+
+// Admin
+window.unlockAdmin=async function(){
+  const pw=document.getElementById('adminPw').value;
+  if(!pw){showToast('Enter password','warn');return;}
+  if(location.protocol==='file:'){
+    showToast('Admin login needs deployed site or local Cloudflare Pages server.','warn');
+    return;
+  }
+  try{
+    const res=await fetch('/api/admin-auth',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({adminPassword:pw})
+    });
+    const data=await res.json().catch(()=>({}));
+    if(res.ok&&data.ok){
+    adminUnlocked=true;
+    adminPasswordCache=pw;
+    document.getElementById('adminLock').style.display='none';
+    document.getElementById('adminDash').classList.add('show');
+    startLiveOrders();
+    }else{
+      showToast(data.error||'Wrong password','warn');
+      document.getElementById('adminPw').value='';
+    }
+  }catch(e){
+    showToast('Admin login failed: '+e.message,'warn');
+  }
+};
+window.logoutAdmin=function(){
+  adminUnlocked=false;
+  adminPasswordCache='';
+  if(unsubscribe)unsubscribe();
+  document.getElementById('adminLock').style.display='flex';
+  document.getElementById('adminDash').classList.remove('show');
+  document.getElementById('adminPw').value='';
+};
+
+function startLiveOrders(){
+  if(unsubscribe)unsubscribe();
+  const q=query(collection(db,COL),orderBy('createdAt','desc'));
+  unsubscribe=onSnapshot(q,snap=>{
+    allOrders=snap.docs.map(d=>({docId:d.id,...d.data()})).filter(o=>!o.archived);
+    renderKPI();
+    renderTable(filterState);
+    updNotify();
+  });
+}
+
+function renderKPI(){
+  const a=allOrders;
+  const completed=a.filter(o=>o.status==='completed');
+  const knownCompleted=completed.filter(hasSupplierCost);
+  const unknownCost=completed.length-knownCompleted.length;
+  const pen=a.filter(o=>o.status==='pending').length;
+  const comp=completed.length;
+  const gross=completed.reduce((sum,o)=>sum+Number(o.pkg?.price||0),0);
+  const cost=knownCompleted.reduce((sum,o)=>sum+supplierCostKs(o)+paymentFeeKs(o),0);
+  const net=knownCompleted.reduce((sum,o)=>sum+netProfitKs(o),0);
+  const netSub=unknownCost?`${unknownCost} completed order cost missing`:'Ks profit';
+  document.getElementById('kpiRow').innerHTML=`
+    <div class="kpi-card"><div class="kpi-lbl">Orders</div><div class="kpi-val blue">${a.length}</div><div class="kpi-sub">Active</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">Pending</div><div class="kpi-val warn">${pen}</div><div class="kpi-sub">Waiting</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">Completed</div><div class="kpi-val green">${comp}</div><div class="kpi-sub">Delivered</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">Gross Revenue</div><div class="kpi-val gold">${fmt(gross)}</div><div class="kpi-sub">Ks</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">Supplier Cost</div><div class="kpi-val warn">${fmt(cost)}</div><div class="kpi-sub">1 THB = ${THB_TO_KS} Ks</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">Net Revenue</div><div class="kpi-val green">${fmt(net)}</div><div class="kpi-sub">${netSub}</div></div>`;
+}
+
+window.resetAdminData=async function(){
+  if(!adminUnlocked){showToast('Admin only','warn');return;}
+  if(!allOrders.length){showToast('Admin data is already empty');return;}
+  const ok=confirm(`Archive ${allOrders.length} current orders and reset dashboard to 0?`);
+  if(!ok)return;
+  try{
+    await Promise.all(allOrders.map(o=>updateDoc(doc(db,COL,o.docId),{archived:true,archivedAt:serverTimestamp()})));
+    showToast('Admin dashboard reset to 0');
+  }catch(e){
+    showToast('Reset failed: '+e.message,'warn');
+  }
+};
+
+window.filterOrders=function(s,el){
+  filterState=s;
+  document.querySelectorAll('.f-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderTable(s);
+};
+
+function renderTable(s){
+  const list=s==='all'?allOrders:allOrders.filter(o=>o.status===s);
+  const tb=document.getElementById('tbody'),em=document.getElementById('emptyOrders');
+  if(!list.length){tb.innerHTML='';em.style.display='block';return;}
+  em.style.display='none';
+  tb.innerHTML=list.map(o=>`<tr>
+    <td><span class="oid">${o.id}</span><br/><span style="font-size:0.65rem;color:var(--muted);">${fmtT(o.createdAt)}</span></td>
+    <td>${pkgTitle(o.pkg)}<br/><span style="color:var(--diamond);font-family:'Chakra Petch',sans-serif;font-size:0.75rem;">${o.pkg.name||''}</span></td>
+    <td><span style="font-family:'Chakra Petch',sans-serif;font-size:0.75rem;">${o.userId}</span><br/><span style="font-size:0.64rem;color:var(--muted);">Zone ${o.zoneId}</span></td>
+    <td><span style="color:var(--gold);font-family:'Chakra Petch',sans-serif;">${fmt(o.pkg.price)}Ks</span><br/><span style="font-size:0.66rem;color:var(--muted);">${o.payment}</span></td>
+    <td><span style="color:var(--green);font-family:'Chakra Petch',sans-serif;">${netLabel(o)}</span><br/><span style="font-size:0.66rem;color:var(--muted);">profit</span></td>
+    <td><span class="status-badge ${o.status}" style="font-size:0.67rem;padding:3px 9px;">${sLabel[o.status]}</span><br/><span style="font-size:0.66rem;color:var(--muted);">MX: ${mxTopupText(o)}</span></td>
+    <td><div class="act-wrap">
+      <button class="ab ab-view" onclick="viewOrder('${o.docId}')">View</button>
+      ${o.status==='pending'?`<button class="ab ab-proc" onclick="updStatus('${o.docId}','processing')">Proc</button>`:''}
+      ${canSendMxTopup(o)?`<button class="ab ab-proc" onclick="sendMxTopup('${o.docId}')">Top</button>`:''}
+      ${canCompleteOrder(o)?`<button class="ab ab-comp" onclick="updStatus('${o.docId}','completed')">Done</button>`:''}
+      ${(o.status==='pending'||o.status==='processing')?`<button class="ab ab-canc" onclick="updStatus('${o.docId}','cancelled')">Cancel</button>`:''}
+    </div></td>
+  </tr>`).join('');
+}
+
+window.updStatus=async function(docId,ns){
+  try{
+    const o=allOrders.find(x=>x.docId===docId);
+    if(ns==='completed'&&!canCompleteOrder(o)){
+      showToast('Send MXShop top-up first. Complete will not order again.','warn');
+      return;
+    }
+    if(ns==='completed'&&o?.mxshopTopup?.status==='failed'){
+      const ok=confirm('MXShop was marked Check supplier. Complete only if diamonds were delivered. Complete this order now?');
+      if(!ok)return;
+    }
+    const tl=o?.timeline||[];
+    tl.push({status:ns,time:Date.now()});
+    const updateData={status:ns,updatedAt:serverTimestamp(),timeline:tl};
+    await updateDoc(doc(db,COL,docId),updateData);
+    const msgs={processing:'Marked Processing',completed:'Marked Completed',cancelled:'Order Cancelled'};
+    showToast(msgs[ns]||'Updated');
+    // Telegram status update
+    if(o){
+      await tgNotify(
+        `<b>[Order Updated]</b>\n`+
+        `${o.id} -> ${sLabel[ns]}\n`+
+        `${pkgSummary(o.pkg)} | User: ${o.userId}\n`+
+        `${o.contact}`
+      );
+    }
+  }catch(e){showToast('Error: '+e.message,'warn');}
+};
+
+window.sendMxTopup=async function(docId){
+  const order=allOrders.find(x=>x.docId===docId);
+  if(!order)return;
+  if(order.mxshopTopup?.status==='success'){
+    showToast('MXShop top-up was already sent. Complete the order now.','warn');
+    return;
+  }
+  if(order.mxshopTopup?.status==='sending'){
+    showToast('MXShop top-up is already sending. Please wait.','warn');
+    return;
+  }
+  const adminPassword=adminPasswordCache||document.getElementById('adminPw').value||prompt('Admin password');
+  if(!adminPassword)return;
+  try{
+    await updateDoc(doc(db,COL,docId),{
+      mxshopTopup:{status:'sending',startedAt:serverTimestamp()},
+      updatedAt:serverTimestamp()
+    });
+    showToast('Sending MXShop top-up...');
+    const topup=await runMxTopup(order,adminPassword);
+    await updateDoc(doc(db,COL,docId),{
+      mxshopTopup:topup,
+      updatedAt:serverTimestamp()
+    });
+    const req=topup.request||{};
+    alert(
+      `MXShop top-up sent\n\n`+
+      `Order: ${order.id}\n`+
+      `Package: ${pkgSummary(order.pkg)}\n`+
+      `Stock release: ${req.stockreleaselist_id||'unknown'}\n`+
+      `UID sent: ${req.uid||'unknown'}\n\n`+
+      `Now click Complete to close the order.`
+    );
+  }catch(e){
+    await updateDoc(doc(db,COL,docId),{
+      mxshopTopup:{status:'failed',error:e.message,request:e.mxshopRequest||null,response:e.mxshopResponse||null,failedAt:serverTimestamp()},
+      updatedAt:serverTimestamp()
+    }).catch(()=>{});
+    alert('MXShop top-up did not complete:\n\n'+e.message+'\n\nThe order was not marked Completed.');
+    showToast('Error: '+e.message,'warn');
+  }
+};
+
+async function runMxTopup(order,adminPassword){
+  return {
+    ...await requestMxTopup(order,adminPassword),
+    completedAt:serverTimestamp()
+  };
+}
+
+async function requestMxTopup(order,adminPassword){
+  const res=await fetch('/api/mxshop-topup',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({adminPassword,order})
+  });
+  const data=await res.json().catch(()=>({ok:false,error:'MXShop top-up function returned invalid JSON.'}));
+  if(!res.ok||!data.ok){
+    const detail=data.error||data.mxshop?.msg||data.mxshop?.message||'MXShop top-up failed';
+    const err=new Error(detail);
+    err.mxshopRequest=data.request||null;
+    err.mxshopResponse=data.mxshop||data||null;
+    throw err;
+  }
+  return {
+    status:data.skipped?'skipped':'success',
+    skipped:Boolean(data.skipped),
+    request:data.request||null,
+    response:data.mxshop||null
+  };
+}
+
+window.viewOrder=async function(docId){
+  const o=allOrders.find(x=>x.docId===docId);
+  if(!o)return;
+  const costRows=hasSupplierCost(o)
+    ? `<div class="vm-row"><span class="vm-k">Supplier cost</span><span class="vm-v">${fmt(supplierCostKs(o))} Ks (${supplierThb(o)} THB)</span></div>
+       <div class="vm-row"><span class="vm-k">Net revenue</span><span class="vm-v gold">${netLabel(o)}</span></div>`
+    : `<div class="vm-row"><span class="vm-k">Supplier cost</span><span class="vm-v">Set package cost first</span></div>`;
+  const topupRows=o.mxshopTopup
+    ? `<div class="vm-row"><span class="vm-k">MXShop top-up</span><span class="vm-v">${mxTopupText(o)}</span></div>
+       ${o.mxshopTopup.request?`<div class="vm-row"><span class="vm-k">MXShop request</span><span class="vm-v">Stock ${o.mxshopTopup.request.stockreleaselist_id||'-'} | UID ${o.mxshopTopup.request.uid||'-'}</span></div>`:''}
+       ${o.mxshopTopup.error?`<div class="vm-row"><span class="vm-k">MXShop error</span><span class="vm-v">${o.mxshopTopup.error}</span></div>`:''}`
+    : `<div class="vm-row"><span class="vm-k">MXShop top-up</span><span class="vm-v">Not sent yet</span></div>`;
+  document.getElementById('vmTitle').innerHTML=`Order <span style="color:var(--gold)">${o.id}</span>`;
+  document.getElementById('vmBody').innerHTML=`
+    <div class="vm-row"><span class="vm-k">Status</span><span class="vm-v"><span class="status-badge ${o.status}" style="font-size:0.72rem;padding:3px 9px;">${sLabel[o.status]}</span></span></div>
+    <div class="vm-row"><span class="vm-k">Package</span><span class="vm-v">${pkgSummary(o.pkg)}</span></div>
+    <div class="vm-row"><span class="vm-k">Amount</span><span class="vm-v gold">${fmt(o.pkg.price)} Ks</span></div>
+    ${costRows}
+    ${topupRows}
+    <div class="vm-row"><span class="vm-k">User ID</span><span class="vm-v">${o.userId}</span></div>
+    <div class="vm-row"><span class="vm-k">Zone ID</span><span class="vm-v">${o.zoneId}</span></div>
+    <div class="vm-row"><span class="vm-k">In-game name</span><span class="vm-v">${o.ign||'Not verified'}</span></div>
+    <div class="vm-row"><span class="vm-k">Contact</span><span class="vm-v">${o.contact}</span></div>
+    <div class="vm-row"><span class="vm-k">Payment</span><span class="vm-v">${o.payment}</span></div>
+    <div class="vm-row"><span class="vm-k">Created</span><span class="vm-v">${fmtT(o.createdAt)}</span></div>
+    ${slipUrl(o)?`<div class="vm-row"><span class="vm-k">Payment slip</span><span class="vm-v"><img class="slip-admin-img" src="${slipUrl(o)}" alt="Payment slip"/></span></div>`:''}`;
+  document.getElementById('vmActs').innerHTML=`
+    <button class="ab ab-view" style="flex:1;padding:9px;font-size:0.76rem;" onclick="closeModal('viewModal')">Close</button>
+    ${o.status==='pending'?`<button class="ab ab-proc" style="flex:1;padding:9px;font-size:0.76rem;" onclick="updStatus('${o.docId}','processing');closeModal('viewModal')">Processing</button>`:''}
+    ${canSendMxTopup(o)?`<button class="ab ab-proc" style="flex:1;padding:9px;font-size:0.76rem;" onclick="sendMxTopup('${o.docId}');closeModal('viewModal')">Top-up</button>`:''}
+    ${canCompleteOrder(o)?`<button class="ab ab-comp" style="flex:1;padding:9px;font-size:0.76rem;" onclick="updStatus('${o.docId}','completed');closeModal('viewModal')">Complete</button>`:''}`;
+  document.getElementById('viewModal').classList.add('show');
+};
+
+function updNotify(){
+  const c=allOrders.filter(o=>o.status==='pending').length;
+  document.getElementById('nCount').textContent=c;
+}
+window.showPendingAlert=function(){
+  const p=allOrders.filter(o=>o.status==='pending');
+  if(!p.length){showToast('No pending orders');return;}
+  alert(`Pending Orders ${p.length}:\n\n`+
+    p.map(o=>`- ${o.id} | ${pkgSummary(o.pkg)} | User:${o.userId} | ${o.contact}`).join('\n')+
+    `\n\nCheck screenshots in Telegram ${TELE}, then update status in Admin panel.`);
+};
+
+// Ticker
+function renderTicker(){
+  renderTrustTicker();
+}
+
+function sampleTickerItems(){
+  return [
+    "ShadowX bought 86 Diamonds",
+    "MiyaQueen bought Weekly Diamond Pass",
+    "KoHtet7 bought 257 Diamonds",
+    "ZxLancelot bought 172 Diamonds",
+    "AluGod bought Twilight Pass",
+    "FannyLord bought Weekly Elite Bundle",
+    "K1NGZin bought 706 Diamonds",
+    "NOVAx bought 429 Diamonds",
+    "M1KASA bought 600 Diamonds",
+    "Rexxar bought 50+50 Diamonds",
+    "ChouOnly bought 343 Diamonds",
+    "GusionX bought 792 Diamonds",
+    "KairiFan bought Monthly Epic Bundle",
+    "AceZero bought 150+150 Diamonds",
+    "LingMain bought 1049 Diamonds",
+    "SavageBoy bought Weekly Diamond Pass x2",
+    "RubyPro bought 2195 Diamonds",
+    "HayaKing bought 1135 Diamonds",
+    "NoobMaster bought 3688 Diamonds",
+    "XPanda bought Weekly Diamond Pass x3"
+  ];
+}
+function escapeText(value){
+  return String(value||'').replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[char]);
+}
+function safeTickerName(order,index){
+  const ign=String(order?.ign||'').trim();
+  if(isValidIgnName(ign))return ign;
+  const suffix=String(order?.id||order?.userId||index+1).replace(/\D/g,'').slice(-4)||String(index+1).padStart(2,'0');
+  return 'Player' + suffix;
+}
+function tickerTextFromOrder(order,index){
+  return safeTickerName(order,index) + ' bought ' + pkgSummary(order?.pkg||{});
+}
+function renderTrustTicker(){
+  const ticker=document.getElementById('ticker');
+  if(!ticker)return;
+  const liveItems=publicTickerOrders.map(tickerTextFromOrder);
+  const items=[...liveItems,...sampleTickerItems()].slice(0,30);
+  ticker.innerHTML=[...items,...items]
+    .map(x=>`<span class="ticker-item"><span class="ticker-dot"></span>${escapeText(x)}</span>`).join('');
+}
+function startPublicTicker(){
+  renderTrustTicker();
+  if(publicTickerUnsubscribe||location.protocol==='file:')return;
+  try{
+    const q=query(collection(db,COL),orderBy('createdAt','desc'));
+    publicTickerUnsubscribe=onSnapshot(q,snap=>{
+      publicTickerOrders=snap.docs
+        .map((docSnap,index)=>({docId:docSnap.id,_index:index,...docSnap.data()}))
+        .filter(o=>!o.archived&&o?.pkg)
+        .slice(0,10);
+      renderTrustTicker();
+    },error=>{
+      console.warn('Public purchase ticker unavailable:',error);
+      publicTickerOrders=[];
+      renderTrustTicker();
+    });
+  }catch(error){
+    console.warn('Public purchase ticker setup failed:',error);
+  }
+}
+
+window.runTelegramDiagnostic=async function(){
+  const adminPassword=document.getElementById('adminPw').value||prompt('Admin password');
+  if(!adminPassword)return;
+  try{
+    const res=await fetch('/api/telegram-diagnostic',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({adminPassword})
+    });
+    const raw=await res.text();
+    let data;
+    try{
+      data=JSON.parse(raw);
+    }catch{
+      alert(
+        'Telegram diagnostic function is not deployed.\n\n'+
+        'Cloudflare returned the website HTML instead of function JSON. Redeploy the site and make sure the functions/api route is included in the deploy.'
+      );
+      return;
+    }
+    const chats=(data.recentChats||[]).map(c=>`${c.chatId} ${c.name||c.username||''} ${c.text?'- '+c.text:''}`).join('\n');
+    alert(
+      `Telegram diagnostic\n\n`+
+      `OK: ${data.ok}\n`+
+      `Bot: ${data.bot?('@'+data.bot.username):'none'}\n`+
+      `Configured chat: ${data.configuredChatId||'missing'}\n`+
+      `Error: ${data.error||'none'}\n\n`+
+      `getMe: ${data.getMe?.description||data.getMe?.status||''}\n`+
+      `sendMessage: ${data.sendMessage?.description||data.sendMessage?.status||''}\n\n`+
+      `Recent chats from /start:\n${chats||'No recent chats. Send /start to the bot, then try again.'}`
+    );
+  }catch(e){
+    alert('Telegram diagnostic failed: '+e.message);
+  }
+};
+
+window.runMxshopDiagnostic=async function(){
+  const adminPassword=document.getElementById('adminPw').value||adminPasswordCache||prompt('Admin password');
+  if(!adminPassword)return;
+  try{
+    const res=await fetch('/api/mxshop-diagnostic',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({adminPassword})
+    });
+    const data=await res.json().catch(()=>({ok:false,error:'MXShop diagnostic function is not deployed or returned invalid JSON.'}));
+    const releases=(data.releases?.result||[])
+      .map(x=>`${x.stockreleaselist_id} | ${x.product_stockname} | ${x.price} THB${x.not_available?' | unavailable':''}`)
+      .join('\n');
+    alert(
+      `MXShop diagnostic\n\n`+
+      `OK: ${data.ok}\n`+
+      `StockIDX: ${data.stockIDX||'none'}\n`+
+      `Lookup token: ${data.lookup?.hasToken?'configured':'missing'}\n`+
+      `Lookup UID format: ${data.lookup?.uidFormat||'parens'}\n`+
+      `Hello: ${data.hello?.msg||data.hello?.success||'none'}\n`+
+      `Balance: ${data.balance?.result?.balance_current??'unknown'}\n`+
+      `Releases:\n${releases||data.error||data.releases?.msg||'No releases returned.'}`
+    );
+  }catch(e){
+    alert('MXShop diagnostic failed: '+e.message);
+  }
+};
+
+function addAdminDiagnosticButtons(){
+  const toolbar=document.querySelector('#page-admin .toolbar');
+  if(!toolbar||document.getElementById('botTestBtn'))return;
+  const btn=document.createElement('button');
+  btn.id='botTestBtn';
+  btn.className='notify-btn';
+  btn.type='button';
+  btn.textContent='Bot Test';
+  btn.onclick=runTelegramDiagnostic;
+  toolbar.appendChild(btn);
+  const mxBtn=document.createElement('button');
+  mxBtn.id='mxshopTestBtn';
+  mxBtn.className='notify-btn';
+  mxBtn.type='button';
+  mxBtn.textContent='MXShop Test';
+  mxBtn.onclick=runMxshopDiagnostic;
+  toolbar.appendChild(mxBtn);
+}
+
+if(location.protocol==='file:')document.getElementById('envWarning').classList.add('show');
+renderPackages();
+renderBestSellers();
+localizeStaticContent();
+refreshHeroContent();
+relocateTrustSection();
+startPublicTicker();
+bindCustomerMemory();
+bindSlipUpload();
+loadSavedCustomer();
+addAdminDiagnosticButtons();
+if(new URLSearchParams(location.search).get('admin')==='1')showPage('admin');
+</script>
+</body>
+</html>
