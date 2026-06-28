@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="description" content="BestDia is a Myanmar game top-up store for Mobile Legends diamonds, weekly passes, and PUBG Mobile UC with KBZPay and Wave Money support."/>
+<meta property="og:title" content="BestDia - Game Top Up Store"/>
+<meta property="og:description" content="Fast Mobile Legends and PUBG Mobile top-ups for Myanmar players."/>
+<meta property="og:type" content="website"/>
+<meta property="og:image" content="bestdia-profile.png"/>
+<title>BestDia - Game Top Up Store</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700;800&family=Noto+Sans+Myanmar:wght@400;600;700&display=swap" rel="stylesheet"/>
+<script src="firebase-config.js"></script>
+<style>
+:root{--gold:#F5C542;--diamond:#5BE3FF;--diamond2:#00B8D9;--dark:#07090F;--dark2:#0E1220;--panel:#1A2035;--panel2:#1F2840;--text:#E8EAF0;--muted:#8B96AE;--success:#2ECC71;--warn:#F39C12;--danger:#E74C3C;--kbz:#009BDE;--wave:#E91E8C}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{min-height:100vh;background:var(--dark);color:var(--text);font-family:"Noto Sans Myanmar",system-ui,sans-serif;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;z-index:-2;background:radial-gradient(circle at 20% 0%,rgba(91,227,255,.12),transparent 34%),radial-gradient(circle at 85% 18%,rgba(245,197,66,.09),transparent 26%),linear-gradient(180deg,#07090F,#0E1220 54%,#07090F)}
+body::after{content:"";position:fixed;inset:0;z-index:-1;background-image:linear-gradient(rgba(91,227,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(91,227,255,.035) 1px,transparent 1px);background-size:42px 42px;pointer-events:none}
+button,input{font:inherit}
+button{cursor:pointer}
+img{max-width:100%}
+nav{position:sticky;top:0;z-index:50;height:60px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;background:rgba(7,9,15,.9);border-bottom:1px solid rgba(91,227,255,.12);backdrop-filter:blur(16px)}
+.logo{font-family:"Chakra Petch",sans-serif;font-size:1.55rem;font-weight:800;background:linear-gradient(135deg,var(--diamond),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap}
+.nav-tabs{display:flex;gap:6px;overflow-x:auto}
+.nav-tab{border:1px solid transparent;border-radius:8px;background:transparent;color:var(--muted);padding:7px 10px;font-family:"Chakra Petch",sans-serif;font-size:.75rem;font-weight:800;white-space:nowrap}
+.nav-tab.active{color:var(--diamond);border-color:rgba(91,227,255,.35);background:rgba(91,227,255,.08)}
+.page{display:none;position:relative;z-index:1}
+.page.active{display:block}
+.hero{max-width:1060px;margin:0 auto;padding:54px 16px 28px;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(300px,.9fr);gap:28px;align-items:center}
+.eyebrow{display:inline-flex;border:1px solid rgba(91,227,255,.24);border-radius:99px;background:rgba(91,227,255,.08);color:var(--diamond);padding:6px 12px;font-family:"Chakra Petch",sans-serif;font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-bottom:16px}
+h1{font-family:"Chakra Petch",sans-serif;font-size:clamp(2.1rem,5vw,3.5rem);line-height:1.12;letter-spacing:0;margin-bottom:14px}
+h1 span{background:linear-gradient(135deg,var(--diamond),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero-sub{max-width:610px;color:var(--muted);font-size:.96rem;line-height:1.75;margin-bottom:20px}
+.hero-actions{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:10px 15px;border-radius:10px;border:1px solid rgba(91,227,255,.22);background:rgba(91,227,255,.06);color:var(--diamond);font-family:"Chakra Petch",sans-serif;font-size:.82rem;font-weight:800;text-decoration:none}
+.btn.primary{border:0;background:linear-gradient(135deg,var(--diamond2),var(--diamond));color:var(--dark)}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(80px,1fr));gap:8px;max-width:580px}
+.stat{background:rgba(26,32,53,.74);border:1px solid rgba(91,227,255,.1);border-radius:10px;padding:10px}
+.stat b{display:block;font-family:"Chakra Petch",sans-serif;color:var(--gold);font-size:.98rem}
+.stat span{display:block;color:var(--muted);font-size:.68rem;margin-top:2px}
+.hero-card{background:linear-gradient(180deg,rgba(31,40,64,.96),rgba(14,18,32,.98));border:1px solid rgba(91,227,255,.15);border-radius:18px;padding:18px;box-shadow:0 24px 70px rgba(0,0,0,.32)}
+.hero-card-top{display:flex;align-items:center;justify-content:space-between;color:var(--muted);font-family:"Chakra Petch",sans-serif;font-size:.76rem;margin-bottom:14px}
+.hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hero-product{min-height:148px;border:1px solid rgba(91,227,255,.12);border-radius:12px;background:#0E1220;padding:12px;text-align:center;color:inherit}
+.hero-product:hover{border-color:var(--diamond);transform:translateY(-2px)}
+.hero-product img{height:58px;object-fit:contain;margin-bottom:8px;filter:drop-shadow(0 8px 12px rgba(91,227,255,.16))}
+.hero-product b{display:block;font-family:"Chakra Petch",sans-serif;font-size:.84rem;line-height:1.25}
+.hero-product span{display:block;color:var(--gold);font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:.78rem;margin-top:4px}
+.ticker-wrap{overflow:hidden;border-top:1px solid rgba(91,227,255,.08);border-bottom:1px solid rgba(91,227,255,.08);background:rgba(91,227,255,.05);padding:8px 0;margin:18px 0 42px}
+.ticker{display:flex;gap:40px;white-space:nowrap;animation:ticker 28s linear infinite}
+@keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.ticker-item{display:inline-flex;align-items:center;gap:7px;color:var(--muted);font-family:"Chakra Petch",sans-serif;font-size:.74rem}
+.ticker-dot{width:6px;height:6px;border-radius:50%;background:var(--success)}
+.section{max-width:980px;margin:0 auto;padding:0 14px 44px}
+.section-title{display:flex;align-items:center;gap:10px;margin-bottom:15px;color:var(--muted);font-family:"Chakra Petch",sans-serif;font-size:.9rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+.section-title::after{content:"";height:1px;flex:1;background:linear-gradient(90deg,rgba(91,227,255,.2),transparent)}
+.game-switch,.best-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin-bottom:20px}
+.game-card,.best-card,.pkg-card,.order-box,.status-card,.admin-card,.feature{background:linear-gradient(180deg,rgba(31,40,64,.98),rgba(14,18,32,.98));border:1px solid rgba(91,227,255,.12);border-radius:12px}
+.game-card{display:flex;align-items:center;gap:13px;min-height:90px;padding:14px;text-align:left;color:var(--text)}
+.game-card.active{border-color:var(--gold);box-shadow:0 0 0 1px rgba(245,197,66,.34)}
+.game-card img{width:58px;height:58px;border-radius:14px;object-fit:cover}
+.game-card b{display:block;font-family:"Chakra Petch",sans-serif}
+.game-card span{display:block;color:var(--muted);font-size:.72rem;margin-top:3px}
+.topup-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.topup-title{display:flex;align-items:center;gap:12px}
+.topup-title img{width:58px;height:58px;border-radius:14px;object-fit:cover}
+.topup-title h2{font-family:"Chakra Petch",sans-serif;font-size:1.3rem}
+.currency-switch{display:inline-flex;gap:4px;border:1px solid rgba(91,227,255,.18);border-radius:10px;background:#0E1220;padding:3px}
+.currency-btn{border:0;border-radius:7px;background:transparent;color:var(--muted);font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:.76rem;min-width:54px;padding:7px 10px}
+.currency-btn.active{background:linear-gradient(135deg,var(--diamond2),var(--diamond));color:var(--dark)}
+.packages-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px}
+.pkg-card,.best-card{position:relative;min-height:190px;text-align:center;padding:15px 11px;color:inherit;transition:.2s}
+.pkg-card:hover,.best-card:hover{border-color:var(--diamond);transform:translateY(-2px)}
+.pkg-card.selected{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),0 8px 24px rgba(245,197,66,.13)}
+.badge{position:absolute;top:0;right:0;border-radius:0 12px 0 8px;background:linear-gradient(135deg,var(--gold),#E5A200);color:#07090F;padding:3px 8px;font-family:"Chakra Petch",sans-serif;font-size:.58rem;font-weight:800}
+.pkg-card img,.best-card img{height:54px;max-width:82px;object-fit:contain;margin:8px auto 10px;display:block;filter:drop-shadow(0 6px 12px rgba(91,227,255,.16))}
+.pkg-title,.best-title{font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:.9rem;line-height:1.28}
+.pkg-name{color:var(--muted);font-size:.67rem;line-height:1.35;margin-top:4px}
+.pkg-price,.best-price{margin-top:10px;color:var(--gold);font-family:"Chakra Petch",sans-serif;font-weight:800}
+.order-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(280px,.85fr);gap:14px;align-items:start}
+.order-box{padding:20px}
+.form-row{margin-bottom:14px}
+.form-label{display:block;color:var(--muted);font-family:"Chakra Petch",sans-serif;font-size:.75rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
+.form-input,.slip-input{width:100%;border:1px solid rgba(91,227,255,.14);border-radius:9px;background:#0E1220;color:var(--text);padding:11px 13px;outline:none}
+.form-input:focus{border-color:var(--diamond);box-shadow:0 0 0 3px rgba(91,227,255,.09)}
+.lookup-hint{min-height:1.3em;color:var(--muted);font-size:.74rem;margin-top:6px}.lookup-hint.ok{color:var(--success)}.lookup-hint.warn{color:var(--warn)}
+.payment-methods{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.pay-btn{border:2px solid rgba(91,227,255,.12);border-radius:11px;background:#0E1220;color:var(--text);padding:12px;font-family:"Chakra Petch",sans-serif;font-weight:800}
+.pay-btn.active{border-color:var(--diamond);background:rgba(91,227,255,.08)}
+.pay-info,.summary-box{display:none;border:1px solid rgba(91,227,255,.1);border-radius:11px;background:#0E1220;padding:13px;margin-top:10px}
+.pay-info.show,.summary-box.show{display:block}
+.row{display:flex;justify-content:space-between;gap:10px;margin-bottom:7px;font-size:.84rem}
+.row .k{color:var(--muted)}.row .v{font-family:"Chakra Petch",sans-serif;font-weight:800}.gold{color:var(--gold)}
+.slip-preview{display:none;align-items:center;gap:10px;margin-top:10px}.slip-preview.show{display:flex}.slip-preview img{width:58px;height:58px;border-radius:8px;object-fit:cover;border:1px solid rgba(91,227,255,.18)}
+.submit{width:100%;border:0;border-radius:11px;background:linear-gradient(135deg,var(--diamond2),var(--diamond));color:var(--dark);padding:14px;font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:.96rem;margin-top:8px}
+.submit:disabled{opacity:.55;cursor:not-allowed}
+.features{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+.feature{padding:16px;text-align:center}.feature b{display:block;color:var(--diamond);font-family:"Chakra Petch",sans-serif;margin-bottom:6px}.feature p{color:var(--muted);font-size:.76rem;line-height:1.6}
+.status-card,.admin-card{padding:20px;max-width:760px;margin:0 auto 18px}
+.search-row,.admin-login{display:flex;gap:8px}.search-row input,.admin-login input{flex:1}
+.status-result{display:none;margin-top:16px}.status-result.show{display:block}
+.detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin:14px 0}
+.detail-item{border:1px solid rgba(91,227,255,.1);border-radius:10px;background:#0E1220;padding:11px}.detail-lbl{color:var(--muted);font-size:.7rem}.detail-val{font-family:"Chakra Petch",sans-serif;font-weight:800;margin-top:3px;word-break:break-word}
+.status-badge{display:inline-flex;border-radius:99px;padding:4px 9px;font-family:"Chakra Petch",sans-serif;font-size:.7rem;font-weight:800}.status-badge.pending{background:rgba(243,156,18,.14);color:var(--warn)}.status-badge.processing{background:rgba(91,227,255,.12);color:var(--diamond)}.status-badge.completed{background:rgba(46,204,113,.12);color:var(--success)}.status-badge.cancelled{background:rgba(231,76,60,.12);color:var(--danger)}
+.admin-dash{display:none}.admin-dash.show{display:block}.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:12px}.kpi{border:1px solid rgba(91,227,255,.1);border-radius:10px;background:#0E1220;padding:11px}.kpi span{display:block;color:var(--muted);font-size:.68rem}.kpi b{display:block;font-family:"Chakra Petch",sans-serif;color:var(--gold);font-size:1.1rem}
+.filters{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}.filter{border:1px solid rgba(91,227,255,.18);border-radius:8px;background:#0E1220;color:var(--muted);padding:7px 10px;font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:.74rem}.filter.active{color:var(--diamond);border-color:var(--diamond)}
+.table-wrap{overflow:auto;border:1px solid rgba(91,227,255,.12);border-radius:12px}table{width:100%;border-collapse:collapse;min-width:760px;background:#0E1220}th,td{padding:10px;border-bottom:1px solid rgba(91,227,255,.08);font-size:.78rem;text-align:left;vertical-align:top}th{color:var(--muted);font-family:"Chakra Petch",sans-serif;text-transform:uppercase;font-size:.66rem}.act-wrap{display:flex;gap:5px;flex-wrap:wrap}.ab{border:0;border-radius:7px;padding:6px 8px;font-family:"Chakra Petch",sans-serif;font-size:.68rem;font-weight:800}.ab-view{background:rgba(91,227,255,.12);color:var(--diamond)}.ab-proc{background:rgba(243,156,18,.15);color:var(--warn)}.ab-comp{background:rgba(46,204,113,.15);color:var(--success)}.ab-canc{background:rgba(231,76,60,.15);color:var(--danger)}
+.modal{display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.72);align-items:center;justify-content:center;padding:18px}.modal.show{display:flex}.modal-card{max-width:520px;width:100%;max-height:86vh;overflow:auto;border:1px solid rgba(91,227,255,.16);border-radius:16px;background:#11182A;padding:18px}.modal-title{font-family:"Chakra Petch",sans-serif;font-size:1.2rem;margin-bottom:10px}.modal-body{color:var(--muted);line-height:1.7}.modal-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}.modal-close{margin-top:12px;width:100%}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);opacity:0;z-index:120;max-width:calc(100% - 24px);border:1px solid rgba(91,227,255,.18);border-radius:10px;background:#11182A;color:var(--text);padding:10px 14px;box-shadow:0 18px 45px rgba(0,0,0,.35);transition:.2s}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}.toast.warn{border-color:rgba(243,156,18,.35);color:var(--warn)}
+footer{position:relative;z-index:1;text-align:center;color:var(--muted);font-size:.74rem;line-height:1.8;padding:28px 14px;border-top:1px solid rgba(91,227,255,.09)}
+@media(max-width:760px){nav{height:auto;min-height:58px;align-items:flex-start;padding-top:10px;padding-bottom:10px;flex-direction:column}.nav-tabs{width:100%}.hero{grid-template-columns:1fr;padding-top:34px;text-align:center}.hero-sub{margin-left:auto;margin-right:auto}.hero-actions{justify-content:center}.stats{grid-template-columns:repeat(2,1fr);margin:auto}.order-grid{grid-template-columns:1fr}.search-row,.admin-login{flex-direction:column}.topup-head{align-items:flex-start;flex-direction:column}.payment-methods{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo">BestDia</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" type="button" data-page="shop">Shop</button>
+    <button class="nav-tab" type="button" data-page="status">Order Status</button>
+    <button class="nav-tab" type="button" data-page="admin">Admin</button>
+  </div>
+</nav>
+
+<main id="page-shop" class="page active">
+  <section class="hero">
+    <div>
+      <div class="eyebrow">Myanmar Game Top-Up Store</div>
+      <h1>Game top-ups made <span>fast and simple</span></h1>
+      <p class="hero-sub">Buy Mobile Legends diamonds, weekly passes, and PUBG Mobile UC with KBZPay or Wave Money. Upload your slip, keep your Order ID, and track delivery live.</p>
+      <div class="hero-actions">
+        <a class="btn primary" href="#topup">Top Up Now</a>
+        <button class="btn" type="button" data-page="status">Track Order</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><b>1-5 min</b><span>Typical delivery</span></div>
+        <div class="stat"><b>KBZ/Wave</b><span>Payment support</span></div>
+        <div class="stat"><b>MLBB</b><span>Auto supplier ready</span></div>
+        <div class="stat"><b>Live</b><span>Order tracking</span></div>
+      </div>
+    </div>
+    <div class="hero-card">
+      <div class="hero-card-top"><span>Popular packages</span><strong class="gold">Secure slip review</strong></div>
+      <div class="hero-grid" id="heroGrid"></div>
+    </div>
+  </section>
+
+  <div class="ticker-wrap"><div class="ticker" id="ticker"></div></div>
+
+  <section class="section">
+    <div class="section-title">Choose Game</div>
+    <div class="game-switch" id="gameSwitch"></div>
+  </section>
+
+  <section class="section" id="topup">
+    <div class="topup-head">
+      <div class="topup-title"><img id="topupLogo" alt="Selected game"/><div><h2 id="topupTitle"></h2><p class="hero-sub" id="topupSub" style="margin:2px 0 0;font-size:.8rem"></p></div></div>
+      <div class="currency-switch" role="group" aria-label="Currency">
+        <button class="currency-btn active" type="button" data-currency="ks">Ks</button>
+        <button class="currency-btn" type="button" data-currency="thb">THB</button>
+      </div>
+    </div>
+    <div class="section-title">Best Sellers</div>
+    <div class="best-grid" id="bestSellers"></div>
+    <div class="section-title">Packages</div>
+    <div class="packages-grid" id="packages"></div>
+  </section>
+
+  <section class="section">
+    <div class="section-title">Order Details</div>
+    <div class="order-grid">
+      <div class="order-box">
+        <div class="form-row">
+          <label class="form-label" for="userId" id="userLabel">User ID</label>
+          <input class="form-input" id="userId" autocomplete="off"/>
+          <div class="lookup-hint" id="lookupHint"></div>
+        </div>
+        <div class="form-row" id="zoneRow">
+          <label class="form-label" for="zoneId">Zone ID</label>
+          <input class="form-input" id="zoneId" autocomplete="off"/>
+        </div>
+        <div class="form-row">
+          <label class="form-label" for="contact">Contact Phone / Telegram</label>
+          <input class="form-input" id="contact" autocomplete="off" placeholder="09xxxxxxxx or @username"/>
+        </div>
+        <div class="form-row">
+          <div class="form-label">Payment Method</div>
+          <div class="payment-methods">
+            <button class="pay-btn" type="button" data-pay="kbz">KBZPay</button>
+            <button class="pay-btn" type="button" data-pay="wave">Wave Money</button>
+          </div>
+          <div class="pay-info" id="payInfo"></div>
+        </div>
+        <div class="form-row">
+          <label class="form-label" for="paymentSlip">Payment slip screenshot</label>
+          <input class="slip-input" id="paymentSlip" type="file" accept="image/*"/>
+          <div class="slip-preview" id="slipPreview"><img alt="Payment slip preview"/><span id="slipName"></span></div>
+        </div>
+      </div>
+      <div class="order-box">
+        <div class="section-title" style="margin-bottom:10px">Summary</div>
+        <div class="summary-box show" id="summary"></div>
+        <button class="submit" id="submitBtn" type="button">Confirm Order</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="features">
+      <div class="feature"><b>Fast Review</b><p>Orders include slip upload and Telegram notification for quick admin handling.</p></div>
+      <div class="feature"><b>Order Tracking</b><p>Customers only need their Order ID to check current delivery status.</p></div>
+      <div class="feature"><b>Private Admin</b><p>Admin reads and updates are routed through password-protected API functions.</p></div>
+    </div>
+  </section>
+</main>
+
+<main id="page-status" class="page">
+  <section class="section" style="padding-top:42px">
+    <div class="status-card">
+      <div class="section-title">Track Order</div>
+      <div class="search-row">
+        <input class="form-input" id="searchId" placeholder="Enter Order ID, example BD123456"/>
+        <button class="btn primary" type="button" id="searchBtn">Check</button>
+      </div>
+      <div class="status-result" id="statusResult"></div>
+    </div>
+  </section>
+</main>
+
+<main id="page-admin" class="page">
+  <section class="section" style="padding-top:42px">
+    <div class="admin-card" id="adminLock">
+      <div class="section-title">Admin Login</div>
+      <div class="admin-login">
+        <input class="form-input" id="adminPw" type="password" placeholder="Admin password"/>
+        <button class="btn primary" type="button" id="adminLoginBtn">Login</button>
+      </div>
+    </div>
+    <div class="admin-dash" id="adminDash">
+      <div class="admin-card">
+        <div class="topup-head">
+          <div><div class="section-title" style="margin-bottom:6px">Admin Dashboard</div><p class="hero-sub" style="margin:0;font-size:.78rem">Orders sync through secured API endpoints.</p></div>
+          <button class="btn" type="button" id="logoutBtn">Logout</button>
+        </div>
+        <div class="kpis" id="kpiRow"></div>
+        <div class="filters" id="filters">
+          <button class="filter active" type="button" data-filter="all">All</button>
+          <button class="filter" type="button" data-filter="pending">Pending</button>
+          <button class="filter" type="button" data-filter="processing">Processing</button>
+          <button class="filter" type="button" data-filter="completed">Completed</button>
+          <button class="filter" type="button" data-filter="cancelled">Cancelled</button>
+          <button class="filter" type="button" id="resetBtn">Reset</button>
+        </div>
+        <div class="table-wrap"><table><thead><tr><th>Order</th><th>Package</th><th>Player</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead><tbody id="tbody"></tbody></table></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="modal" id="orderModal"><div class="modal-card"><div class="modal-title">Order Confirmed</div><div class="modal-body" id="modalBody"></div><button class="btn primary modal-close" type="button" data-close="orderModal">Close</button></div></div>
+<div class="modal" id="viewModal"><div class="modal-card"><div class="modal-title" id="vmTitle"></div><div class="modal-body" id="vmBody"></div><div class="modal-actions" id="vmActs"></div></div></div>
+<div class="toast" id="toast"></div>
+
+<footer>
+  <strong>BestDia</strong> - Myanmar Game Top Up Store<br/>
+  Contact: <a href="https://t.me/BestDiaa" target="_blank" rel="noopener" style="color:var(--diamond);text-decoration:none">@BestDiaa</a><br/>
+  <span style="font-size:.65rem;opacity:.65">2026 BestDia - Game Top Up Store</span>
+</footer>
+
+<script type="module">
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+import { getStorage, ref as storageRef, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-storage.js";
+
+const app=getApps().length?getApps()[0]:initializeApp(window.FIREBASE_CONFIG);
+const db=getFirestore(app);
+const storage=getStorage(app);
+const COL="orders";
+const TELE="@BestDiaa";
+const THB_TO_KS=133.5;
+const PAYMENT_FEE_RATE=0;
+const sLabel={pending:"Pending",processing:"Processing",completed:"Completed",cancelled:"Cancelled"};
+const PAY={kbz:{name:"KBZPay",number:"09752588797",holder:"MayThet Wai"},wave:{name:"Wave Money",number:"09752588797",holder:"MayThet Wai"}};
+const assetUrl=path=>new URL(path,document.baseURI).href;
+const PKG_IMG={
+  mlbbLogo:"https://play-lh.googleusercontent.com/0gB6KEvQzyQXS6Uscx7HNjjlRMRUzEvYFqWr0TlmwHw6cw3nNRNSR9xChp-EUrk3Cq1lqTlsE1DbPgc97YClXVU%3Dw240-h480",
+  pubgLogo:"https://play-lh.googleusercontent.com/Se7jR6A5R0Mk9ClaIguf46yi2K3k32JsqKb3gAtrktIh3JwnFfxrQRmG9GLvdMpbxbMrReUOxzDkStxGxNo-5Q%3Dw240-h480",
+  diamonds:"https://cdn.unipin.com/images/denom_group/ml-diamonds.png",
+  weekly:"https://cdn.unipin.com/images/denom_group/ml-weekly.png",
+  twilight:"https://cdn.unipin.com/images/denom_group/ml-twilight.png",
+  weeklyElite:"https://cdn.unipin.com/images/denom_group/ml-weeklyeb.png",
+  monthlyEpic:"https://cdn.unipin.com/images/denom_group/ml-monthlyeb.png",
+  pubgUc:assetUrl("assets/pubg/uc-60.png"),
+  pubgPrime:assetUrl("assets/pubg/prime-1-month.png"),
+  pubgPack:assetUrl("assets/pubg/first-purchase-pack.png")
+};
+const pubgAsset=name=>assetUrl(`assets/pubg/${name}.png`);
+const MLBB_PKGS=[
+  {id:1,title:"50+5 Diamonds",name:"Special Bonus",diamonds:55,baseDiamonds:50,regularBonus:5,firstBonus:50,supplierPriceThb:26.13,img:PKG_IMG.diamonds,popular:true,mxshopStockReleaseId:"169991"},
+  {id:2,title:"150+15 Diamonds",name:"Special Bonus",diamonds:165,baseDiamonds:150,regularBonus:15,firstBonus:150,supplierPriceThb:78.32,img:PKG_IMG.diamonds,mxshopStockReleaseId:"169992"},
+  {id:3,title:"250+25 Diamonds",name:"Special Bonus",diamonds:275,baseDiamonds:250,regularBonus:25,firstBonus:250,supplierPriceThb:125.63,img:PKG_IMG.diamonds,mxshopStockReleaseId:"169993"},
+  {id:4,title:"500+65 Diamonds",name:"Special Bonus",diamonds:565,baseDiamonds:500,regularBonus:65,firstBonus:500,supplierPriceThb:257.95,img:PKG_IMG.diamonds,popular:true,mxshopStockReleaseId:"169994"},
+  {id:5,title:"Weekly Elite Bundle",name:"Bundle",supplierPriceThb:25.74,img:PKG_IMG.weeklyElite,popular:true},
+  {id:6,title:"Monthly Epic Bundle",name:"Bundle",supplierPriceThb:127.92,img:PKG_IMG.monthlyEpic},
+  {id:7,title:"Weekly Diamond Pass",name:"Pass",supplierPriceThb:49.40,img:PKG_IMG.weekly,popular:true,mxshopStockReleaseId:"169995"},
+  {id:8,title:"Weekly Diamond Pass x2",name:"Pass",supplierPriceThb:98.80,img:PKG_IMG.weekly,mxshopStockReleaseId:"169998"},
+  {id:9,title:"Weekly Diamond Pass x3",name:"Pass",supplierPriceThb:148.20,img:PKG_IMG.weekly,mxshopStockReleaseId:"169999"},
+  {id:10,title:"Twilight Pass",name:"Pass",supplierPriceThb:261.63,img:PKG_IMG.twilight,popular:true,mxshopStockReleaseId:"169996"},
+  {id:11,title:"86 Diamonds",name:"78 + 8 Bonus",diamonds:86,supplierPriceThb:39.38,img:PKG_IMG.diamonds,popular:true,mxshopStockReleaseId:"170014"},
+  {id:12,title:"172 Diamonds",name:"156 + 16 Bonus",diamonds:172,supplierPriceThb:78.08,img:PKG_IMG.diamonds,mxshopStockReleaseId:"170015"},
+  {id:13,title:"257 Diamonds",name:"234 + 23 Bonus",diamonds:257,supplierPriceThb:113.09,img:PKG_IMG.diamonds,mxshopStockReleaseId:"170016"},
+  {id:14,title:"343 Diamonds",name:"312 + 31 Bonus",diamonds:343,supplierPriceThb:152.45,img:PKG_IMG.diamonds,mxshopStockReleaseId:"170017"},
+  {id:15,title:"429 Diamonds",name:"390 + 39 Bonus",diamonds:429,supplierPriceThb:191.17,img:PKG_IMG.diamonds,mxshopStockReleaseId:"170018"},
+  {id:16,title:"600 Diamonds",name:"546 + 54 Bonus",diamonds:600,supplierPriceThb:265.54,img:PKG_IMG.diamonds,mxshopStockReleaseId:"170019"},
+  {id:17,title:"706 Diamonds",name:"625 + 81 Bonus",diamonds:706,supplierPriceThb:307.2,img:PKG_IMG.diamonds,mxshopStockReleaseId:"170020"},
+  {id:18,title:"792 Diamonds",name:"703 + 89 Bonus",diamonds:792,supplierPriceThb:346.56,img:PKG_IMG.diamonds,mxshopStockReleaseId:"170021"},
+  {id:19,title:"1049 Diamonds",name:"937 + 112 Bonus",diamonds:1049,supplierPriceThb:459.65,img:PKG_IMG.diamonds,mxshopStockReleaseId:"170022"},
+  {id:20,title:"1135 Diamonds",name:"1015 + 120 Bonus",diamonds:1135,supplierPriceThb:498.37,img:PKG_IMG.diamonds,mxshopStockReleaseId:"170023"},
+  {id:21,title:"2195 Diamonds",name:"1860 + 335 Bonus",diamonds:2195,supplierPriceThb:929.92,img:PKG_IMG.diamonds,popular:true,mxshopStockReleaseId:"170024"},
+  {id:22,title:"3688 Diamonds",name:"3099 + 589 Bonus",diamonds:3688,supplierPriceThb:1541.66,img:PKG_IMG.diamonds,mxshopStockReleaseId:"170025"},
+  {id:23,title:"5532 Diamonds",name:"4649 + 883 Bonus",diamonds:5532,supplierPriceThb:2322.15,img:PKG_IMG.diamonds,mxshopStockReleaseId:"170026"},
+  {id:24,title:"9288 Diamonds",name:"7740 + 1548 Bonus",diamonds:9288,supplierPriceThb:3844.36,img:PKG_IMG.diamonds,mxshopStockReleaseId:"170027"}
+];
+const PUBG_PKGS=[
+  ["60",32.10,true],["120",64.20,true],["180",96.30],["325",148.50,true],["385",180.60],["660",295.01,true],["720",325.01],["985",443.50],["1045",475.50],["1320",589.01],["1800",730.01,true],["1920",789.20],["2125",874.50],["2460",1020.01],["3850",1435.01],["8100",2835.01,true],["16200",5670.02],["24300",8505.03],["72900",25515.09]
+].map(([uc,thb,popular])=>({id:`pubg-${uc}`,title:`${uc} UC`,name:"",uc:Number(uc),supplierPriceThb:thb,img:pubgAsset(`uc-${uc}`),popular:Boolean(popular)})).concat([
+  {id:"pubg-first-purchase-pack",title:"First Purchase Pack",name:"Special Pack",supplierPriceThb:32.10,img:pubgAsset("first-purchase-pack"),popular:true},
+  {id:"pubg-prime-1-month",title:"Prime 1 Month",name:"Subscription",supplierPriceThb:33.01,img:pubgAsset("prime-1-month")},
+  {id:"pubg-firearm-materials-pack",title:"Upgradable Firearm Materials Pack",name:"Materials Pack",supplierPriceThb:89.10,img:pubgAsset("firearm-materials-pack")},
+  {id:"pubg-prime-3-month",title:"Prime 3 Month",name:"Subscription",supplierPriceThb:95.01,img:pubgAsset("prime-3-month")},
+  {id:"pubg-mythic-emblem-pack",title:"Mythic Emblem Pack",name:"Special Pack",supplierPriceThb:148.50,img:pubgAsset("mythic-emblem-pack")},
+  {id:"pubg-prime-plus-1-month",title:"Prime Plus 1 Month",name:"Subscription",supplierPriceThb:299.01,img:pubgAsset("prime-plus-1-month")},
+  {id:"pubg-prime-plus-3-month",title:"Prime Plus 3 Month",name:"Subscription",supplierPriceThb:890.01,img:pubgAsset("prime-plus-3-month")}
+]);
+const PRODUCTS={
+  mlbb:{key:"mlbb",name:"Mobile Legends",shortName:"MLBB",unit:"Diamonds",tagline:"Diamonds, passes, and bundles",userLabel:"MLBB User ID",userPlaceholder:"Example - 123456789",zoneLabel:"Zone ID",zonePlaceholder:"Example - 12345",requiresZone:true,lookup:true,heroIds:[11,7,10,5],bestIds:[11,12,13,7,5,10],img:PKG_IMG.mlbbLogo,packages:MLBB_PKGS},
+  pubg:{key:"pubg",name:"PUBG Mobile",shortName:"PUBG",unit:"UC",tagline:"UC and subscription packs",userLabel:"PUBG Player ID",userPlaceholder:"Example - 5123456789",requiresZone:false,lookup:false,heroIds:["pubg-60","pubg-660","pubg-1800","pubg-prime-plus-1-month"],bestIds:["pubg-60","pubg-325","pubg-660","pubg-1800","pubg-8100","pubg-prime-plus-1-month"],img:PKG_IMG.pubgLogo,packages:PUBG_PKGS}
+};
+
+const priceMarginByThb=thb=>thb<150?.05:(thb<500?.03:.02);
+const roundKsToLast2=ks=>Math.round(ks/100)*100;
+const packagePriceThb=p=>Math.round(Number(p.supplierPriceThb||0)*(1+priceMarginByThb(Number(p.supplierPriceThb||0))));
+const packagePriceKs=p=>roundKsToLast2(Number(p.supplierPriceThb||0)*THB_TO_KS*(1+priceMarginByThb(Number(p.supplierPriceThb||0))));
+Object.values(PRODUCTS).forEach(product=>product.packages.forEach(p=>{p.price=packagePriceKs(p);}));
+
+let activeGameKey="mlbb",activeProduct=PRODUCTS.mlbb,PKGS=activeProduct.packages,sPkg=null,sPay=null,displayCurrency="ks";
+let allOrders=[],filterState="all",adminUnlocked=false,adminPasswordCache="",adminPoll=null,currentIgn="",slipDataUrl="",slipFileName="",lookupTimer=null,lookupSeq=0,publicTickerItems=[];
+
+const $=sel=>document.querySelector(sel);
+const $$=sel=>Array.from(document.querySelectorAll(sel));
+const fmt=n=>Number(n||0).toLocaleString();
+const escapeText=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
+const pkgTitle=p=>p?.title||`${fmt(p?.diamonds||0)} Diamonds`;
+const pkgPurchaseTitle=p=>p?.firstBonus?`${fmt(p.baseDiamonds)}+${fmt(p.firstBonus)} Diamonds`:pkgTitle(p);
+const pkgSummary=p=>p?.firstBonus?`${pkgPurchaseTitle(p)} - First Purchase Bonus`:`${pkgTitle(p)}${p?.name?" - "+p.name:""}`;
+const priceDisplay=p=>displayCurrency==="thb"?`${fmt(packagePriceThb(p))} THB`:`${fmt(Number(p?.price||0))} Ks`;
+const productForOrder=o=>PRODUCTS[o?.gameKey]||PRODUCTS[o?.pkg?.gameKey]||PRODUCTS.mlbb;
+const playerLine=o=>productForOrder(o).requiresZone&&o.zoneId?`${o.userId} (Zone ${o.zoneId})`:String(o.userId||"-");
+const supplierThb=o=>Number(o?.pkg?.supplierPriceThb||currentPkgById(o?.pkg?.id).supplierPriceThb||0);
+const supplierCostKs=o=>Math.round(supplierThb(o)*Number(o?.pkg?.exchangeRateThbToKs||THB_TO_KS));
+const netProfitKs=o=>Number(o?.pkg?.price||0)-supplierCostKs(o)-Math.round(Number(o?.pkg?.price||0)*PAYMENT_FEE_RATE);
+const netLabel=o=>supplierThb(o)>0?`${fmt(netProfitKs(o))} Ks`:"Set cost";
+const allProductPackages=()=>Object.values(PRODUCTS).flatMap(product=>product.packages);
+const currentPkgById=id=>allProductPackages().find(p=>String(p.id)===String(id))||{};
+const hasMxPackageMapping=o=>Boolean(o?.pkg?.mxshopStockReleaseId||currentPkgById(o?.pkg?.id).mxshopStockReleaseId);
+const hasMxAttempt=o=>Boolean(o?.mxshopTopup);
+const canSendMxTopup=o=>(o?.gameKey||o?.pkg?.gameKey||"mlbb")==="mlbb"&&hasMxPackageMapping(o)&&o?.status==="processing"&&!hasMxAttempt(o);
+const canCompleteOrder=o=>o?.status==="processing"&&(productForOrder(o).key!=="mlbb"||!hasMxPackageMapping(o)||(hasMxAttempt(o)&&o.mxshopTopup?.status!=="sending"));
+const mxTopupText=o=>{const t=o?.mxshopTopup;if(productForOrder(o).key==="mlbb"&&!hasMxPackageMapping(o))return"Manual";if(!t)return"Not sent";if(t.status==="success")return"Sent";if(t.status==="sending")return"Sending";if(t.status==="failed")return"Check supplier";return t.status||"Unknown";};
+const fmtT=ts=>{if(!ts)return "-";const d=ts.toDate?ts.toDate():new Date(ts);return Number.isNaN(d.getTime())?"-":d.toLocaleString("en-US",{month:"short",day:"2-digit",hour:"2-digit",minute:"2-digit"});};
+
+function showToast(msg,type=""){const t=$("#toast");t.textContent=msg;t.className=`toast show ${type}`;clearTimeout(showToast.timer);showToast.timer=setTimeout(()=>t.className="toast",3200);}
+async function apiPost(path,payload){const res=await fetch(path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload||{})});const data=await res.json().catch(()=>({ok:false,error:"API returned invalid JSON."}));if(!res.ok||data.ok===false)throw new Error(data.error||data.details||"API request failed");return data;}
+const adminApi=(path,payload={})=>apiPost(path,{adminPassword:adminPasswordCache,...payload});
+async function tgNotify(msg,extra={}){try{const res=await fetch("/api/telegram-notify",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:msg,...extra})});return res.ok;}catch{return false;}}
+
+function showPage(page){$$(".page").forEach(p=>p.classList.remove("active"));$(`#page-${page}`)?.classList.add("active");$$(".nav-tab").forEach(b=>b.classList.toggle("active",b.dataset.page===page));window.scrollTo({top:0,behavior:"smooth"});}
+$$("[data-page]").forEach(el=>el.addEventListener("click",()=>showPage(el.dataset.page)));
+$$("[data-close]").forEach(el=>el.addEventListener("click",()=>$("#"+el.dataset.close).classList.remove("show")));
+
+function renderGameSwitch(){ $("#gameSwitch").innerHTML=Object.values(PRODUCTS).map(p=>`<button class="game-card ${p.key===activeGameKey?"active":""}" type="button" data-game="${p.key}"><img src="${escapeText(p.img)}" alt="${escapeText(p.name)}"/><span><b>${escapeText(p.name)}</b><span>${escapeText(p.tagline)}</span></span></button>`).join("");$$("[data-game]").forEach(btn=>btn.addEventListener("click",()=>openGame(btn.dataset.game)));}
+function packageFallbackImg(p){
+  if(activeProduct.key!=="pubg")return activeProduct.img;
+  if(p?.uc)return PKG_IMG.pubgUc;
+  if(/prime/i.test(`${p?.id||""} ${p?.title||""}`))return PKG_IMG.pubgPrime;
+  return PKG_IMG.pubgPack;
+}
+function pkgImgTag(p,cls=""){const src=escapeText(p.img||packageFallbackImg(p)),fallback=escapeText(packageFallbackImg(p));return `<img ${cls?`class="${cls}"`:""} src="${src}" alt="${escapeText(pkgTitle(p))}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='${fallback}'"/>`;}
+function renderHero(){const items=activeProduct.heroIds.map(currentPkgById).filter(p=>p.id).slice(0,4);$("#heroGrid").innerHTML=items.map(p=>`<button class="hero-product" type="button" data-pkg="${escapeText(p.id)}">${pkgImgTag(p)}<b>${escapeText(pkgPurchaseTitle(p))}</b><span>${escapeText(priceDisplay(p))}</span></button>`).join("");$("#heroGrid").querySelectorAll("[data-pkg]").forEach(b=>b.addEventListener("click",()=>{selectPkg(b.dataset.pkg);$("#topup").scrollIntoView({behavior:"smooth"});}));}
+function renderBest(){const best=activeProduct.bestIds.map(currentPkgById).filter(p=>p.id);$("#bestSellers").innerHTML=best.map(p=>`<button class="best-card" type="button" data-pkg="${escapeText(p.id)}"><span class="badge">HOT</span>${pkgImgTag(p)}<div class="best-title">${escapeText(pkgPurchaseTitle(p))}</div><div class="best-price">${escapeText(priceDisplay(p))}</div></button>`).join("");$("#bestSellers").querySelectorAll("[data-pkg]").forEach(b=>b.addEventListener("click",()=>selectPkg(b.dataset.pkg)));}
+function renderPackages(){ $("#packages").innerHTML=PKGS.map(p=>`<button class="pkg-card ${sPkg&&String(sPkg.id)===String(p.id)?"selected":""}" type="button" data-pkg="${escapeText(p.id)}">${p.popular?'<span class="badge">POPULAR</span>':""}${pkgImgTag(p)}<div class="pkg-title">${escapeText(pkgPurchaseTitle(p))}</div><div class="pkg-name">${escapeText(p.name||activeProduct.unit)}</div><div class="pkg-price">${escapeText(priceDisplay(p))}</div></button>`).join("");$("#packages").querySelectorAll("[data-pkg]").forEach(b=>b.addEventListener("click",()=>selectPkg(b.dataset.pkg)));}
+function renderTopupHead(){ $("#topupLogo").src=activeProduct.img;$("#topupLogo").alt=activeProduct.name;$("#topupTitle").textContent=activeProduct.name;$("#topupSub").textContent=activeProduct.tagline;$("#userLabel").textContent=activeProduct.userLabel;$("#userId").placeholder=activeProduct.userPlaceholder;$("#zoneRow").style.display=activeProduct.requiresZone?"block":"none";$("#zoneId").placeholder=activeProduct.zonePlaceholder||"";}
+function openGame(key){activeGameKey=key;activeProduct=PRODUCTS[key];PKGS=activeProduct.packages;sPkg=null;currentIgn="";$("#lookupHint").textContent="";renderAll();}
+function selectPkg(id){sPkg=PKGS.find(p=>String(p.id)===String(id))||currentPkgById(id);renderPackages();renderBest();updateSummary();}
+function selectPay(key){sPay=key;$$(".pay-btn").forEach(b=>b.classList.toggle("active",b.dataset.pay===key));const d=PAY[key];$("#payInfo").innerHTML=`<div class="row"><span class="k">Method</span><span class="v">${escapeText(d.name)}</span></div><div class="row"><span class="k">Phone</span><button class="btn" type="button" id="copyPay">${escapeText(d.number)}</button></div><div class="row"><span class="k">Name</span><span class="v">${escapeText(d.holder)}</span></div>`;$("#payInfo").classList.add("show");$("#copyPay").addEventListener("click",()=>navigator.clipboard?.writeText(d.number).then(()=>showToast("Copied")));updateSummary();}
+function updateSummary(){const rows=[];rows.push(["Package",sPkg?pkgSummary(sPkg):"Choose a package"]);rows.push(["Payment",sPay?PAY[sPay].name:"Choose payment"]);rows.push(["Amount",sPkg?`${fmt(sPkg.price)} Ks`:"-"]);$("#summary").innerHTML=rows.map(([k,v])=>`<div class="row"><span class="k">${escapeText(k)}</span><span class="v ${k==="Amount"?"gold":""}">${escapeText(v)}</span></div>`).join("");}
+function renderAll(){renderGameSwitch();renderHero();renderTopupHead();renderBest();renderPackages();updateSummary();}
+$$(".currency-btn").forEach(btn=>btn.addEventListener("click",()=>{displayCurrency=btn.dataset.currency;$$(".currency-btn").forEach(b=>b.classList.toggle("active",b===btn));renderHero();renderBest();renderPackages();updateSummary();}));
+$$(".pay-btn").forEach(btn=>btn.addEventListener("click",()=>selectPay(btn.dataset.pay)));
+
+function bindLookup(){const uid=$("#userId"),zid=$("#zoneId");[uid,zid].forEach(input=>input.addEventListener("input",()=>{currentIgn="";const hint=$("#lookupHint");hint.className="lookup-hint";hint.textContent="";if(!activeProduct.lookup)return;clearTimeout(lookupTimer);lookupTimer=setTimeout(lookupIgn,650);}));}
+async function lookupIgn(){if(!activeProduct.lookup)return;const userId=$("#userId").value.trim(),zoneId=$("#zoneId").value.trim();if(!userId||!zoneId)return;const seq=++lookupSeq;const hint=$("#lookupHint");hint.className="lookup-hint";hint.textContent="Checking in-game name...";try{const data=await apiPost("/api/mlbb-lookup",{userId,zoneId});if(seq!==lookupSeq)return;if(data.nickname){currentIgn=data.nickname;hint.textContent=`Verified: ${data.nickname}`;hint.className="lookup-hint ok";}else{hint.textContent=data.error||"Could not verify name. You can continue manually.";hint.className="lookup-hint warn";}}catch(e){if(seq===lookupSeq){hint.textContent="Nickname lookup unavailable. You can still place the order.";hint.className="lookup-hint warn";}}}
+
+$("#paymentSlip").addEventListener("change",async()=>{const file=$("#paymentSlip").files?.[0];slipDataUrl="";slipFileName="";$("#slipPreview").classList.remove("show");if(!file)return;if(!file.type.startsWith("image/")){showToast("Please upload an image slip.","warn");$("#paymentSlip").value="";return;}if(file.size>6*1024*1024){showToast("Slip image is too large. Please upload under 6MB.","warn");$("#paymentSlip").value="";return;}slipFileName=file.name;slipDataUrl=await compressSlip(file);$("#slipPreview img").src=slipDataUrl;$("#slipName").textContent=file.name;$("#slipPreview").classList.add("show");});
+function compressSlip(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>{const img=new Image();img.onload=()=>{let max=1200,quality=.82,out="";const canvas=document.createElement("canvas"),ctx=canvas.getContext("2d");do{const scale=Math.min(1,max/Math.max(img.width,img.height));canvas.width=Math.round(img.width*scale);canvas.height=Math.round(img.height*scale);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);out=canvas.toDataURL("image/jpeg",quality);max=Math.round(max*.85);quality=Math.max(.58,quality-.08);}while(out.length>850000&&max>520);resolve(out);};img.onerror=reject;img.src=reader.result;};reader.onerror=reject;reader.readAsDataURL(file);});}
+async function uploadSlip(oid){if(!slipDataUrl)return null;const path=`payment-slips/${oid}-${Date.now()}.jpg`;const ref=storageRef(storage,path);await uploadString(ref,slipDataUrl,"data_url",{contentType:"image/jpeg"});return{name:slipFileName,path,url:await getDownloadURL(ref)};}
+
+$("#submitBtn").addEventListener("click",submitOrder);
+async function submitOrder(){const uid=$("#userId").value.trim(),zid=$("#zoneId").value.trim(),contact=$("#contact").value.trim();if(!sPkg)return showToast("Choose a package","warn");if(!uid)return showToast("Enter User ID","warn");if(activeProduct.requiresZone&&!zid)return showToast("Enter Zone ID","warn");if(!contact)return showToast("Enter contact info","warn");if(!sPay)return showToast("Choose payment method","warn");if(!slipDataUrl)return showToast("Upload your payment slip","warn");const btn=$("#submitBtn");btn.disabled=true;btn.textContent="Submitting...";const oid="BD"+Date.now().toString().slice(-6);try{let slip=null;try{slip=await uploadSlip(oid);}catch(e){slip={name:slipFileName||"payment-slip.jpg",uploadError:e.message};}await addDoc(collection(db,COL),{id:oid,gameKey:activeProduct.key,gameName:activeProduct.name,userId:uid,zoneId:activeProduct.requiresZone?zid:"",contact,ign:currentIgn,pkg:{id:sPkg.id,name:sPkg.name,title:sPkg.title,diamonds:sPkg.diamonds||0,price:sPkg.price,img:sPkg.img,gameKey:activeProduct.key,gameName:activeProduct.name,unit:activeProduct.unit,uc:sPkg.uc||0,mxshopStockReleaseId:sPkg.mxshopStockReleaseId||"",baseDiamonds:sPkg.baseDiamonds||0,regularBonus:sPkg.regularBonus||0,firstBonus:sPkg.firstBonus||0,supplierPriceThb:sPkg.supplierPriceThb||0,exchangeRateThbToKs:THB_TO_KS},payment:PAY[sPay].name,payKey:sPay,paymentReference:oid,paymentStatus:"slip_uploaded",slip,status:"pending",createdAt:serverTimestamp(),updatedAt:serverTimestamp(),timeline:[{status:"pending",time:Date.now()}]});await tgNotify(`<b>[New Order]</b>\nOrder ID: <code>${oid}</code>\nGame: ${activeProduct.name}\nPackage: ${pkgSummary(sPkg)}\nAmount: ${fmt(sPkg.price)} Ks\nPlayer: ${activeProduct.requiresZone?`${uid} (Zone ${zid})`:uid}\nIn-game name: ${currentIgn||"Not verified"}\nContact: ${contact}\nPayment: ${PAY[sPay].name}`,{slipDataUrl,slipFileName});$("#modalBody").innerHTML=`Your order ID is <b class="gold">${escapeText(oid)}</b>.<br/>Package: <b>${escapeText(pkgSummary(sPkg))}</b><br/>Amount: <b class="gold">${fmt(sPkg.price)} Ks</b><br/><br/>Keep your Order ID and check the Order Status page for updates.`;$("#orderModal").classList.add("show");resetOrderForm();}catch(e){showToast("Order failed: "+e.message,"warn");}finally{btn.disabled=false;btn.textContent="Confirm Order";}}
+function resetOrderForm(){sPkg=null;sPay=null;slipDataUrl="";slipFileName="";$("#paymentSlip").value="";$("#slipPreview").classList.remove("show");$$(".pay-btn").forEach(b=>b.classList.remove("active"));$("#payInfo").classList.remove("show");renderPackages();renderBest();updateSummary();}
+
+$("#searchBtn").addEventListener("click",searchOrder);$("#searchId").addEventListener("keydown",e=>{if(e.key==="Enter")searchOrder();});
+async function searchOrder(){const id=$("#searchId").value.trim().toUpperCase();if(!id)return showToast("Enter your Order ID","warn");const res=$("#statusResult");res.classList.add("show");res.innerHTML='<div class="detail-item">Checking order...</div>';try{const data=await apiPost("/api/order-status",{orderId:id});renderStatusResult(data.order);}catch(e){res.innerHTML=`<div class="detail-item"><div class="detail-val">${/not found/i.test(e.message)?"Order not found":escapeText(e.message)}</div><div class="detail-lbl">Please check your Order ID and try again.</div></div>`;}}
+function renderStatusResult(o){const res=$("#statusResult");res.innerHTML=`<div class="topup-head"><div><div class="detail-lbl">Order ID</div><h2 class="gold">${escapeText(o.id)}</h2></div><span class="status-badge ${escapeText(o.status)}">${escapeText(sLabel[o.status]||o.status)}</span></div><div class="detail-grid"><div class="detail-item"><div class="detail-lbl">Game</div><div class="detail-val">${escapeText(productForOrder(o).name)}</div></div><div class="detail-item"><div class="detail-lbl">Package</div><div class="detail-val">${escapeText(pkgSummary(o.pkg))}</div></div><div class="detail-item"><div class="detail-lbl">Amount</div><div class="detail-val gold">${fmt(o.pkg?.price)} Ks</div></div><div class="detail-item"><div class="detail-lbl">Player</div><div class="detail-val">${escapeText(playerLine(o))}</div></div><div class="detail-item"><div class="detail-lbl">In-game name</div><div class="detail-val">${escapeText(o.ign||"Not verified")}</div></div><div class="detail-item"><div class="detail-lbl">Ordered at</div><div class="detail-val">${escapeText(fmtT(o.createdAt))}</div></div></div>${o.status==="cancelled"?`<div class="detail-item" style="border-color:rgba(231,76,60,.24);color:var(--danger)">Order cancelled. Please contact ${escapeText(TELE)} for help.</div>`:""}`;}
+
+$("#adminLoginBtn").addEventListener("click",unlockAdmin);$("#adminPw").addEventListener("keydown",e=>{if(e.key==="Enter")unlockAdmin();});$("#logoutBtn").addEventListener("click",logoutAdmin);$("#resetBtn").addEventListener("click",resetAdminData);$("#filters").addEventListener("click",e=>{const btn=e.target.closest("[data-filter]");if(!btn)return;filterState=btn.dataset.filter;$$(".filter").forEach(b=>b.classList.toggle("active",b===btn));renderTable();});
+async function unlockAdmin(){const pw=$("#adminPw").value;if(!pw)return showToast("Enter password","warn");try{const data=await apiPost("/api/admin-auth",{adminPassword:pw});if(data.ok){adminUnlocked=true;adminPasswordCache=pw;$("#adminLock").style.display="none";$("#adminDash").classList.add("show");startLiveOrders();}}catch(e){showToast(e.message,"warn");$("#adminPw").value="";}}
+function logoutAdmin(){adminUnlocked=false;adminPasswordCache="";if(adminPoll)clearInterval(adminPoll);$("#adminLock").style.display="block";$("#adminDash").classList.remove("show");$("#adminPw").value="";}
+function startLiveOrders(){if(adminPoll)clearInterval(adminPoll);const load=async()=>{if(!adminUnlocked)return;try{const data=await adminApi("/api/admin-orders");allOrders=Array.isArray(data.orders)?data.orders:[];renderKPI();renderTable();}catch(e){showToast("Admin sync failed: "+e.message,"warn");}};load();adminPoll=setInterval(load,8000);}
+function renderKPI(){const a=allOrders,completed=a.filter(o=>o.status==="completed"),gross=completed.reduce((s,o)=>s+Number(o.pkg?.price||0),0),net=completed.reduce((s,o)=>s+netProfitKs(o),0);$("#kpiRow").innerHTML=`<div class="kpi"><span>Orders</span><b>${a.length}</b></div><div class="kpi"><span>Pending</span><b>${a.filter(o=>o.status==="pending").length}</b></div><div class="kpi"><span>Completed</span><b>${completed.length}</b></div><div class="kpi"><span>Gross</span><b>${fmt(gross)}</b></div><div class="kpi"><span>Net</span><b>${fmt(net)}</b></div>`;}
+function renderTable(){const list=filterState==="all"?allOrders:allOrders.filter(o=>o.status===filterState);$("#tbody").innerHTML=list.map(o=>`<tr><td><b class="gold">${escapeText(o.id)}</b><br/><span style="color:var(--muted)">${escapeText(fmtT(o.createdAt))}</span></td><td>${escapeText(pkgSummary(o.pkg))}<br/><span style="color:var(--diamond)">${escapeText(productForOrder(o).shortName)}</span></td><td>${escapeText(playerLine(o))}<br/><span style="color:var(--muted)">${escapeText(o.contact||"")}</span></td><td><b class="gold">${fmt(o.pkg?.price)} Ks</b><br/><span style="color:var(--muted)">${escapeText(netLabel(o))} profit</span></td><td><span class="status-badge ${escapeText(o.status)}">${escapeText(sLabel[o.status]||o.status)}</span><br/><span style="color:var(--muted)">${escapeText(productForOrder(o).key==="mlbb"?"MX: "+mxTopupText(o):"Manual top-up")}</span></td><td><div class="act-wrap"><button class="ab ab-view" data-view="${escapeText(o.docId)}">View</button>${o.status==="pending"?`<button class="ab ab-proc" data-status="processing" data-doc="${escapeText(o.docId)}">Proc</button>`:""}${canSendMxTopup(o)?`<button class="ab ab-proc" data-top="${escapeText(o.docId)}">Top</button>`:""}${canCompleteOrder(o)?`<button class="ab ab-comp" data-status="completed" data-doc="${escapeText(o.docId)}">Done</button>`:""}${(o.status==="pending"||o.status==="processing")?`<button class="ab ab-canc" data-status="cancelled" data-doc="${escapeText(o.docId)}">Cancel</button>`:""}</div></td></tr>`).join("");}
+$("#tbody").addEventListener("click",e=>{const view=e.target.closest("[data-view]"),status=e.target.closest("[data-status]"),top=e.target.closest("[data-top]");if(view)viewOrder(view.dataset.view);if(status)updStatus(status.dataset.doc,status.dataset.status);if(top)sendMxTopup(top.dataset.top);});
+async function resetAdminData(){if(!adminUnlocked)return showToast("Admin only","warn");if(!allOrders.length)return showToast("Admin data is already empty");if(!confirm(`Archive ${allOrders.length} current orders?`))return;try{await adminApi("/api/admin-archive-orders");allOrders=[];renderKPI();renderTable();showToast("Admin dashboard reset to 0");}catch(e){showToast("Reset failed: "+e.message,"warn");}}
+async function updStatus(docId,status){const o=allOrders.find(x=>x.docId===docId);if(status==="completed"&&!canCompleteOrder(o))return showToast("Send MXShop top-up first.","warn");if(status==="completed"&&o?.mxshopTopup?.status==="failed"&&!confirm("MXShop was marked Check supplier. Complete only if delivered. Continue?"))return;try{const data=await adminApi("/api/admin-update-order",{docId,status});if(data.order){const idx=allOrders.findIndex(x=>x.docId===docId);if(idx>=0)allOrders[idx]=data.order;}renderKPI();renderTable();showToast(sLabel[status]||"Updated");if(o)await tgNotify(`<b>[Order Updated]</b>\n${o.id} -> ${sLabel[status]}\n${productForOrder(o).name} | ${pkgSummary(o.pkg)} | Player: ${playerLine(o)}\n${o.contact}`);}catch(e){showToast("Update failed: "+e.message,"warn");}}
+async function sendMxTopup(docId){const order=allOrders.find(x=>x.docId===docId);if(!order)return;if(order.mxshopTopup?.status==="success")return showToast("MXShop top-up already sent.","warn");try{const sending={status:"sending",startedAt:new Date().toISOString()};await adminApi("/api/admin-update-order",{docId,mxshopTopup:sending});order.mxshopTopup=sending;renderTable();showToast("Sending MXShop top-up...");const topup=await requestMxTopup(order);topup.completedAt=new Date().toISOString();const updated=await adminApi("/api/admin-update-order",{docId,mxshopTopup:topup});if(updated.order){const idx=allOrders.findIndex(x=>x.docId===docId);if(idx>=0)allOrders[idx]=updated.order;}renderTable();alert("MXShop top-up sent. Now click Complete to close the order.");}catch(e){const failed={status:"failed",error:e.message,request:e.mxshopRequest||null,response:e.mxshopResponse||null,failedAt:new Date().toISOString()};await adminApi("/api/admin-update-order",{docId,mxshopTopup:failed}).catch(()=>{});showToast("Top-up failed: "+e.message,"warn");alert("MXShop top-up did not complete:\n\n"+e.message);}}
+async function requestMxTopup(order){const res=await fetch("/api/mxshop-topup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({adminPassword:adminPasswordCache,order})});const data=await res.json().catch(()=>({ok:false,error:"MXShop top-up function returned invalid JSON."}));if(!res.ok||!data.ok){const err=new Error(data.error||data.message||"MXShop top-up failed");err.mxshopRequest=data.request||null;err.mxshopResponse=data.mxshop||data||null;throw err;}return{status:data.skipped?"skipped":"success",skipped:Boolean(data.skipped),request:data.request||null,response:data.mxshop||null};}
+function viewOrder(docId){const o=allOrders.find(x=>x.docId===docId);if(!o)return;$("#vmTitle").innerHTML=`Order <span class="gold">${escapeText(o.id)}</span>`;$("#vmBody").innerHTML=`<div class="detail-grid"><div class="detail-item"><div class="detail-lbl">Status</div><div class="detail-val">${escapeText(sLabel[o.status]||o.status)}</div></div><div class="detail-item"><div class="detail-lbl">Game</div><div class="detail-val">${escapeText(productForOrder(o).name)}</div></div><div class="detail-item"><div class="detail-lbl">Package</div><div class="detail-val">${escapeText(pkgSummary(o.pkg))}</div></div><div class="detail-item"><div class="detail-lbl">Amount</div><div class="detail-val gold">${fmt(o.pkg?.price)} Ks</div></div><div class="detail-item"><div class="detail-lbl">Player</div><div class="detail-val">${escapeText(playerLine(o))}</div></div><div class="detail-item"><div class="detail-lbl">IGN</div><div class="detail-val">${escapeText(o.ign||"Not verified")}</div></div><div class="detail-item"><div class="detail-lbl">Contact</div><div class="detail-val">${escapeText(o.contact||"")}</div></div><div class="detail-item"><div class="detail-lbl">Top-up</div><div class="detail-val">${escapeText(mxTopupText(o))}</div></div></div>${o.slip?.url?`<img src="${escapeText(o.slip.url)}" alt="Payment slip" style="width:100%;max-width:320px;border-radius:10px;border:1px solid rgba(91,227,255,.18)"/>`:""}`;$("#vmActs").innerHTML=`<button class="btn" type="button" data-close-view>Close</button>`;$("#viewModal").classList.add("show");$("[data-close-view]").addEventListener("click",()=>$("#viewModal").classList.remove("show"));}
+
+function sampleTickerItems(){return["ShadowX bought 86 Diamonds","MiyaQueen bought Weekly Diamond Pass","KoHtet7 bought 257 Diamonds","AceZero bought 150+150 Diamonds","Rexxar bought 60 UC","KairiFan bought Monthly Epic Bundle"];}
+function renderTrustTicker(){const items=[...publicTickerItems,...sampleTickerItems()].slice(0,24);$("#ticker").innerHTML=[...items,...items].map(x=>`<span class="ticker-item"><span class="ticker-dot"></span>${escapeText(x)}</span>`).join("");}
+async function startPublicTicker(){renderTrustTicker();if(location.protocol==="file:")return;try{const data=await apiPost("/api/public-ticker");publicTickerItems=Array.isArray(data.items)?data.items:[];renderTrustTicker();}catch(e){console.warn("Public ticker unavailable:",e);}}
+
+bindLookup();
+renderAll();
+startPublicTicker();
+</script>
+</body>
+</html>
