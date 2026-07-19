@@ -1,0 +1,13 @@
+name = "bestdia-daily-opportunity-cron"
+main = "workers/daily-opportunity-cron.js"
+compatibility_date = "2026-07-19"
+
+# Cloudflare Cron Triggers use UTC.
+# 01:30 UTC = 08:00 Myanmar time / 08:30 Bangkok time.
+[triggers]
+crons = [ "30 1 * * *" ]
+
+[vars]
+BESTDIA_PIPELINE_URL = "https://bestdia.pages.dev/api/run-daily-opportunity-pipeline"
+PIPELINE_LIMIT_PER_SOURCE = "5"
+PIPELINE_AGENT_LIMIT = "10"
