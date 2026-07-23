@@ -36,6 +36,7 @@ export async function onRequest(context) {
     if (route === "public-ticker") return publicTicker(request, env);
     if (route === "collect-news") return collectNewsApi(request, env);
     if (route === "run-opportunity-agent") return runOpportunityAgentApi(request, env);
+    if (route === "run-writer-agent") return runWriterAgentApi(request, env);
     if (route === "run-daily-opportunity-pipeline") return runDailyOpportunityPipelineApi(request, env);
     if (route === "telegram-diagnostic") return telegramDiagnostic(request, env);
     if (route === "telegram-notify") return telegramNotify(request, env);
@@ -1125,6 +1126,41 @@ Safety rules:
 const OPPORTUNITY_PROMPT_VERSION = "opportunity-agent-v1";
 const OPPORTUNITY_GAMES = new Set(["mlbb", "pubg", "other"]);
 const OPPORTUNITY_TYPES = new Set(["trend_post", "sales_post", "educational_post", "event_reminder", "promotion_angle", "community_reaction", "urgent_update"]);
+const WRITER_PROMPT_VERSION = "writer-agent-v1";
+const WRITER_ALLOWED_CHANNELS = new Set(["facebook", "tiktok", "telegram", "website"]);
+const WRITER_AGENT_PROMPT = `You are the BestDia Writer Agent.
+
+BestDia sells MLBB diamonds, Weekly Diamond Passes, PUBG UC, and gaming top-ups in Myanmar.
+
+Your job is to turn one approved marketing opportunity into ready-to-review social media draft copy.
+
+Return only valid JSON with this shape:
+{
+  "drafts": [
+    {
+      "channel": "facebook",
+      "draft_type": "post",
+      "title": "short internal title",
+      "body": "post body",
+      "call_to_action": "clear CTA",
+      "hashtags": ["#BestDia"]
+    }
+  ]
+}
+
+Rules:
+- Generate drafts only for requested channels.
+- Allowed channels: facebook, tiktok, telegram, website.
+- Do not claim official discounts unless the opportunity/article says so.
+- Do not invent dates, rewards, skins, crates, prices, or product availability.
+- Write for Myanmar mobile gamers, but keep the copy in simple English for V1.
+- Mention BestDia naturally.
+- Keep Facebook body under 900 characters.
+- Keep TikTok body/caption under 300 characters.
+- Include a clear call to action.
+- Use only products listed in the input.
+- Hashtags must be an array of short strings.
+- Nothing should imply the post has already been published.`;
 
 const NEWS_COLLECTOR_SOURCES = [
   {
@@ -1428,6 +1464,21 @@ async function runOpportunityAgentApi(request, env) {
   if (auth) return auth;
 
   const result = await runOpportunityAgent(env, payload);
+  return jsonResponse(200, { ok: true, ...result });
+}
+
+async function runWriterAgentApi(request, env) {
+  if (request.method !== "POST") return jsonResponse(405, { ok: false, error: "Method not allowed" });
+  const payload = await readJson(request);
+  const auth = requireAdmin(payload, env);
+  if (auth) return auth;
+  const opportunityId = String(payload.opportunityId || payload.opportunity_id || "").trim();
+  if (!opportunityId) return jsonResponse(400, { ok: false, error: "Missing opportunity ID" });
+
+  const result = await runWriterAgent(env, {
+    opportunityId,
+    channels: payload.channels,
+  });
   return jsonResponse(200, { ok: true, ...result });
 }
 
@@ -1761,6 +1812,160 @@ function normalizeOpportunityScore(value) {
   return Math.max(0, Math.min(100, score));
 }
 
+async function runWriterAgent(env, options = {}) {
+  const opportunity = await supabaseSelectOpportunityForWriter(env, options.opportunityId);
+  if (!opportunity) throw new Error("Opportunity not found");
+  const article = opportunity.article_id ? await supabaseSelectArticleById(env, opportunity.article_id).catch(() => null) : null;
+  const productMatches = await supabaseSelectOpportunityProductMatches(env, opportunity.id).catch(() => []);
+  const latestReview = await supabaseSelectLatestOpportunityReview(env, opportunity.id).catch(() => null);
+  const channels = normalizeWriterChannels(options.channels, opportunity, latestReview);
+  if (!channels.length) throw new Error("No valid writer channels were selected");
+
+  const startedAt = Date.now();
+  const agentRun = await supabaseCreateNamedAgentRun(env, "writer_agent", {
+    opportunity_id: opportunity.id,
+    prompt_version: WRITER_PROMPT_VERSION,
+    channels,
+  });
+
+  try {
+    const model = await callWriterModel(env, { opportunity, article, productMatches, latestReview, channels });
+    const drafts = validateWriterDrafts(model.result, channels);
+    if (!drafts.length) throw new Error("Writer Agent did not return any valid drafts");
+    const rows = await supabaseCreateContentDrafts(env, drafts.map((draft) => ({
+      opportunity_id: opportunity.id,
+      channel: draft.channel,
+      draft_type: draft.draft_type,
+      title: draft.title,
+      body: draft.body,
+      call_to_action: draft.call_to_action,
+      hashtags: draft.hashtags,
+      status: "draft",
+      prompt_version: WRITER_PROMPT_VERSION,
+      model: model.model,
+      metadata: {
+        agent_run_id: agentRun.id,
+        review_id: latestReview?.id || null,
+        source: "writer_agent_v1",
+      },
+    })));
+    await supabaseUpdateAgentRun(env, agentRun.id, {
+      status: "success",
+      finished_at: new Date().toISOString(),
+      tokens_used: Number(model.data?.usage?.total_tokens || 0),
+      duration_ms: Date.now() - startedAt,
+      metadata: { opportunity_id: opportunity.id, drafts_created: rows.length, prompt_version: WRITER_PROMPT_VERSION, model: model.model, channels },
+    });
+    return { opportunityId: opportunity.id, agentRunId: agentRun.id, drafts: rows };
+  } catch (error) {
+    const message = String(error.message || "Writer Agent failed").slice(0, 1000);
+    await supabaseUpdateAgentRun(env, agentRun.id, {
+      status: "failed",
+      finished_at: new Date().toISOString(),
+      duration_ms: Date.now() - startedAt,
+      error: message,
+      metadata: { opportunity_id: opportunity.id, prompt_version: WRITER_PROMPT_VERSION, channels },
+    }).catch(() => null);
+    throw new Error(message);
+  }
+}
+
+async function callWriterModel(env, context) {
+  if (!env.GROQ_API_KEY) throw new Error("GROQ_API_KEY is not configured");
+  const model = env.GROQ_MODEL || "llama-3.3-70b-versatile";
+  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${env.GROQ_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: "system", content: WRITER_AGENT_PROMPT },
+        { role: "user", content: buildWriterAgentInput(context) },
+      ],
+      temperature: 0.55,
+      response_format: { type: "json_object" },
+    }),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error?.message || "Groq request failed");
+  const outputText = extractGroqOutputText(data);
+  if (!outputText) throw new Error("Groq response did not include output text");
+  return { model, data, result: JSON.parse(outputText) };
+}
+
+function buildWriterAgentInput({ opportunity, article, productMatches, latestReview, channels }) {
+  const products = productMatches.map((match) => {
+    const product = match.products || {};
+    return `- ${product.name || "Product"} (${product.game || opportunity.game || "game"}, ${product.product_type || "topup"}): relevance ${match.relevance_score || 0}. ${match.reason || ""}`;
+  }).join("\n");
+  return [
+    `Requested channels: ${channels.join(", ")}`,
+    "",
+    "Opportunity:",
+    `Title: ${opportunity.title || ""}`,
+    `Game: ${opportunity.game || ""}`,
+    `Type: ${opportunity.opportunity_type || ""}`,
+    `Description: ${opportunity.description || ""}`,
+    `Reasoning: ${opportunity.reasoning || ""}`,
+    `Scores: overall ${opportunity.overall_score || 0}, trend ${opportunity.trend_score || 0}, sales ${opportunity.sales_score || 0}, urgency ${opportunity.urgency_score || 0}, Myanmar ${opportunity.myanmar_interest_score || 0}`,
+    "",
+    "Latest review:",
+    latestReview ? `Decision: ${latestReview.decision || ""}\nChannel: ${latestReview.selected_channel || ""}\nNotes: ${latestReview.notes || ""}\nFeedback: ${latestReview.feedback_label || ""}` : "No review notes.",
+    "",
+    "Products BestDia can mention:",
+    products || "- No matched products found",
+    "",
+    "Source article:",
+    `Title: ${article?.title || ""}`,
+    `URL: ${article?.url || ""}`,
+    `Published: ${article?.published_at || ""}`,
+    `Summary: ${article?.summary || ""}`,
+    `Content excerpt: ${String(article?.raw_content || "").slice(0, 1400)}`,
+  ].join("\n");
+}
+
+function validateWriterDrafts(result, requestedChannels) {
+  const drafts = Array.isArray(result?.drafts) ? result.drafts : [];
+  const requested = new Set(requestedChannels);
+  return drafts.map((draft) => {
+    const channel = normalizeWriterChannel(draft.channel);
+    if (!channel || !requested.has(channel)) return null;
+    const body = String(draft.body || "").trim();
+    if (!body) return null;
+    return {
+      channel,
+      draft_type: String(draft.draft_type || "post").trim().slice(0, 40) || "post",
+      title: String(draft.title || "").trim().slice(0, 180) || `${channel} draft`,
+      body: body.slice(0, channel === "tiktok" ? 300 : 900),
+      call_to_action: String(draft.call_to_action || "").trim().slice(0, 220) || "Message BestDia to top up today.",
+      hashtags: normalizeDraftHashtags(draft.hashtags),
+    };
+  }).filter(Boolean);
+}
+
+function normalizeWriterChannels(value, opportunity, latestReview) {
+  const raw = Array.isArray(value) ? value : [];
+  const reviewChannel = latestReview?.selected_channel ? [latestReview.selected_channel] : [];
+  const opportunityChannels = Array.isArray(opportunity?.recommended_channels) ? opportunity.recommended_channels : [];
+  const candidates = [...raw, ...reviewChannel, ...opportunityChannels, "facebook"];
+  return Array.from(new Set(candidates.map(normalizeWriterChannel).filter(Boolean))).slice(0, 3);
+}
+
+function normalizeWriterChannel(value) {
+  const channel = String(value || "").trim().toLowerCase();
+  return WRITER_ALLOWED_CHANNELS.has(channel) ? channel : "";
+}
+
+function normalizeDraftHashtags(value) {
+  const tags = Array.isArray(value) ? value : [];
+  const clean = tags.map((tag) => {
+    const text = String(tag || "").trim().replace(/\s+/g, "");
+    if (!text) return "";
+    return text.startsWith("#") ? text : `#${text}`;
+  }).filter(Boolean);
+  return Array.from(new Set([...clean, "#BestDia"])).slice(0, 8);
+}
+
 async function supabaseSelectCollectedArticles(env, limit) {
   const qs = supabaseQuery({
     select: "id,title,url,game,published_at,raw_content,summary,engagement_count,comment_count,share_count,collected_at,news_sources(name)",
@@ -1776,8 +1981,37 @@ async function supabaseSelectActiveProducts(env) {
   return supabaseRequest(env, "GET", `products?${qs}`);
 }
 
+async function supabaseSelectOpportunityForWriter(env, id) {
+  const rows = await supabaseRequest(env, "GET", `opportunities?${supabaseQuery({ select: "*", id: `eq.${id}`, limit: "1" })}`);
+  return rows[0] || null;
+}
+
+async function supabaseSelectArticleById(env, id) {
+  const rows = await supabaseRequest(env, "GET", `news_articles?${supabaseQuery({ select: "id,title,url,game,published_at,summary,raw_content", id: `eq.${id}`, limit: "1" })}`);
+  return rows[0] || null;
+}
+
+async function supabaseSelectOpportunityProductMatches(env, opportunityId) {
+  const qs = supabaseQuery({
+    select: "relevance_score,reason,products(name,game,product_type)",
+    opportunity_id: `eq.${opportunityId}`,
+    order: "relevance_score.desc",
+  });
+  return supabaseRequest(env, "GET", `opportunity_product_matches?${qs}`);
+}
+
+async function supabaseSelectLatestOpportunityReview(env, opportunityId) {
+  const rows = await supabaseRequest(env, "GET", `opportunity_reviews?${supabaseQuery({ select: "*", opportunity_id: `eq.${opportunityId}`, order: "created_at.desc", limit: "1" })}`);
+  return rows[0] || null;
+}
+
 async function supabaseCreateAgentRun(env, metadata) {
   const rows = await supabaseRequest(env, "POST", "agent_runs", [{ agent_name: "opportunity_agent", run_type: "v1_manual_or_scheduled", status: "running", metadata: metadata || {} }], "return=representation");
+  return rows[0];
+}
+
+async function supabaseCreateNamedAgentRun(env, agentName, metadata) {
+  const rows = await supabaseRequest(env, "POST", "agent_runs", [{ agent_name: agentName, run_type: "v1_manual", status: "running", metadata: metadata || {} }], "return=representation");
   return rows[0];
 }
 
@@ -1794,6 +2028,11 @@ async function supabaseCreateOpportunity(env, row) {
 async function supabaseCreateProductMatches(env, rows) {
   if (!rows.length) return [];
   return supabaseRequest(env, "POST", "opportunity_product_matches", rows, "return=representation");
+}
+
+async function supabaseCreateContentDrafts(env, rows) {
+  if (!rows.length) return [];
+  return supabaseRequest(env, "POST", "content_drafts", rows, "return=representation");
 }
 
 async function supabaseUpdateArticle(env, id, updates) {
