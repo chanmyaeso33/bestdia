@@ -30,7 +30,7 @@ button{cursor:pointer}
 .toolbar{display:grid;grid-template-columns:1fr 150px 150px auto;gap:8px;margin-bottom:14px}.status{min-height:22px;color:var(--muted);font-size:.82rem;margin-bottom:10px}.status.warn{color:var(--warn)}.status.ok{color:var(--success)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px}.opp{position:relative;overflow:hidden}.opp::before{content:"";position:absolute;inset:0 0 auto;height:4px;background:linear-gradient(90deg,var(--diamond),var(--gold));opacity:.85}.opp-head{display:flex;justify-content:space-between;gap:12px;padding-top:4px;margin-bottom:10px}.opp h3{font-size:1rem;line-height:1.35}.score{flex:0 0 58px;height:58px;border-radius:10px;display:grid;place-items:center;background:#07101a;border:1px solid rgba(245,197,66,.28);color:var(--gold);font-family:"Chakra Petch",sans-serif;font-size:1.35rem;font-weight:800}.meta{display:flex;gap:6px;flex-wrap:wrap;margin:9px 0}.pill{display:inline-flex;align-items:center;min-height:24px;border:1px solid var(--line);border-radius:999px;background:rgba(91,227,255,.06);color:var(--diamond);padding:3px 8px;font-size:.72rem;font-weight:700}.pill.gold{color:var(--gold);border-color:rgba(245,197,66,.24);background:rgba(245,197,66,.08)}.pill.green{color:var(--success);border-color:rgba(46,204,113,.24);background:rgba(46,204,113,.08)}
 .reason{color:#cdd5e8;font-size:.84rem;line-height:1.55;margin:10px 0 12px}.products{display:grid;gap:7px;margin:10px 0}.product{border:1px solid rgba(91,227,255,.1);border-radius:8px;background:#0B1020;padding:9px}.product b{font-size:.82rem}.product span{display:block;color:var(--muted);font-size:.72rem;line-height:1.45;margin-top:3px}.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}.empty{padding:28px;text-align:center;color:var(--muted)}
-.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:50;align-items:center;justify-content:center;padding:16px}.modal.show{display:flex}.modal-card{max-width:640px;width:100%;max-height:86vh;overflow:auto;background:#101728;border:1px solid var(--line);border-radius:12px;padding:16px}.modal-title{font-family:"Chakra Petch",sans-serif;font-size:1.15rem;margin-bottom:10px}.modal-body{color:#cdd5e8;line-height:1.6;font-size:.9rem}.row{display:grid;grid-template-columns:130px 1fr;gap:8px;padding:7px 0;border-bottom:1px solid rgba(91,227,255,.08)}.row span:first-child{color:var(--muted)}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:50;align-items:center;justify-content:center;padding:16px}.modal.show{display:flex}.modal-card{max-width:640px;width:100%;max-height:86vh;overflow:auto;background:#101728;border:1px solid var(--line);border-radius:12px;padding:16px}.modal-title{font-family:"Chakra Petch",sans-serif;font-size:1.15rem;margin-bottom:10px}.modal-body{color:#cdd5e8;line-height:1.6;font-size:.9rem}.row{display:grid;grid-template-columns:130px 1fr;gap:8px;padding:7px 0;border-bottom:1px solid rgba(91,227,255,.08)}.row span:first-child{color:var(--muted)}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}.form-grid .wide{grid-column:1/-1}.textarea{width:100%;min-height:92px;resize:vertical;border:1px solid var(--line);border-radius:8px;background:#0B1020;color:var(--text);padding:10px 11px;outline:none}.review-hint{color:var(--muted);font-size:.78rem;line-height:1.5;margin-top:8px}
 @media(max-width:860px){.hero{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}.toolbar{grid-template-columns:1fr 1fr}.topbar-inner{align-items:flex-start;flex-direction:column}.grid{grid-template-columns:1fr}}@media(max-width:520px){.kpis,.toolbar{grid-template-columns:1fr}.headline{display:block}.score{width:52px;height:52px}.row{grid-template-columns:1fr}}
 </style>
 </head>
@@ -86,8 +86,26 @@ button{cursor:pointer}
   </div>
 </div>
 
+<div class="modal" id="reviewModal">
+  <div class="modal-card">
+    <div class="modal-title" id="reviewTitle">Review Opportunity</div>
+    <div class="modal-body">
+      <p id="reviewSummary" class="review-hint"></p>
+      <div class="form-grid">
+        <label><span class="label">Decision</span><select class="select" id="reviewDecision"><option value="reviewed">Reviewed</option><option value="approved">Approved</option><option value="used">Posted / Used</option><option value="rejected">Rejected</option></select></label>
+        <label><span class="label">Channel</span><select class="select" id="reviewChannel"><option value="">Not selected</option><option value="facebook">Facebook</option><option value="tiktok">TikTok</option><option value="telegram">Telegram</option><option value="website">Website</option></select></label>
+        <label class="wide"><span class="label">Published URL</span><input class="input" id="reviewPublishedUrl" placeholder="Paste post URL after publishing"/></label>
+        <label><span class="label">Feedback</span><select class="select" id="reviewFeedback"><option value="">Not scored yet</option><option value="good">Good</option><option value="neutral">Neutral</option><option value="bad">Bad</option></select></label>
+        <label class="wide"><span class="label">Notes</span><textarea class="textarea" id="reviewNotes" placeholder="Why approve/reject? What angle should the writer use?"></textarea></label>
+      </div>
+      <p class="review-hint">A review saves the decision history for learning. Mark as Posted / Used when BestDia actually publishes it.</p>
+    </div>
+    <div class="actions"><button class="btn primary" type="button" id="saveReviewBtn">Save Review</button><button class="btn" type="button" id="closeReviewBtn">Cancel</button></div>
+  </div>
+</div>
+
 <script>
-let adminPassword="", opportunities=[];
+let adminPassword="", opportunities=[], reviewTargetId="";
 const $=sel=>document.querySelector(sel);
 const escapeText=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
 const fmt=n=>Number(n||0).toLocaleString();
@@ -120,12 +138,13 @@ async function runPipeline(){
   finally{$("#runPipelineBtn").disabled=false;}
 }
 
-async function updateOpportunity(id,status){
+async function updateOpportunity(id,status,extra={}){
   try{
-    await apiPost("/api/admin-update-opportunity",adminPayload({id,status}));
+    const data=await apiPost("/api/admin-update-opportunity",adminPayload({id,status,...extra}));
     opportunities=opportunities.filter(item=>item.id!==id);
     render();
-    setStatus(`Opportunity marked ${status}.`,"ok");
+    const warning=data.reviewWarning?` Review note was not saved yet: ${data.reviewWarning}`:"";
+    setStatus(`Opportunity marked ${status}.${warning}`,"ok");
   }catch(error){setStatus(error.message||"Could not update opportunity.","warn");}
 }
 
@@ -162,7 +181,7 @@ function renderOpportunity(item){
     <p class="reason">${escapeText(item.reasoning||"No reasoning provided.")}</p>
     <div class="meta">${channels.length?channels.map(c=>`<span class="pill">${escapeText(c)}</span>`).join(""):`<span class="pill">facebook</span>`}</div>
     <div class="products">${products.length?products.map(p=>`<div class="product"><b>${escapeText(p.product_name||"Product")}</b><span>${fmt(p.relevance_score)} relevance. ${escapeText(p.reason||"Matched product.")}</span></div>`).join(""):`<div class="product"><b>No product match</b><span>Review this before posting.</span></div>`}</div>
-    <div class="actions"><button class="btn" type="button" data-view="${escapeText(item.id)}">Details</button><button class="btn primary" type="button" data-status="approved" data-id="${escapeText(item.id)}">Approve</button><button class="btn" type="button" data-status="used" data-id="${escapeText(item.id)}">Used</button><button class="btn danger" type="button" data-status="rejected" data-id="${escapeText(item.id)}">Reject</button></div>
+    <div class="actions"><button class="btn" type="button" data-view="${escapeText(item.id)}">Details</button><button class="btn primary" type="button" data-review="${escapeText(item.id)}" data-decision="approved">Approve</button><button class="btn" type="button" data-review="${escapeText(item.id)}" data-decision="used">Posted</button><button class="btn danger" type="button" data-review="${escapeText(item.id)}" data-decision="rejected">Reject</button></div>
   </article>`;
 }
 function showDetails(id){
@@ -183,6 +202,35 @@ function showDetails(id){
   $("#detailModal").classList.add("show");
 }
 
+function openReview(id,decision="reviewed"){
+  const item=opportunities.find(opp=>opp.id===id);
+  if(!item)return;
+  reviewTargetId=id;
+  $("#reviewTitle").textContent=`Review: ${item.title||"Opportunity"}`;
+  $("#reviewSummary").textContent=`${(item.game||"other").toUpperCase()} · Score ${fmt(item.overall_score)} · ${item.reasoning||"No reasoning provided."}`;
+  $("#reviewDecision").value=decision;
+  const channels=getChannels(item);
+  $("#reviewChannel").value=channels.includes("facebook")?"facebook":(channels[0]||"");
+  $("#reviewPublishedUrl").value="";
+  $("#reviewFeedback").value=decision==="approved"||decision==="used"?"good":(decision==="rejected"?"bad":"");
+  $("#reviewNotes").value="";
+  $("#reviewModal").classList.add("show");
+}
+
+async function saveReview(){
+  if(!reviewTargetId)return;
+  $("#saveReviewBtn").disabled=true;
+  await updateOpportunity(reviewTargetId,$("#reviewDecision").value,{
+    selectedChannel:$("#reviewChannel").value,
+    publishedUrl:$("#reviewPublishedUrl").value,
+    feedbackLabel:$("#reviewFeedback").value,
+    notes:$("#reviewNotes").value,
+  });
+  $("#saveReviewBtn").disabled=false;
+  $("#reviewModal").classList.remove("show");
+  reviewTargetId="";
+}
+
 $("#unlockBtn").addEventListener("click",()=>{adminPassword=$("#adminPassword").value.trim();localStorage.setItem("bestdia_marketing_os_admin",adminPassword);loadOpportunities();});
 $("#refreshBtn").addEventListener("click",loadOpportunities);
 $("#runPipelineBtn").addEventListener("click",runPipeline);
@@ -191,12 +239,15 @@ $("#gameFilter").addEventListener("change",loadOpportunities);
 $("#statusFilter").addEventListener("change",loadOpportunities);
 $("#opportunityGrid").addEventListener("click",event=>{
   const view=event.target.closest("[data-view]");
-  const status=event.target.closest("[data-status]");
+  const review=event.target.closest("[data-review]");
   if(view)showDetails(view.dataset.view);
-  if(status)updateOpportunity(status.dataset.id,status.dataset.status);
+  if(review)openReview(review.dataset.review,review.dataset.decision);
 });
 $("#closeModalBtn").addEventListener("click",()=>$("#detailModal").classList.remove("show"));
 $("#detailModal").addEventListener("click",event=>{if(event.target.id==="detailModal")$("#detailModal").classList.remove("show");});
+$("#saveReviewBtn").addEventListener("click",saveReview);
+$("#closeReviewBtn").addEventListener("click",()=>$("#reviewModal").classList.remove("show"));
+$("#reviewModal").addEventListener("click",event=>{if(event.target.id==="reviewModal")$("#reviewModal").classList.remove("show");});
 $("#adminPassword").value=localStorage.getItem("bestdia_marketing_os_admin")||"";
 if($("#adminPassword").value){adminPassword=$("#adminPassword").value;loadOpportunities();}
 </script>
