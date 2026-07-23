@@ -288,6 +288,10 @@ async function createOrder(request, env) {
 
   const now = new Date().toISOString();
   const initialStatus = trustedPay.key === "balance" ? "processing" : "pending";
+  const submittedIgn = String(order.ign || "").trim().slice(0, 120);
+  const verifiedIgn = trustedProduct.key === "mlbb"
+    ? await resolveMlbbNickname(env, userId, String(order.zoneId || "").trim())
+    : "";
   const cleanOrder = {
     id: orderId,
     gameKey: trustedProduct.key,
@@ -295,7 +299,7 @@ async function createOrder(request, env) {
     userId,
     zoneId: trustedProduct.requiresZone ? String(order.zoneId || "").trim().slice(0, 80) : "",
     contact,
-    ign: String(order.ign || "").trim().slice(0, 120),
+    ign: verifiedIgn || submittedIgn,
     accountId: String(order.accountId || "").trim().slice(0, 160),
     pkg: trustedPkg,
     payment: trustedPay.name,
@@ -391,6 +395,15 @@ async function orderStatus(request, env) {
   const firestore = await firestoreClient(env);
   const found = await findOrderById(firestore, orderId);
   if (!found) return jsonResponse(404, { ok: false, error: "Order not found" });
+  if (!String(found.data?.ign || "").trim() && found.data?.gameKey === "mlbb" && found.data?.userId && found.data?.zoneId) {
+    const verifiedIgn = await resolveMlbbNickname(env, found.data.userId, found.data.zoneId);
+    if (verifiedIgn) {
+      found.data = await updateOrderDoc(firestore, found.docId, {
+        ign: verifiedIgn,
+        updatedAt: new Date().toISOString(),
+      });
+    }
+  }
   return jsonResponse(200, { ok: true, order: publicOrder(found.data) });
 }
 
@@ -686,6 +699,12 @@ async function mlbbLookup(request, env) {
   const zoneId = onlyDigits(payload.zoneId);
   if (!userId || !zoneId) return jsonResponse(400, { error: "Missing User ID or Zone ID" });
 
+  const result = await resolveMlbbNickname(env, userId, zoneId, true);
+  if (result.nickname) return jsonResponse(200, { ok: true, nickname: result.nickname, source: result.source });
+  return jsonResponse(502, { ok: false, error: result.error || "Nickname lookup is unavailable. Please verify the ID manually." });
+}
+
+async function resolveMlbbNickname(env, userId, zoneId, includeDetails = false) {
   const mxshopLookupToken = env.MXSHOP_LOOKUP_TOKEN || env.MXSHOP_BEARER_TOKEN || "";
   const candidates = [
     mxshopLookupToken && {
@@ -710,11 +729,10 @@ async function mlbbLookup(request, env) {
   let lookupError = "";
   for (const candidate of candidates) {
     const result = await tryLookup(candidate, userId, zoneId);
-    if (result.nickname) return jsonResponse(200, { ok: true, nickname: result.nickname, source: result.source });
+    if (result.nickname) return includeDetails ? result : result.nickname;
     if (result.error && !lookupError) lookupError = result.error;
   }
-
-  return jsonResponse(502, { ok: false, error: lookupError || "Nickname lookup is unavailable. Please verify the ID manually." });
+  return includeDetails ? { nickname: "", error: lookupError } : "";
 }
 
 async function telegramNotify(request, env) {
