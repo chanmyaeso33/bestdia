@@ -29,7 +29,7 @@ button{cursor:pointer}
 .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}.kpi{background:#0B1020;border:1px solid var(--line);border-radius:10px;padding:12px}.kpi span{display:block;color:var(--muted);font-size:.72rem}.kpi b{display:block;margin-top:4px;color:var(--gold);font-family:"Chakra Petch",sans-serif;font-size:1.35rem}
 .toolbar{display:grid;grid-template-columns:1fr 150px 150px auto;gap:8px;margin-bottom:14px}.status{min-height:22px;color:var(--muted);font-size:.82rem;margin-bottom:10px}.status.warn{color:var(--warn)}.status.ok{color:var(--success)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px}.opp{position:relative;overflow:hidden}.opp::before{content:"";position:absolute;inset:0 0 auto;height:4px;background:linear-gradient(90deg,var(--diamond),var(--gold));opacity:.85}.opp-head{display:flex;justify-content:space-between;gap:12px;padding-top:4px;margin-bottom:10px}.opp h3{font-size:1rem;line-height:1.35}.score{flex:0 0 58px;height:58px;border-radius:10px;display:grid;place-items:center;background:#07101a;border:1px solid rgba(245,197,66,.28);color:var(--gold);font-family:"Chakra Petch",sans-serif;font-size:1.35rem;font-weight:800}.meta{display:flex;gap:6px;flex-wrap:wrap;margin:9px 0}.pill{display:inline-flex;align-items:center;min-height:24px;border:1px solid var(--line);border-radius:999px;background:rgba(91,227,255,.06);color:var(--diamond);padding:3px 8px;font-size:.72rem;font-weight:700}.pill.gold{color:var(--gold);border-color:rgba(245,197,66,.24);background:rgba(245,197,66,.08)}.pill.green{color:var(--success);border-color:rgba(46,204,113,.24);background:rgba(46,204,113,.08)}
-.reason{color:#cdd5e8;font-size:.84rem;line-height:1.55;margin:10px 0 12px}.products{display:grid;gap:7px;margin:10px 0}.product{border:1px solid rgba(91,227,255,.1);border-radius:8px;background:#0B1020;padding:9px}.product b{font-size:.82rem}.product span{display:block;color:var(--muted);font-size:.72rem;line-height:1.45;margin-top:3px}.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}.empty{padding:28px;text-align:center;color:var(--muted)}
+.reason{color:#cdd5e8;font-size:.84rem;line-height:1.55;margin:10px 0 12px}.products,.drafts{display:grid;gap:7px;margin:10px 0}.product,.draft{border:1px solid rgba(91,227,255,.1);border-radius:8px;background:#0B1020;padding:9px}.product b,.draft b{font-size:.82rem}.product span,.draft span{display:block;color:var(--muted);font-size:.72rem;line-height:1.45;margin-top:3px}.draft pre{white-space:pre-wrap;color:#dfe7f7;font-family:Inter,system-ui,sans-serif;font-size:.84rem;line-height:1.55;margin-top:8px}.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}.empty{padding:28px;text-align:center;color:var(--muted)}
 .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:50;align-items:center;justify-content:center;padding:16px}.modal.show{display:flex}.modal-card{max-width:640px;width:100%;max-height:86vh;overflow:auto;background:#101728;border:1px solid var(--line);border-radius:12px;padding:16px}.modal-title{font-family:"Chakra Petch",sans-serif;font-size:1.15rem;margin-bottom:10px}.modal-body{color:#cdd5e8;line-height:1.6;font-size:.9rem}.row{display:grid;grid-template-columns:130px 1fr;gap:8px;padding:7px 0;border-bottom:1px solid rgba(91,227,255,.08)}.row span:first-child{color:var(--muted)}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}.form-grid .wide{grid-column:1/-1}.textarea{width:100%;min-height:92px;resize:vertical;border:1px solid var(--line);border-radius:8px;background:#0B1020;color:var(--text);padding:10px 11px;outline:none}.review-hint{color:var(--muted);font-size:.78rem;line-height:1.5;margin-top:8px}
 @media(max-width:860px){.hero{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}.toolbar{grid-template-columns:1fr 1fr}.topbar-inner{align-items:flex-start;flex-direction:column}.grid{grid-template-columns:1fr}}@media(max-width:520px){.kpis,.toolbar{grid-template-columns:1fr}.headline{display:block}.score{width:52px;height:52px}.row{grid-template-columns:1fr}}
 </style>
@@ -104,6 +104,14 @@ button{cursor:pointer}
   </div>
 </div>
 
+<div class="modal" id="draftModal">
+  <div class="modal-card">
+    <div class="modal-title" id="draftTitle">Drafts</div>
+    <div class="modal-body" id="draftBody"></div>
+    <div class="actions"><button class="btn primary" type="button" id="closeDraftBtn">Close</button></div>
+  </div>
+</div>
+
 <script>
 let adminPassword="", opportunities=[], reviewTargetId="";
 const $=sel=>document.querySelector(sel);
@@ -148,6 +156,18 @@ async function updateOpportunity(id,status,extra={}){
   }catch(error){setStatus(error.message||"Could not update opportunity.","warn");}
 }
 
+async function generateDraft(id){
+  if(!adminPassword){setStatus("Enter the admin password first.","warn");return;}
+  const item=opportunities.find(opp=>opp.id===id);
+  const channels=getChannels(item||{}).filter(channel=>["facebook","tiktok","telegram","website"].includes(channel));
+  setStatus("Generating draft...");
+  try{
+    const data=await apiPost("/api/run-writer-agent",adminPayload({opportunityId:id,channels:channels.length?channels:["facebook","tiktok"]}));
+    showDrafts(item,data.drafts||[]);
+    setStatus(`Generated ${(data.drafts||[]).length} draft(s).`,"ok");
+  }catch(error){setStatus(error.message||"Could not generate draft.","warn");}
+}
+
 function getProducts(item){return Array.isArray(item.products)?item.products:[];}
 function getChannels(item){return Array.isArray(item.recommended_channels)?item.recommended_channels:[];}
 function visibleOpportunities(){
@@ -181,7 +201,7 @@ function renderOpportunity(item){
     <p class="reason">${escapeText(item.reasoning||"No reasoning provided.")}</p>
     <div class="meta">${channels.length?channels.map(c=>`<span class="pill">${escapeText(c)}</span>`).join(""):`<span class="pill">facebook</span>`}</div>
     <div class="products">${products.length?products.map(p=>`<div class="product"><b>${escapeText(p.product_name||"Product")}</b><span>${fmt(p.relevance_score)} relevance. ${escapeText(p.reason||"Matched product.")}</span></div>`).join(""):`<div class="product"><b>No product match</b><span>Review this before posting.</span></div>`}</div>
-    <div class="actions"><button class="btn" type="button" data-view="${escapeText(item.id)}">Details</button><button class="btn primary" type="button" data-review="${escapeText(item.id)}" data-decision="approved">Approve</button><button class="btn" type="button" data-review="${escapeText(item.id)}" data-decision="used">Posted</button><button class="btn danger" type="button" data-review="${escapeText(item.id)}" data-decision="rejected">Reject</button></div>
+    <div class="actions"><button class="btn" type="button" data-view="${escapeText(item.id)}">Details</button><button class="btn primary" type="button" data-draft="${escapeText(item.id)}">Generate Draft</button><button class="btn" type="button" data-review="${escapeText(item.id)}" data-decision="approved">Approve</button><button class="btn" type="button" data-review="${escapeText(item.id)}" data-decision="used">Posted</button><button class="btn danger" type="button" data-review="${escapeText(item.id)}" data-decision="rejected">Reject</button></div>
   </article>`;
 }
 function showDetails(id){
@@ -207,7 +227,7 @@ function openReview(id,decision="reviewed"){
   if(!item)return;
   reviewTargetId=id;
   $("#reviewTitle").textContent=`Review: ${item.title||"Opportunity"}`;
-  $("#reviewSummary").textContent=`${(item.game||"other").toUpperCase()} · Score ${fmt(item.overall_score)} · ${item.reasoning||"No reasoning provided."}`;
+  $("#reviewSummary").textContent=`${(item.game||"other").toUpperCase()} - Score ${fmt(item.overall_score)} - ${item.reasoning||"No reasoning provided."}`;
   $("#reviewDecision").value=decision;
   const channels=getChannels(item);
   $("#reviewChannel").value=channels.includes("facebook")?"facebook":(channels[0]||"");
@@ -215,6 +235,12 @@ function openReview(id,decision="reviewed"){
   $("#reviewFeedback").value=decision==="approved"||decision==="used"?"good":(decision==="rejected"?"bad":"");
   $("#reviewNotes").value="";
   $("#reviewModal").classList.add("show");
+}
+
+function showDrafts(item,drafts){
+  $("#draftTitle").textContent=`Drafts: ${item?.title||"Opportunity"}`;
+  $("#draftBody").innerHTML=drafts.length?`<div class="drafts">${drafts.map(draft=>`<div class="draft"><b>${escapeText((draft.channel||"channel").toUpperCase())}</b><span>${escapeText(draft.title||"Draft")}</span><pre>${escapeText(draft.body||"")}</pre><span>${escapeText(draft.call_to_action||"")}</span><span>${Array.isArray(draft.hashtags)?draft.hashtags.map(escapeText).join(" "):""}</span></div>`).join("")}</div>`:`<div class="empty">No drafts were returned.</div>`;
+  $("#draftModal").classList.add("show");
 }
 
 async function saveReview(){
@@ -240,14 +266,18 @@ $("#statusFilter").addEventListener("change",loadOpportunities);
 $("#opportunityGrid").addEventListener("click",event=>{
   const view=event.target.closest("[data-view]");
   const review=event.target.closest("[data-review]");
+  const draft=event.target.closest("[data-draft]");
   if(view)showDetails(view.dataset.view);
   if(review)openReview(review.dataset.review,review.dataset.decision);
+  if(draft)generateDraft(draft.dataset.draft);
 });
 $("#closeModalBtn").addEventListener("click",()=>$("#detailModal").classList.remove("show"));
 $("#detailModal").addEventListener("click",event=>{if(event.target.id==="detailModal")$("#detailModal").classList.remove("show");});
 $("#saveReviewBtn").addEventListener("click",saveReview);
 $("#closeReviewBtn").addEventListener("click",()=>$("#reviewModal").classList.remove("show"));
 $("#reviewModal").addEventListener("click",event=>{if(event.target.id==="reviewModal")$("#reviewModal").classList.remove("show");});
+$("#closeDraftBtn").addEventListener("click",()=>$("#draftModal").classList.remove("show"));
+$("#draftModal").addEventListener("click",event=>{if(event.target.id==="draftModal")$("#draftModal").classList.remove("show");});
 $("#adminPassword").value=localStorage.getItem("bestdia_marketing_os_admin")||"";
 if($("#adminPassword").value){adminPassword=$("#adminPassword").value;loadOpportunities();}
 </script>
