@@ -17,9 +17,11 @@ export async function onRequest(context) {
     if (route === "admin-balance-topups") return adminBalanceTopups(request, env);
     if (route === "admin-confirm-balance-topup") return adminConfirmBalanceTopup(request, env);
     if (route === "admin-content-drafts") return adminContentDrafts(request, env);
+    if (route === "admin-content-calendar") return adminContentCalendar(request, env);
     if (route === "admin-orders") return adminOrders(request, env);
     if (route === "admin-opportunities") return adminOpportunities(request, env);
     if (route === "admin-update-content-draft") return adminUpdateContentDraft(request, env);
+    if (route === "admin-update-content-calendar") return adminUpdateContentCalendar(request, env);
     if (route === "admin-update-opportunity") return adminUpdateOpportunity(request, env);
     if (route === "admin-update-balance-topup") return adminUpdateBalanceTopup(request, env);
     if (route === "admin-update-order") return adminUpdateOrder(request, env);
@@ -504,6 +506,72 @@ async function adminContentDrafts(request, env) {
   if (!opportunityId) return jsonResponse(400, { ok: false, error: "Missing opportunity ID" });
   const drafts = await supabaseSelectContentDrafts(env, opportunityId);
   return jsonResponse(200, { ok: true, drafts });
+}
+
+async function adminContentCalendar(request, env) {
+  if (request.method !== "POST") return jsonResponse(405, { ok: false, error: "Method not allowed" });
+  const payload = await readJson(request);
+  const auth = requireAdmin(payload, env);
+  if (auth) return auth;
+  const status = String(payload.status || "scheduled").trim();
+  const limit = Math.max(1, Math.min(100, Number(payload.limit || 30)));
+  const items = await supabaseSelectContentCalendar(env, { status, limit });
+  return jsonResponse(200, { ok: true, items });
+}
+
+async function adminUpdateContentCalendar(request, env) {
+  if (request.method !== "POST") return jsonResponse(405, { ok: false, error: "Method not allowed" });
+  const payload = await readJson(request);
+  const auth = requireAdmin(payload, env);
+  if (auth) return auth;
+  const action = String(payload.action || "schedule").trim();
+  if (action === "schedule") return scheduleContentCalendarItem(env, payload);
+  if (action === "update") return updateContentCalendarItem(env, payload);
+  return jsonResponse(400, { ok: false, error: "Invalid calendar action" });
+}
+
+async function scheduleContentCalendarItem(env, payload) {
+  const draftId = String(payload.draftId || payload.draft_id || "").trim();
+  if (!draftId) return jsonResponse(400, { ok: false, error: "Missing draft ID" });
+  const scheduledFor = normalizeScheduledFor(payload.scheduledFor || payload.scheduled_for);
+  if (!scheduledFor) return jsonResponse(400, { ok: false, error: "Invalid scheduled date/time" });
+  const draft = await supabaseSelectContentDraftById(env, draftId);
+  if (!draft) return jsonResponse(404, { ok: false, error: "Draft not found" });
+  const channel = normalizeWriterChannel(payload.channel || draft.channel);
+  if (!channel) return jsonResponse(400, { ok: false, error: "Invalid calendar channel" });
+  const rows = await supabaseCreateContentCalendarItem(env, {
+    draft_id: draft.id,
+    opportunity_id: draft.opportunity_id || null,
+    channel,
+    scheduled_for: scheduledFor,
+    status: "scheduled",
+    notes: cleanOptionalText(payload.notes, 1200) || null,
+    updated_at: new Date().toISOString(),
+  });
+  await supabaseUpdateContentDraft(env, draft.id, { status: "approved", updated_at: new Date().toISOString() }).catch(() => null);
+  return jsonResponse(200, { ok: true, item: rows[0] || null });
+}
+
+async function updateContentCalendarItem(env, payload) {
+  const id = String(payload.id || "").trim();
+  if (!id) return jsonResponse(400, { ok: false, error: "Missing calendar item ID" });
+  const status = String(payload.status || "").trim();
+  if (!["scheduled", "published", "cancelled", "missed"].includes(status)) return jsonResponse(400, { ok: false, error: "Invalid calendar status" });
+  const updates = {
+    status,
+    updated_at: new Date().toISOString(),
+  };
+  if (payload.publishedUrl !== undefined || payload.published_url !== undefined) updates.published_url = cleanOptionalText(payload.publishedUrl || payload.published_url, 500) || null;
+  if (payload.notes !== undefined) updates.notes = cleanOptionalText(payload.notes, 1200) || null;
+  if (payload.scheduledFor !== undefined || payload.scheduled_for !== undefined) {
+    const scheduledFor = normalizeScheduledFor(payload.scheduledFor || payload.scheduled_for);
+    if (!scheduledFor) return jsonResponse(400, { ok: false, error: "Invalid scheduled date/time" });
+    updates.scheduled_for = scheduledFor;
+  }
+  const rows = await supabaseUpdateContentCalendarItem(env, id, updates);
+  const item = rows[0] || null;
+  if (item?.draft_id && status === "published") await supabaseUpdateContentDraft(env, item.draft_id, { status: "published", updated_at: new Date().toISOString() }).catch(() => null);
+  return jsonResponse(200, { ok: true, item });
 }
 
 async function adminUpdateContentDraft(request, env) {
@@ -2019,6 +2087,12 @@ function normalizeDraftHashtagsForUpdate(value) {
   return Array.from(new Set(clean)).slice(0, 8);
 }
 
+function normalizeScheduledFor(value) {
+  const date = new Date(String(value || ""));
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toISOString();
+}
+
 async function supabaseSelectCollectedArticles(env, limit) {
   const qs = supabaseQuery({
     select: "id,title,url,game,published_at,raw_content,summary,engagement_count,comment_count,share_count,collected_at,news_sources(name)",
@@ -2097,8 +2171,32 @@ async function supabaseSelectContentDrafts(env, opportunityId) {
   return supabaseRequest(env, "GET", `content_drafts?${qs}`);
 }
 
+async function supabaseSelectContentDraftById(env, id) {
+  const rows = await supabaseRequest(env, "GET", `content_drafts?${supabaseQuery({ select: "*", id: `eq.${id}`, limit: "1" })}`);
+  return rows[0] || null;
+}
+
 async function supabaseUpdateContentDraft(env, id, updates) {
   return supabaseRequest(env, "PATCH", `content_drafts?${supabaseQuery({ id: `eq.${id}` })}`, updates, "return=representation");
+}
+
+async function supabaseSelectContentCalendar(env, options = {}) {
+  const status = String(options.status || "scheduled").trim();
+  const params = {
+    select: "*,content_drafts(channel,title,body,call_to_action,hashtags,status),opportunities(title,game,overall_score)",
+    order: "scheduled_for.asc",
+    limit: String(options.limit || 30),
+  };
+  if (status !== "all") params.status = `eq.${status}`;
+  return supabaseRequest(env, "GET", `content_calendar?${supabaseQuery(params)}`);
+}
+
+async function supabaseCreateContentCalendarItem(env, row) {
+  return supabaseRequest(env, "POST", "content_calendar", [row], "return=representation");
+}
+
+async function supabaseUpdateContentCalendarItem(env, id, updates) {
+  return supabaseRequest(env, "PATCH", `content_calendar?${supabaseQuery({ id: `eq.${id}` })}`, updates, "return=representation");
 }
 
 async function supabaseUpdateArticle(env, id, updates) {
