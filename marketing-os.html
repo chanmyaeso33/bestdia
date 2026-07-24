@@ -27,9 +27,9 @@ button{cursor:pointer}
 .headline{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}.headline h2{font-family:"Chakra Petch",sans-serif;font-size:1.55rem;margin-bottom:8px}.headline p{color:var(--muted);line-height:1.55;max-width:720px;font-size:.9rem}
 .login{display:grid;gap:9px}.label{display:block;color:var(--muted);font-family:"Chakra Petch",sans-serif;font-size:.7rem;font-weight:800;text-transform:uppercase;margin-bottom:5px;letter-spacing:.08em}.input,.select{width:100%;border:1px solid var(--line);border-radius:8px;background:#0B1020;color:var(--text);padding:10px 11px;outline:none}.input:focus,.select:focus{border-color:var(--diamond);box-shadow:0 0 0 3px rgba(91,227,255,.08)}
 .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}.kpi{background:#0B1020;border:1px solid var(--line);border-radius:10px;padding:12px}.kpi span{display:block;color:var(--muted);font-size:.72rem}.kpi b{display:block;margin-top:4px;color:var(--gold);font-family:"Chakra Petch",sans-serif;font-size:1.35rem}
-.toolbar{display:grid;grid-template-columns:1fr 150px 150px auto;gap:8px;margin-bottom:14px}.status{min-height:22px;color:var(--muted);font-size:.82rem;margin-bottom:10px}.status.warn{color:var(--warn)}.status.ok{color:var(--success)}
+.toolbar{display:grid;grid-template-columns:1fr 150px 150px auto;gap:8px;margin-bottom:14px}.calendar-toolbar{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:10px}.status{min-height:22px;color:var(--muted);font-size:.82rem;margin-bottom:10px}.status.warn{color:var(--warn)}.status.ok{color:var(--success)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px}.opp{position:relative;overflow:hidden}.opp::before{content:"";position:absolute;inset:0 0 auto;height:4px;background:linear-gradient(90deg,var(--diamond),var(--gold));opacity:.85}.opp-head{display:flex;justify-content:space-between;gap:12px;padding-top:4px;margin-bottom:10px}.opp h3{font-size:1rem;line-height:1.35}.score{flex:0 0 58px;height:58px;border-radius:10px;display:grid;place-items:center;background:#07101a;border:1px solid rgba(245,197,66,.28);color:var(--gold);font-family:"Chakra Petch",sans-serif;font-size:1.35rem;font-weight:800}.meta{display:flex;gap:6px;flex-wrap:wrap;margin:9px 0}.pill{display:inline-flex;align-items:center;min-height:24px;border:1px solid var(--line);border-radius:999px;background:rgba(91,227,255,.06);color:var(--diamond);padding:3px 8px;font-size:.72rem;font-weight:700}.pill.gold{color:var(--gold);border-color:rgba(245,197,66,.24);background:rgba(245,197,66,.08)}.pill.green{color:var(--success);border-color:rgba(46,204,113,.24);background:rgba(46,204,113,.08)}
-.reason{color:#cdd5e8;font-size:.84rem;line-height:1.55;margin:10px 0 12px}.products,.drafts{display:grid;gap:7px;margin:10px 0}.product,.draft{border:1px solid rgba(91,227,255,.1);border-radius:8px;background:#0B1020;padding:9px}.product b,.draft b{font-size:.82rem}.product span,.draft span{display:block;color:var(--muted);font-size:.72rem;line-height:1.45;margin-top:3px}.draft pre{white-space:pre-wrap;color:#dfe7f7;font-family:Inter,system-ui,sans-serif;font-size:.84rem;line-height:1.55;margin-top:8px}.draft .draft-status{display:inline-flex;margin-left:6px;color:var(--gold)}.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}.empty{padding:28px;text-align:center;color:var(--muted)}
+.reason{color:#cdd5e8;font-size:.84rem;line-height:1.55;margin:10px 0 12px}.products,.drafts,.calendar-list{display:grid;gap:7px;margin:10px 0}.product,.draft,.calendar-item{border:1px solid rgba(91,227,255,.1);border-radius:8px;background:#0B1020;padding:9px}.product b,.draft b,.calendar-item b{font-size:.82rem}.product span,.draft span,.calendar-item span{display:block;color:var(--muted);font-size:.72rem;line-height:1.45;margin-top:3px}.draft pre,.calendar-item pre{white-space:pre-wrap;color:#dfe7f7;font-family:Inter,system-ui,sans-serif;font-size:.84rem;line-height:1.55;margin-top:8px}.draft .draft-status{display:inline-flex;margin-left:6px;color:var(--gold)}.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}.empty{padding:28px;text-align:center;color:var(--muted)}
 .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:50;align-items:center;justify-content:center;padding:16px}.modal.show{display:flex}.modal-card{max-width:640px;width:100%;max-height:86vh;overflow:auto;background:#101728;border:1px solid var(--line);border-radius:12px;padding:16px}.modal-title{font-family:"Chakra Petch",sans-serif;font-size:1.15rem;margin-bottom:10px}.modal-body{color:#cdd5e8;line-height:1.6;font-size:.9rem}.row{display:grid;grid-template-columns:130px 1fr;gap:8px;padding:7px 0;border-bottom:1px solid rgba(91,227,255,.08)}.row span:first-child{color:var(--muted)}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}.form-grid .wide{grid-column:1/-1}.textarea{width:100%;min-height:92px;resize:vertical;border:1px solid var(--line);border-radius:8px;background:#0B1020;color:var(--text);padding:10px 11px;outline:none}.draft .textarea{margin-top:8px}.review-hint{color:var(--muted);font-size:.78rem;line-height:1.5;margin-top:8px}
 @media(max-width:860px){.hero{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}.toolbar{grid-template-columns:1fr 1fr}.topbar-inner{align-items:flex-start;flex-direction:column}.grid{grid-template-columns:1fr}}@media(max-width:520px){.kpis,.toolbar{grid-template-columns:1fr}.headline{display:block}.score{width:52px;height:52px}.row{grid-template-columns:1fr}}
 </style>
@@ -76,6 +76,15 @@ button{cursor:pointer}
     <div class="status" id="statusLine">Enter the admin password to load opportunities.</div>
     <div class="grid" id="opportunityGrid"></div>
   </section>
+
+  <section class="panel" style="margin-top:14px">
+    <div class="calendar-toolbar">
+      <div><h2 style="font-family:'Chakra Petch',sans-serif;font-size:1.1rem">Content Calendar</h2><p class="review-hint">Approved drafts scheduled for human publishing.</p></div>
+      <div class="actions" style="margin-top:0"><select class="select" id="calendarStatus" style="width:auto"><option value="scheduled">Scheduled</option><option value="published">Published</option><option value="cancelled">Cancelled</option><option value="all">All</option></select><button class="btn" id="refreshCalendarBtn" type="button">Refresh Calendar</button></div>
+    </div>
+    <div class="status" id="calendarStatusLine">Load the dashboard to see scheduled content.</div>
+    <div class="calendar-list" id="calendarList"></div>
+  </section>
 </main>
 
 <div class="modal" id="detailModal">
@@ -113,12 +122,13 @@ button{cursor:pointer}
 </div>
 
 <script>
-let adminPassword="", opportunities=[], reviewTargetId="", activeDraftOpportunity=null, activeDrafts=[];
+let adminPassword="", opportunities=[], calendarItems=[], reviewTargetId="", activeDraftOpportunity=null, activeDrafts=[];
 const $=sel=>document.querySelector(sel);
 const escapeText=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
 const fmt=n=>Number(n||0).toLocaleString();
 
 function setStatus(message,type=""){const el=$("#statusLine");el.textContent=message;el.className=`status ${type}`;}
+function setCalendarStatus(message,type=""){const el=$("#calendarStatusLine");el.textContent=message;el.className=`status ${type}`;}
 async function apiPost(path,payload){const res=await fetch(path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload||{})});const data=await res.json().catch(()=>({ok:false,error:"Invalid API response"}));if(!res.ok||data.ok===false)throw new Error(data.error||"API request failed");return data;}
 function adminPayload(extra={}){return {adminPassword,...extra};}
 
@@ -130,6 +140,7 @@ async function loadOpportunities(){
     opportunities=Array.isArray(data.opportunities)?data.opportunities:[];
     render();
     setStatus(`Loaded ${opportunities.length} opportunities.`,"ok");
+    loadCalendar();
   }catch(error){setStatus(error.message||"Could not load opportunities.","warn");}
 }
 
@@ -186,6 +197,43 @@ async function updateDraftStatus(id,status){
     showDrafts(activeDraftOpportunity,activeDrafts);
     setStatus(`Draft marked ${status}.`,"ok");
   }catch(error){setStatus(error.message||"Could not update draft.","warn");}
+}
+
+async function scheduleDraft(id){
+  const card=document.querySelector(`[data-draft-card="${CSS.escape(id)}"]`);
+  if(!card)return;
+  try{
+    const data=await apiPost("/api/admin-update-content-calendar",adminPayload({
+      action:"schedule",
+      draftId:id,
+      scheduledFor:card.querySelector("[data-schedule-for]").value,
+      notes:card.querySelector("[data-schedule-notes]").value,
+    }));
+    setStatus("Draft scheduled.","ok");
+    await loadCalendar();
+    if(data.item)card.querySelector("[data-schedule-notes]").value="";
+  }catch(error){setStatus(error.message||"Could not schedule draft.","warn");}
+}
+
+async function loadCalendar(){
+  if(!adminPassword)return;
+  setCalendarStatus("Loading calendar...");
+  try{
+    const data=await apiPost("/api/admin-content-calendar",adminPayload({status:$("#calendarStatus").value,limit:40}));
+    calendarItems=Array.isArray(data.items)?data.items:[];
+    renderCalendar();
+    setCalendarStatus(`Loaded ${calendarItems.length} calendar item(s).`,"ok");
+  }catch(error){setCalendarStatus(error.message||"Could not load calendar.","warn");}
+}
+
+async function updateCalendarItem(id,status){
+  const item=calendarItems.find(row=>row.id===id);
+  const url=status==="published"?prompt("Published URL (optional):",item?.published_url||""):"";
+  try{
+    await apiPost("/api/admin-update-content-calendar",adminPayload({action:"update",id,status,publishedUrl:url||""}));
+    await loadCalendar();
+    setCalendarStatus(`Calendar item marked ${status}.`,"ok");
+  }catch(error){setCalendarStatus(error.message||"Could not update calendar item.","warn");}
 }
 
 async function saveDraftEdits(id){
@@ -245,6 +293,22 @@ function render(){
   renderKpis(list);
   $("#opportunityGrid").innerHTML=list.length?list.map(renderOpportunity).join(""):`<div class="empty">No opportunities match this view.</div>`;
 }
+
+function renderCalendar(){
+  $("#calendarList").innerHTML=calendarItems.length?calendarItems.map(renderCalendarItem).join(""):`<div class="empty">No calendar items match this view.</div>`;
+}
+
+function renderCalendarItem(item){
+  const draft=item.content_drafts||{};
+  const opp=item.opportunities||{};
+  return `<article class="calendar-item"><b>${escapeText((item.channel||"").toUpperCase())} - ${escapeText(item.status||"scheduled")}</b><span>${escapeText(formatDateTime(item.scheduled_for))}</span><span>${escapeText(opp.title||draft.title||"Scheduled draft")}</span><pre>${escapeText(draft.body||"")}</pre>${item.published_url?`<span>${escapeText(item.published_url)}</span>`:""}<div class="actions"><button class="btn primary" type="button" data-calendar-status="published" data-calendar-id="${escapeText(item.id)}">Mark Published</button><button class="btn danger" type="button" data-calendar-status="cancelled" data-calendar-id="${escapeText(item.id)}">Cancel</button></div></article>`;
+}
+
+function formatDateTime(value){
+  if(!value)return "-";
+  const date=new Date(value);
+  return Number.isNaN(date.getTime())?"-":date.toLocaleString([], { dateStyle:"medium", timeStyle:"short" });
+}
 function renderOpportunity(item){
   const products=getProducts(item);
   const channels=getChannels(item);
@@ -294,7 +358,7 @@ function showDrafts(item,drafts){
   activeDraftOpportunity=item||activeDraftOpportunity;
   activeDrafts=Array.isArray(drafts)?drafts:[];
   $("#draftTitle").textContent=`Drafts: ${item?.title||"Opportunity"}`;
-  $("#draftBody").innerHTML=activeDrafts.length?`<div class="drafts">${activeDrafts.map(draft=>`<div class="draft" data-draft-card="${escapeText(draft.id)}"><b>${escapeText((draft.channel||"channel").toUpperCase())}<span class="draft-status">${escapeText(draft.status||"draft")}</span></b><label><span class="label">Title</span><input class="input" data-edit-title value="${escapeText(draft.title||"Draft")}"/></label><label><span class="label">Body</span><textarea class="textarea" data-edit-body>${escapeText(draft.body||"")}</textarea></label><label><span class="label">Call to action</span><input class="input" data-edit-cta value="${escapeText(draft.call_to_action||"")}"/></label><label><span class="label">Hashtags</span><input class="input" data-edit-tags value="${Array.isArray(draft.hashtags)?draft.hashtags.map(escapeText).join(" "):""}"/></label><div class="actions"><button class="btn" type="button" data-copy-draft="${escapeText(draft.id)}">Copy</button><button class="btn" type="button" data-save-draft="${escapeText(draft.id)}">Save Edits</button><button class="btn primary" type="button" data-draft-status="approved" data-id="${escapeText(draft.id)}">Approve Draft</button><button class="btn danger" type="button" data-draft-status="rejected" data-id="${escapeText(draft.id)}">Reject Draft</button></div></div>`).join("")}</div>`:`<div class="empty">No saved drafts yet. Generate one first.</div>`;
+  $("#draftBody").innerHTML=activeDrafts.length?`<div class="drafts">${activeDrafts.map(draft=>`<div class="draft" data-draft-card="${escapeText(draft.id)}"><b>${escapeText((draft.channel||"channel").toUpperCase())}<span class="draft-status">${escapeText(draft.status||"draft")}</span></b><label><span class="label">Title</span><input class="input" data-edit-title value="${escapeText(draft.title||"Draft")}"/></label><label><span class="label">Body</span><textarea class="textarea" data-edit-body>${escapeText(draft.body||"")}</textarea></label><label><span class="label">Call to action</span><input class="input" data-edit-cta value="${escapeText(draft.call_to_action||"")}"/></label><label><span class="label">Hashtags</span><input class="input" data-edit-tags value="${Array.isArray(draft.hashtags)?draft.hashtags.map(escapeText).join(" "):""}"/></label><div class="form-grid"><label><span class="label">Schedule for</span><input class="input" type="datetime-local" data-schedule-for/></label><label><span class="label">Schedule notes</span><input class="input" data-schedule-notes placeholder="Optional"/></label></div><div class="actions"><button class="btn" type="button" data-copy-draft="${escapeText(draft.id)}">Copy</button><button class="btn" type="button" data-save-draft="${escapeText(draft.id)}">Save Edits</button><button class="btn primary" type="button" data-schedule-draft="${escapeText(draft.id)}">Schedule Draft</button><button class="btn" type="button" data-draft-status="approved" data-id="${escapeText(draft.id)}">Approve Draft</button><button class="btn danger" type="button" data-draft-status="rejected" data-id="${escapeText(draft.id)}">Reject Draft</button></div></div>`).join("")}</div>`:`<div class="empty">No saved drafts yet. Generate one first.</div>`;
   $("#draftModal").classList.add("show");
 }
 
@@ -314,6 +378,8 @@ async function saveReview(){
 
 $("#unlockBtn").addEventListener("click",()=>{adminPassword=$("#adminPassword").value.trim();localStorage.setItem("bestdia_marketing_os_admin",adminPassword);loadOpportunities();});
 $("#refreshBtn").addEventListener("click",loadOpportunities);
+$("#refreshCalendarBtn").addEventListener("click",loadCalendar);
+$("#calendarStatus").addEventListener("change",loadCalendar);
 $("#runPipelineBtn").addEventListener("click",runPipeline);
 $("#searchInput").addEventListener("input",render);
 $("#gameFilter").addEventListener("change",loadOpportunities);
@@ -332,9 +398,15 @@ $("#draftBody").addEventListener("click",event=>{
   const copy=event.target.closest("[data-copy-draft]");
   const status=event.target.closest("[data-draft-status]");
   const save=event.target.closest("[data-save-draft]");
+  const schedule=event.target.closest("[data-schedule-draft]");
   if(copy)copyDraft(copy.dataset.copyDraft);
   if(save)saveDraftEdits(save.dataset.saveDraft);
+  if(schedule)scheduleDraft(schedule.dataset.scheduleDraft);
   if(status)updateDraftStatus(status.dataset.id,status.dataset.draftStatus);
+});
+$("#calendarList").addEventListener("click",event=>{
+  const status=event.target.closest("[data-calendar-status]");
+  if(status)updateCalendarItem(status.dataset.calendarId,status.dataset.calendarStatus);
 });
 $("#closeModalBtn").addEventListener("click",()=>$("#detailModal").classList.remove("show"));
 $("#detailModal").addEventListener("click",event=>{if(event.target.id==="detailModal")$("#detailModal").classList.remove("show");});
