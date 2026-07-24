@@ -121,8 +121,30 @@ button{cursor:pointer}
   </div>
 </div>
 
+<div class="modal" id="performanceModal">
+  <div class="modal-card">
+    <div class="modal-title" id="performanceTitle">Add Performance</div>
+    <div class="modal-body">
+      <p class="review-hint" id="performanceSummary"></p>
+      <div class="form-grid">
+        <label><span class="label">Views</span><input class="input" id="metricViews" type="number" min="0" step="1" value="0"/></label>
+        <label><span class="label">Likes</span><input class="input" id="metricLikes" type="number" min="0" step="1" value="0"/></label>
+        <label><span class="label">Comments</span><input class="input" id="metricComments" type="number" min="0" step="1" value="0"/></label>
+        <label><span class="label">Shares</span><input class="input" id="metricShares" type="number" min="0" step="1" value="0"/></label>
+        <label><span class="label">Clicks</span><input class="input" id="metricClicks" type="number" min="0" step="1" value="0"/></label>
+        <label><span class="label">Orders</span><input class="input" id="metricOrders" type="number" min="0" step="1" value="0"/></label>
+        <label><span class="label">Revenue</span><input class="input" id="metricRevenue" type="number" min="0" step="0.01" value="0"/></label>
+        <label><span class="label">Measured at</span><input class="input" id="metricMeasuredAt" type="datetime-local"/></label>
+        <label class="wide"><span class="label">Notes</span><textarea class="textarea" id="metricNotes" placeholder="What happened after publishing?"></textarea></label>
+      </div>
+      <p class="review-hint">These metrics become the feedback loop for future opportunity scoring.</p>
+    </div>
+    <div class="actions"><button class="btn primary" type="button" id="savePerformanceBtn">Save Metrics</button><button class="btn" type="button" id="closePerformanceBtn">Cancel</button></div>
+  </div>
+</div>
+
 <script>
-let adminPassword="", opportunities=[], calendarItems=[], reviewTargetId="", activeDraftOpportunity=null, activeDrafts=[];
+let adminPassword="", opportunities=[], calendarItems=[], reviewTargetId="", activeDraftOpportunity=null, activeDrafts=[], activePerformanceCalendarId="";
 const $=sel=>document.querySelector(sel);
 const escapeText=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
 const fmt=n=>Number(n||0).toLocaleString();
@@ -301,7 +323,9 @@ function renderCalendar(){
 function renderCalendarItem(item){
   const draft=item.content_drafts||{};
   const opp=item.opportunities||{};
-  const actions=item.status==="scheduled"?`<div class="actions"><button class="btn primary" type="button" data-calendar-status="published" data-calendar-id="${escapeText(item.id)}">Mark Published</button><button class="btn danger" type="button" data-calendar-status="cancelled" data-calendar-id="${escapeText(item.id)}">Cancel</button></div>`:"";
+  let actions="";
+  if(item.status==="scheduled")actions=`<div class="actions"><button class="btn primary" type="button" data-calendar-status="published" data-calendar-id="${escapeText(item.id)}">Mark Published</button><button class="btn danger" type="button" data-calendar-status="cancelled" data-calendar-id="${escapeText(item.id)}">Cancel</button></div>`;
+  if(item.status==="published")actions=`<div class="actions"><button class="btn primary" type="button" data-performance="${escapeText(item.id)}">Add Metrics</button></div>`;
   return `<article class="calendar-item"><b>${escapeText((item.channel||"").toUpperCase())} - ${escapeText(item.status||"scheduled")}</b><span>${escapeText(formatDateTime(item.scheduled_for))}</span><span>${escapeText(opp.title||draft.title||"Scheduled draft")}</span><pre>${escapeText(draft.body||"")}</pre>${item.published_url?`<span>${escapeText(item.published_url)}</span>`:""}${actions}</article>`;
 }
 
@@ -363,6 +387,45 @@ function showDrafts(item,drafts){
   $("#draftModal").classList.add("show");
 }
 
+function openPerformance(id){
+  const item=calendarItems.find(row=>row.id===id);
+  if(!item)return;
+  const draft=item.content_drafts||{};
+  const opp=item.opportunities||{};
+  activePerformanceCalendarId=id;
+  $("#performanceTitle").textContent=`Performance: ${(item.channel||"channel").toUpperCase()}`;
+  $("#performanceSummary").textContent=opp.title||draft.title||"Published content";
+  ["Views","Likes","Comments","Shares","Clicks","Orders"].forEach(name=>{$(`#metric${name}`).value=0;});
+  $("#metricRevenue").value=0;
+  $("#metricMeasuredAt").value=new Date().toISOString().slice(0,16);
+  $("#metricNotes").value="";
+  $("#performanceModal").classList.add("show");
+}
+
+async function savePerformance(){
+  if(!activePerformanceCalendarId)return;
+  $("#savePerformanceBtn").disabled=true;
+  const measuredAt=$("#metricMeasuredAt").value;
+  try{
+    await apiPost("/api/admin-update-content-performance",adminPayload({
+      calendarId:activePerformanceCalendarId,
+      views:$("#metricViews").value,
+      likes:$("#metricLikes").value,
+      comments:$("#metricComments").value,
+      shares:$("#metricShares").value,
+      clicks:$("#metricClicks").value,
+      orders:$("#metricOrders").value,
+      revenue:$("#metricRevenue").value,
+      measuredAt:measuredAt?new Date(measuredAt).toISOString():"",
+      notes:$("#metricNotes").value,
+    }));
+    $("#performanceModal").classList.remove("show");
+    activePerformanceCalendarId="";
+    setCalendarStatus("Performance metrics saved.","ok");
+  }catch(error){setCalendarStatus(error.message||"Could not save performance metrics.","warn");}
+  finally{$("#savePerformanceBtn").disabled=false;}
+}
+
 async function saveReview(){
   if(!reviewTargetId)return;
   $("#saveReviewBtn").disabled=true;
@@ -407,7 +470,9 @@ $("#draftBody").addEventListener("click",event=>{
 });
 $("#calendarList").addEventListener("click",event=>{
   const status=event.target.closest("[data-calendar-status]");
+  const performance=event.target.closest("[data-performance]");
   if(status)updateCalendarItem(status.dataset.calendarId,status.dataset.calendarStatus);
+  if(performance)openPerformance(performance.dataset.performance);
 });
 $("#closeModalBtn").addEventListener("click",()=>$("#detailModal").classList.remove("show"));
 $("#detailModal").addEventListener("click",event=>{if(event.target.id==="detailModal")$("#detailModal").classList.remove("show");});
@@ -416,6 +481,9 @@ $("#closeReviewBtn").addEventListener("click",()=>$("#reviewModal").classList.re
 $("#reviewModal").addEventListener("click",event=>{if(event.target.id==="reviewModal")$("#reviewModal").classList.remove("show");});
 $("#closeDraftBtn").addEventListener("click",()=>$("#draftModal").classList.remove("show"));
 $("#draftModal").addEventListener("click",event=>{if(event.target.id==="draftModal")$("#draftModal").classList.remove("show");});
+$("#savePerformanceBtn").addEventListener("click",savePerformance);
+$("#closePerformanceBtn").addEventListener("click",()=>$("#performanceModal").classList.remove("show"));
+$("#performanceModal").addEventListener("click",event=>{if(event.target.id==="performanceModal")$("#performanceModal").classList.remove("show");});
 $("#adminPassword").value=localStorage.getItem("bestdia_marketing_os_admin")||"";
 if($("#adminPassword").value){adminPassword=$("#adminPassword").value;loadOpportunities();}
 </script>
