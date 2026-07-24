@@ -16,8 +16,10 @@ export async function onRequest(context) {
     if (route === "admin-archive-orders") return adminArchiveOrders(request, env);
     if (route === "admin-balance-topups") return adminBalanceTopups(request, env);
     if (route === "admin-confirm-balance-topup") return adminConfirmBalanceTopup(request, env);
+    if (route === "admin-content-drafts") return adminContentDrafts(request, env);
     if (route === "admin-orders") return adminOrders(request, env);
     if (route === "admin-opportunities") return adminOpportunities(request, env);
+    if (route === "admin-update-content-draft") return adminUpdateContentDraft(request, env);
     if (route === "admin-update-opportunity") return adminUpdateOpportunity(request, env);
     if (route === "admin-update-balance-topup") return adminUpdateBalanceTopup(request, env);
     if (route === "admin-update-order") return adminUpdateOrder(request, env);
@@ -491,6 +493,47 @@ async function adminOpportunities(request, env) {
   if (game) params.game = `eq.${game}`;
   const opportunities = await supabaseRequest(env, "GET", `today_opportunities?${supabaseQuery(params)}`);
   return jsonResponse(200, { ok: true, opportunities });
+}
+
+async function adminContentDrafts(request, env) {
+  if (request.method !== "POST") return jsonResponse(405, { ok: false, error: "Method not allowed" });
+  const payload = await readJson(request);
+  const auth = requireAdmin(payload, env);
+  if (auth) return auth;
+  const opportunityId = String(payload.opportunityId || payload.opportunity_id || "").trim();
+  if (!opportunityId) return jsonResponse(400, { ok: false, error: "Missing opportunity ID" });
+  const drafts = await supabaseSelectContentDrafts(env, opportunityId);
+  return jsonResponse(200, { ok: true, drafts });
+}
+
+async function adminUpdateContentDraft(request, env) {
+  if (request.method !== "POST") return jsonResponse(405, { ok: false, error: "Method not allowed" });
+  const payload = await readJson(request);
+  const auth = requireAdmin(payload, env);
+  if (auth) return auth;
+  const id = String(payload.id || "").trim();
+  const status = String(payload.status || "").trim();
+  if (!id) return jsonResponse(400, { ok: false, error: "Missing draft ID" });
+  if (status && !["draft", "approved", "rejected", "published"].includes(status)) {
+    return jsonResponse(400, { ok: false, error: "Invalid draft status" });
+  }
+  const updates = {
+    updated_at: new Date().toISOString(),
+  };
+  if (status) updates.status = status;
+  if (payload.title !== undefined) updates.title = cleanOptionalText(payload.title, 180) || null;
+  if (payload.body !== undefined) {
+    const body = cleanOptionalText(payload.body, 1200);
+    if (!body) return jsonResponse(400, { ok: false, error: "Draft body cannot be empty" });
+    updates.body = body;
+  }
+  if (payload.callToAction !== undefined || payload.call_to_action !== undefined) {
+    updates.call_to_action = cleanOptionalText(payload.callToAction || payload.call_to_action, 220) || null;
+  }
+  if (payload.hashtags !== undefined) updates.hashtags = normalizeDraftHashtagsForUpdate(payload.hashtags);
+  if (Object.keys(updates).length === 1) return jsonResponse(400, { ok: false, error: "No draft update was provided" });
+  const rows = await supabaseUpdateContentDraft(env, id, updates);
+  return jsonResponse(200, { ok: true, draft: rows[0] || null });
 }
 
 async function adminUpdateOpportunity(request, env) {
@@ -1966,6 +2009,16 @@ function normalizeDraftHashtags(value) {
   return Array.from(new Set([...clean, "#BestDia"])).slice(0, 8);
 }
 
+function normalizeDraftHashtagsForUpdate(value) {
+  const tags = Array.isArray(value) ? value : String(value || "").split(/[,\s]+/);
+  const clean = tags.map((tag) => {
+    const text = String(tag || "").trim().replace(/\s+/g, "");
+    if (!text) return "";
+    return text.startsWith("#") ? text : `#${text}`;
+  }).filter(Boolean);
+  return Array.from(new Set(clean)).slice(0, 8);
+}
+
 async function supabaseSelectCollectedArticles(env, limit) {
   const qs = supabaseQuery({
     select: "id,title,url,game,published_at,raw_content,summary,engagement_count,comment_count,share_count,collected_at,news_sources(name)",
@@ -2033,6 +2086,19 @@ async function supabaseCreateProductMatches(env, rows) {
 async function supabaseCreateContentDrafts(env, rows) {
   if (!rows.length) return [];
   return supabaseRequest(env, "POST", "content_drafts", rows, "return=representation");
+}
+
+async function supabaseSelectContentDrafts(env, opportunityId) {
+  const qs = supabaseQuery({
+    select: "*",
+    opportunity_id: `eq.${opportunityId}`,
+    order: "created_at.desc",
+  });
+  return supabaseRequest(env, "GET", `content_drafts?${qs}`);
+}
+
+async function supabaseUpdateContentDraft(env, id, updates) {
+  return supabaseRequest(env, "PATCH", `content_drafts?${supabaseQuery({ id: `eq.${id}` })}`, updates, "return=representation");
 }
 
 async function supabaseUpdateArticle(env, id, updates) {
