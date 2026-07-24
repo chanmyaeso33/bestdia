@@ -20,8 +20,10 @@ export async function onRequest(context) {
     if (route === "admin-content-calendar") return adminContentCalendar(request, env);
     if (route === "admin-orders") return adminOrders(request, env);
     if (route === "admin-opportunities") return adminOpportunities(request, env);
+    if (route === "admin-content-performance") return adminContentPerformance(request, env);
     if (route === "admin-update-content-draft") return adminUpdateContentDraft(request, env);
     if (route === "admin-update-content-calendar") return adminUpdateContentCalendar(request, env);
+    if (route === "admin-update-content-performance") return adminUpdateContentPerformance(request, env);
     if (route === "admin-update-opportunity") return adminUpdateOpportunity(request, env);
     if (route === "admin-update-balance-topup") return adminUpdateBalanceTopup(request, env);
     if (route === "admin-update-order") return adminUpdateOrder(request, env);
@@ -517,6 +519,46 @@ async function adminContentCalendar(request, env) {
   const limit = Math.max(1, Math.min(100, Number(payload.limit || 30)));
   const items = await supabaseSelectContentCalendar(env, { status, limit });
   return jsonResponse(200, { ok: true, items });
+}
+
+async function adminContentPerformance(request, env) {
+  if (request.method !== "POST") return jsonResponse(405, { ok: false, error: "Method not allowed" });
+  const payload = await readJson(request);
+  const auth = requireAdmin(payload, env);
+  if (auth) return auth;
+  const calendarId = String(payload.calendarId || payload.calendar_id || "").trim();
+  const limit = Math.max(1, Math.min(100, Number(payload.limit || 30)));
+  const rows = await supabaseSelectContentPerformance(env, { calendarId, limit });
+  return jsonResponse(200, { ok: true, metrics: rows });
+}
+
+async function adminUpdateContentPerformance(request, env) {
+  if (request.method !== "POST") return jsonResponse(405, { ok: false, error: "Method not allowed" });
+  const payload = await readJson(request);
+  const auth = requireAdmin(payload, env);
+  if (auth) return auth;
+  const calendarId = String(payload.calendarId || payload.calendar_id || "").trim();
+  if (!calendarId) return jsonResponse(400, { ok: false, error: "Missing calendar item ID" });
+  const calendarItem = await supabaseSelectContentCalendarItemById(env, calendarId);
+  if (!calendarItem) return jsonResponse(404, { ok: false, error: "Calendar item not found" });
+  const row = {
+    calendar_id: calendarItem.id,
+    draft_id: calendarItem.draft_id || null,
+    opportunity_id: calendarItem.opportunity_id || null,
+    channel: calendarItem.channel,
+    views: normalizeMetricNumber(payload.views),
+    likes: normalizeMetricNumber(payload.likes),
+    comments: normalizeMetricNumber(payload.comments),
+    shares: normalizeMetricNumber(payload.shares),
+    clicks: normalizeMetricNumber(payload.clicks),
+    orders: normalizeMetricNumber(payload.orders),
+    revenue: normalizeMetricMoney(payload.revenue),
+    notes: cleanOptionalText(payload.notes, 1200) || null,
+    measured_at: normalizeScheduledFor(payload.measuredAt || payload.measured_at) || new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+  const rows = await supabaseCreateContentPerformance(env, row);
+  return jsonResponse(200, { ok: true, metric: rows[0] || null });
 }
 
 async function adminUpdateContentCalendar(request, env) {
@@ -2093,6 +2135,16 @@ function normalizeScheduledFor(value) {
   return date.toISOString();
 }
 
+function normalizeMetricNumber(value) {
+  const number = Math.round(Number(value || 0));
+  return Math.max(0, number);
+}
+
+function normalizeMetricMoney(value) {
+  const number = Number(value || 0);
+  return Math.max(0, Math.round(number * 100) / 100);
+}
+
 async function supabaseSelectCollectedArticles(env, limit) {
   const qs = supabaseQuery({
     select: "id,title,url,game,published_at,raw_content,summary,engagement_count,comment_count,share_count,collected_at,news_sources(name)",
@@ -2191,12 +2243,31 @@ async function supabaseSelectContentCalendar(env, options = {}) {
   return supabaseRequest(env, "GET", `content_calendar?${supabaseQuery(params)}`);
 }
 
+async function supabaseSelectContentCalendarItemById(env, id) {
+  const rows = await supabaseRequest(env, "GET", `content_calendar?${supabaseQuery({ select: "*", id: `eq.${id}`, limit: "1" })}`);
+  return rows[0] || null;
+}
+
 async function supabaseCreateContentCalendarItem(env, row) {
   return supabaseRequest(env, "POST", "content_calendar", [row], "return=representation");
 }
 
 async function supabaseUpdateContentCalendarItem(env, id, updates) {
   return supabaseRequest(env, "PATCH", `content_calendar?${supabaseQuery({ id: `eq.${id}` })}`, updates, "return=representation");
+}
+
+async function supabaseSelectContentPerformance(env, options = {}) {
+  const params = {
+    select: "*",
+    order: "measured_at.desc",
+    limit: String(options.limit || 30),
+  };
+  if (options.calendarId) params.calendar_id = `eq.${options.calendarId}`;
+  return supabaseRequest(env, "GET", `content_performance?${supabaseQuery(params)}`);
+}
+
+async function supabaseCreateContentPerformance(env, row) {
+  return supabaseRequest(env, "POST", "content_performance", [row], "return=representation");
 }
 
 async function supabaseUpdateArticle(env, id, updates) {
