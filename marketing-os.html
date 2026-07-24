@@ -301,7 +301,8 @@ function renderCalendar(){
 function renderCalendarItem(item){
   const draft=item.content_drafts||{};
   const opp=item.opportunities||{};
-  return `<article class="calendar-item"><b>${escapeText((item.channel||"").toUpperCase())} - ${escapeText(item.status||"scheduled")}</b><span>${escapeText(formatDateTime(item.scheduled_for))}</span><span>${escapeText(opp.title||draft.title||"Scheduled draft")}</span><pre>${escapeText(draft.body||"")}</pre>${item.published_url?`<span>${escapeText(item.published_url)}</span>`:""}<div class="actions"><button class="btn primary" type="button" data-calendar-status="published" data-calendar-id="${escapeText(item.id)}">Mark Published</button><button class="btn danger" type="button" data-calendar-status="cancelled" data-calendar-id="${escapeText(item.id)}">Cancel</button></div></article>`;
+  const actions=item.status==="scheduled"?`<div class="actions"><button class="btn primary" type="button" data-calendar-status="published" data-calendar-id="${escapeText(item.id)}">Mark Published</button><button class="btn danger" type="button" data-calendar-status="cancelled" data-calendar-id="${escapeText(item.id)}">Cancel</button></div>`:"";
+  return `<article class="calendar-item"><b>${escapeText((item.channel||"").toUpperCase())} - ${escapeText(item.status||"scheduled")}</b><span>${escapeText(formatDateTime(item.scheduled_for))}</span><span>${escapeText(opp.title||draft.title||"Scheduled draft")}</span><pre>${escapeText(draft.body||"")}</pre>${item.published_url?`<span>${escapeText(item.published_url)}</span>`:""}${actions}</article>`;
 }
 
 function formatDateTime(value){
