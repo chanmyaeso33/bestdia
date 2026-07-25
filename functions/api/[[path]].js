@@ -2258,7 +2258,7 @@ async function supabaseUpdateContentCalendarItem(env, id, updates) {
 
 async function supabaseSelectContentPerformance(env, options = {}) {
   const params = {
-    select: "*",
+    select: "*,content_calendar(scheduled_for,status,published_url),content_drafts(title,body),opportunities(title,game,overall_score)",
     order: "measured_at.desc",
     limit: String(options.limit || 30),
   };
