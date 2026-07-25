@@ -29,9 +29,10 @@ button{cursor:pointer}
 .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}.kpi{background:#0B1020;border:1px solid var(--line);border-radius:10px;padding:12px}.kpi span{display:block;color:var(--muted);font-size:.72rem}.kpi b{display:block;margin-top:4px;color:var(--gold);font-family:"Chakra Petch",sans-serif;font-size:1.35rem}
 .toolbar{display:grid;grid-template-columns:1fr 150px 150px auto;gap:8px;margin-bottom:14px}.calendar-toolbar{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:10px}.status{min-height:22px;color:var(--muted);font-size:.82rem;margin-bottom:10px}.status.warn{color:var(--warn)}.status.ok{color:var(--success)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px}.opp{position:relative;overflow:hidden}.opp::before{content:"";position:absolute;inset:0 0 auto;height:4px;background:linear-gradient(90deg,var(--diamond),var(--gold));opacity:.85}.opp-head{display:flex;justify-content:space-between;gap:12px;padding-top:4px;margin-bottom:10px}.opp h3{font-size:1rem;line-height:1.35}.score{flex:0 0 58px;height:58px;border-radius:10px;display:grid;place-items:center;background:#07101a;border:1px solid rgba(245,197,66,.28);color:var(--gold);font-family:"Chakra Petch",sans-serif;font-size:1.35rem;font-weight:800}.meta{display:flex;gap:6px;flex-wrap:wrap;margin:9px 0}.pill{display:inline-flex;align-items:center;min-height:24px;border:1px solid var(--line);border-radius:999px;background:rgba(91,227,255,.06);color:var(--diamond);padding:3px 8px;font-size:.72rem;font-weight:700}.pill.gold{color:var(--gold);border-color:rgba(245,197,66,.24);background:rgba(245,197,66,.08)}.pill.green{color:var(--success);border-color:rgba(46,204,113,.24);background:rgba(46,204,113,.08)}
-.reason{color:#cdd5e8;font-size:.84rem;line-height:1.55;margin:10px 0 12px}.products,.drafts,.calendar-list{display:grid;gap:7px;margin:10px 0}.product,.draft,.calendar-item{border:1px solid rgba(91,227,255,.1);border-radius:8px;background:#0B1020;padding:9px}.product b,.draft b,.calendar-item b{font-size:.82rem}.product span,.draft span,.calendar-item span{display:block;color:var(--muted);font-size:.72rem;line-height:1.45;margin-top:3px}.draft pre,.calendar-item pre{white-space:pre-wrap;color:#dfe7f7;font-family:Inter,system-ui,sans-serif;font-size:.84rem;line-height:1.55;margin-top:8px}.draft .draft-status{display:inline-flex;margin-left:6px;color:var(--gold)}.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}.empty{padding:28px;text-align:center;color:var(--muted)}
+.reason{color:#cdd5e8;font-size:.84rem;line-height:1.55;margin:10px 0 12px}.products,.drafts,.calendar-list,.performance-list{display:grid;gap:7px;margin:10px 0}.product,.draft,.calendar-item,.performance-item,.channel-item{border:1px solid rgba(91,227,255,.1);border-radius:8px;background:#0B1020;padding:9px}.product b,.draft b,.calendar-item b,.performance-item b,.channel-item b{font-size:.82rem}.product span,.draft span,.calendar-item span,.performance-item span,.channel-item span{display:block;color:var(--muted);font-size:.72rem;line-height:1.45;margin-top:3px}.draft pre,.calendar-item pre{white-space:pre-wrap;color:#dfe7f7;font-family:Inter,system-ui,sans-serif;font-size:.84rem;line-height:1.55;margin-top:8px}.draft .draft-status{display:inline-flex;margin-left:6px;color:var(--gold)}.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}.empty{padding:28px;text-align:center;color:var(--muted)}
+.performance-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:10px 0 14px}.metric{background:#0B1020;border:1px solid var(--line);border-radius:10px;padding:12px}.metric span{display:block;color:var(--muted);font-size:.72rem}.metric b{display:block;margin-top:4px;color:var(--gold);font-family:"Chakra Petch",sans-serif;font-size:1.18rem}.performance-layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(260px,.65fr);gap:12px}.channel-list{display:grid;gap:7px;margin:10px 0}.performance-rank{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.performance-rank strong{color:var(--diamond);font-family:"Chakra Petch",sans-serif}
 .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:50;align-items:center;justify-content:center;padding:16px}.modal.show{display:flex}.modal-card{max-width:640px;width:100%;max-height:86vh;overflow:auto;background:#101728;border:1px solid var(--line);border-radius:12px;padding:16px}.modal-title{font-family:"Chakra Petch",sans-serif;font-size:1.15rem;margin-bottom:10px}.modal-body{color:#cdd5e8;line-height:1.6;font-size:.9rem}.row{display:grid;grid-template-columns:130px 1fr;gap:8px;padding:7px 0;border-bottom:1px solid rgba(91,227,255,.08)}.row span:first-child{color:var(--muted)}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}.form-grid .wide{grid-column:1/-1}.textarea{width:100%;min-height:92px;resize:vertical;border:1px solid var(--line);border-radius:8px;background:#0B1020;color:var(--text);padding:10px 11px;outline:none}.draft .textarea{margin-top:8px}.review-hint{color:var(--muted);font-size:.78rem;line-height:1.5;margin-top:8px}
-@media(max-width:860px){.hero{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}.toolbar{grid-template-columns:1fr 1fr}.topbar-inner{align-items:flex-start;flex-direction:column}.grid{grid-template-columns:1fr}}@media(max-width:520px){.kpis,.toolbar{grid-template-columns:1fr}.headline{display:block}.score{width:52px;height:52px}.row{grid-template-columns:1fr}}
+@media(max-width:860px){.hero{grid-template-columns:1fr}.kpis,.performance-grid{grid-template-columns:repeat(2,1fr)}.toolbar{grid-template-columns:1fr 1fr}.topbar-inner{align-items:flex-start;flex-direction:column}.grid,.performance-layout{grid-template-columns:1fr}}@media(max-width:520px){.kpis,.toolbar,.performance-grid{grid-template-columns:1fr}.headline{display:block}.score{width:52px;height:52px}.row{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -84,6 +85,30 @@ button{cursor:pointer}
     </div>
     <div class="status" id="calendarStatusLine">Load the dashboard to see scheduled content.</div>
     <div class="calendar-list" id="calendarList"></div>
+  </section>
+
+  <section class="panel" style="margin-top:14px">
+    <div class="calendar-toolbar">
+      <div><h2 style="font-family:'Chakra Petch',sans-serif;font-size:1.1rem">Performance Summary</h2><p class="review-hint">Published content results for learning what actually drives orders.</p></div>
+      <button class="btn" id="refreshPerformanceBtn" type="button">Refresh Performance</button>
+    </div>
+    <div class="status" id="performanceStatusLine">Load the dashboard to see performance.</div>
+    <div class="performance-grid" id="performanceKpis">
+      <div class="metric"><span>Views</span><b>0</b></div>
+      <div class="metric"><span>Orders</span><b>0</b></div>
+      <div class="metric"><span>Revenue</span><b>0</b></div>
+      <div class="metric"><span>Click Rate</span><b>0%</b></div>
+    </div>
+    <div class="performance-layout">
+      <div>
+        <h3 style="font-family:'Chakra Petch',sans-serif;font-size:.95rem">Top Posts</h3>
+        <div class="performance-list" id="topPerformanceList"></div>
+      </div>
+      <div>
+        <h3 style="font-family:'Chakra Petch',sans-serif;font-size:.95rem">Channels</h3>
+        <div class="channel-list" id="channelPerformanceList"></div>
+      </div>
+    </div>
   </section>
 </main>
 
@@ -144,13 +169,14 @@ button{cursor:pointer}
 </div>
 
 <script>
-let adminPassword="", opportunities=[], calendarItems=[], reviewTargetId="", activeDraftOpportunity=null, activeDrafts=[], activePerformanceCalendarId="";
+let adminPassword="", opportunities=[], calendarItems=[], performanceMetrics=[], reviewTargetId="", activeDraftOpportunity=null, activeDrafts=[], activePerformanceCalendarId="";
 const $=sel=>document.querySelector(sel);
 const escapeText=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
 const fmt=n=>Number(n||0).toLocaleString();
 
 function setStatus(message,type=""){const el=$("#statusLine");el.textContent=message;el.className=`status ${type}`;}
 function setCalendarStatus(message,type=""){const el=$("#calendarStatusLine");el.textContent=message;el.className=`status ${type}`;}
+function setPerformanceStatus(message,type=""){const el=$("#performanceStatusLine");el.textContent=message;el.className=`status ${type}`;}
 async function apiPost(path,payload){const res=await fetch(path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload||{})});const data=await res.json().catch(()=>({ok:false,error:"Invalid API response"}));if(!res.ok||data.ok===false)throw new Error(data.error||"API request failed");return data;}
 function adminPayload(extra={}){return {adminPassword,...extra};}
 
@@ -163,6 +189,7 @@ async function loadOpportunities(){
     render();
     setStatus(`Loaded ${opportunities.length} opportunities.`,"ok");
     loadCalendar();
+    loadPerformance();
   }catch(error){setStatus(error.message||"Could not load opportunities.","warn");}
 }
 
@@ -248,6 +275,17 @@ async function loadCalendar(){
   }catch(error){setCalendarStatus(error.message||"Could not load calendar.","warn");}
 }
 
+async function loadPerformance(){
+  if(!adminPassword)return;
+  setPerformanceStatus("Loading performance...");
+  try{
+    const data=await apiPost("/api/admin-content-performance",adminPayload({limit:100}));
+    performanceMetrics=Array.isArray(data.metrics)?data.metrics:[];
+    renderPerformance();
+    setPerformanceStatus(`Loaded ${performanceMetrics.length} performance record(s).`,"ok");
+  }catch(error){setPerformanceStatus(error.message||"Could not load performance.","warn");}
+}
+
 async function updateCalendarItem(id,status){
   const item=calendarItems.find(row=>row.id===id);
   const url=status==="published"?prompt("Published URL (optional):",item?.published_url||""):"";
@@ -329,11 +367,63 @@ function renderCalendarItem(item){
   return `<article class="calendar-item"><b>${escapeText((item.channel||"").toUpperCase())} - ${escapeText(item.status||"scheduled")}</b><span>${escapeText(formatDateTime(item.scheduled_for))}</span><span>${escapeText(opp.title||draft.title||"Scheduled draft")}</span><pre>${escapeText(draft.body||"")}</pre>${item.published_url?`<span>${escapeText(item.published_url)}</span>`:""}${actions}</article>`;
 }
 
+function renderPerformance(){
+  const totals=performanceMetrics.reduce((sum,item)=>({
+    views:sum.views+Number(item.views||0),
+    likes:sum.likes+Number(item.likes||0),
+    comments:sum.comments+Number(item.comments||0),
+    shares:sum.shares+Number(item.shares||0),
+    clicks:sum.clicks+Number(item.clicks||0),
+    orders:sum.orders+Number(item.orders||0),
+    revenue:sum.revenue+Number(item.revenue||0),
+  }),{views:0,likes:0,comments:0,shares:0,clicks:0,orders:0,revenue:0});
+  const clickRate=totals.views?`${((totals.clicks/totals.views)*100).toFixed(1)}%`:"0%";
+  $("#performanceKpis").innerHTML=[
+    ["Views",fmt(totals.views)],
+    ["Orders",fmt(totals.orders)],
+    ["Revenue",fmtMoney(totals.revenue)],
+    ["Click Rate",clickRate],
+  ].map(([label,value])=>`<div class="metric"><span>${escapeText(label)}</span><b>${escapeText(value)}</b></div>`).join("");
+  const ranked=[...performanceMetrics].sort((a,b)=>(Number(b.revenue||0)-Number(a.revenue||0))||(Number(b.orders||0)-Number(a.orders||0))||(Number(b.views||0)-Number(a.views||0))).slice(0,8);
+  $("#topPerformanceList").innerHTML=ranked.length?ranked.map(renderPerformanceItem).join(""):`<div class="empty">No performance metrics saved yet.</div>`;
+  const channels=groupPerformanceByChannel(performanceMetrics);
+  $("#channelPerformanceList").innerHTML=channels.length?channels.map(renderChannelPerformance).join(""):`<div class="empty">No channel data yet.</div>`;
+}
+
+function groupPerformanceByChannel(rows){
+  const map=new Map();
+  rows.forEach(item=>{
+    const channel=item.channel||"unknown";
+    const current=map.get(channel)||{channel,views:0,clicks:0,orders:0,revenue:0,posts:0};
+    current.views+=Number(item.views||0);
+    current.clicks+=Number(item.clicks||0);
+    current.orders+=Number(item.orders||0);
+    current.revenue+=Number(item.revenue||0);
+    current.posts+=1;
+    map.set(channel,current);
+  });
+  return [...map.values()].sort((a,b)=>(b.revenue-a.revenue)||(b.orders-a.orders)||(b.views-a.views));
+}
+
+function renderPerformanceItem(item){
+  const draft=item.content_drafts||{};
+  const opp=item.opportunities||{};
+  const title=opp.title||draft.title||"Published content";
+  const game=opp.game?`${String(opp.game).toUpperCase()} - `:"";
+  return `<article class="performance-item"><div class="performance-rank"><b>${escapeText(title)}</b><strong>${escapeText(fmtMoney(item.revenue))}</strong></div><span>${escapeText(game)}${escapeText(item.channel||"channel")} - ${escapeText(formatDateTime(item.measured_at))}</span><div class="meta"><span class="pill">Views ${fmt(item.views)}</span><span class="pill">Clicks ${fmt(item.clicks)}</span><span class="pill">Orders ${fmt(item.orders)}</span><span class="pill gold">Revenue ${escapeText(fmtMoney(item.revenue))}</span></div></article>`;
+}
+
+function renderChannelPerformance(item){
+  const clickRate=item.views?`${((item.clicks/item.views)*100).toFixed(1)}%`:"0%";
+  return `<article class="channel-item"><div class="performance-rank"><b>${escapeText(item.channel.toUpperCase())}</b><strong>${escapeText(fmtMoney(item.revenue))}</strong></div><span>${fmt(item.posts)} post(s), ${fmt(item.views)} views, ${fmt(item.orders)} orders, ${clickRate} click rate</span></article>`;
+}
+
 function formatDateTime(value){
   if(!value)return "-";
   const date=new Date(value);
   return Number.isNaN(date.getTime())?"-":date.toLocaleString([], { dateStyle:"medium", timeStyle:"short" });
 }
+function fmtMoney(value){return Number(value||0).toLocaleString(undefined,{maximumFractionDigits:2});}
 function renderOpportunity(item){
   const products=getProducts(item);
   const channels=getChannels(item);
@@ -422,6 +512,7 @@ async function savePerformance(){
     $("#performanceModal").classList.remove("show");
     activePerformanceCalendarId="";
     setCalendarStatus("Performance metrics saved.","ok");
+    loadPerformance();
   }catch(error){setCalendarStatus(error.message||"Could not save performance metrics.","warn");}
   finally{$("#savePerformanceBtn").disabled=false;}
 }
@@ -443,6 +534,7 @@ async function saveReview(){
 $("#unlockBtn").addEventListener("click",()=>{adminPassword=$("#adminPassword").value.trim();localStorage.setItem("bestdia_marketing_os_admin",adminPassword);loadOpportunities();});
 $("#refreshBtn").addEventListener("click",loadOpportunities);
 $("#refreshCalendarBtn").addEventListener("click",loadCalendar);
+$("#refreshPerformanceBtn").addEventListener("click",loadPerformance);
 $("#calendarStatus").addEventListener("change",loadCalendar);
 $("#runPipelineBtn").addEventListener("click",runPipeline);
 $("#searchInput").addEventListener("input",render);
