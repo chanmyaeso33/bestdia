@@ -20,6 +20,7 @@ export async function onRequest(context) {
     if (route === "admin-content-calendar") return adminContentCalendar(request, env);
     if (route === "admin-orders") return adminOrders(request, env);
     if (route === "admin-opportunities") return adminOpportunities(request, env);
+    if (route === "admin-agent-runs") return adminAgentRuns(request, env);
     if (route === "admin-content-performance") return adminContentPerformance(request, env);
     if (route === "admin-marketing-insights") return adminMarketingInsights(request, env);
     if (route === "admin-update-content-draft") return adminUpdateContentDraft(request, env);
@@ -499,6 +500,17 @@ async function adminOpportunities(request, env) {
   if (game) params.game = `eq.${game}`;
   const opportunities = await supabaseRequest(env, "GET", `today_opportunities?${supabaseQuery(params)}`);
   return jsonResponse(200, { ok: true, opportunities });
+}
+
+async function adminAgentRuns(request, env) {
+  if (request.method !== "POST") return jsonResponse(405, { ok: false, error: "Method not allowed" });
+  const payload = await readJson(request);
+  const auth = requireAdmin(payload, env);
+  if (auth) return auth;
+  const agentName = cleanOptionalText(payload.agentName || payload.agent_name, 80);
+  const limit = Math.max(1, Math.min(50, Number(payload.limit || 12)));
+  const runs = await supabaseSelectAgentRuns(env, { agentName, limit });
+  return jsonResponse(200, { ok: true, runs });
 }
 
 async function adminContentDrafts(request, env) {
@@ -2709,6 +2721,16 @@ async function supabaseCreateNamedAgentRun(env, agentName, metadata) {
 async function supabaseUpdateAgentRun(env, id, updates) {
   const rows = await supabaseRequest(env, "PATCH", `agent_runs?${supabaseQuery({ id: `eq.${id}` })}`, updates, "return=representation");
   return rows[0];
+}
+
+async function supabaseSelectAgentRuns(env, options = {}) {
+  const params = {
+    select: "*",
+    order: "started_at.desc",
+    limit: String(options.limit || 12),
+  };
+  if (options.agentName) params.agent_name = `eq.${options.agentName}`;
+  return supabaseRequest(env, "GET", `agent_runs?${supabaseQuery(params)}`);
 }
 
 async function supabaseCreateOpportunity(env, row) {
