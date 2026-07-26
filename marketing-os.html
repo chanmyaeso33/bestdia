@@ -427,9 +427,9 @@ function renderDailyBrief(sourceList){
   const ready=list.filter(item=>item.qa?.status==="ready").slice(0,3);
   const review=list.filter(item=>item.qa?.status==="review").slice(0,4);
   const blocked=list.filter(item=>item.qa?.status==="blocked").slice(0,4);
-  const candidates=ready.length?ready:list.filter(item=>Number(item.overall_score||0)>=70 && item.qa?.status!=="blocked").slice(0,3);
+  const candidates=ready;
   const nextActions=buildBriefActions(candidates, review, blocked);
-  $("#dailyBrief").innerHTML=`<div class="brief-card"><h3>Post Candidates</h3>${renderBriefList(candidates,"No QA-ready or high-score candidates yet.")}</div><div class="brief-card"><h3>Needs Human Review</h3>${renderBriefList(review,"No review items.")}</div><div class="brief-card"><h3>Do Not Post Yet</h3>${renderBriefList(blocked,"No blocked items.")}</div><div class="brief-card"><h3>Recommended Action</h3><div class="brief-actions">${nextActions.map(item=>`<div>${escapeText(item)}</div>`).join("")}</div></div>`;
+  $("#dailyBrief").innerHTML=`<div class="brief-card"><h3>Post Candidates</h3>${renderBriefList(candidates,"No QA-ready post candidates yet.")}</div><div class="brief-card"><h3>Needs Human Review</h3>${renderBriefList(review,"No review items.")}</div><div class="brief-card"><h3>Do Not Post Yet</h3>${renderBriefList(blocked,"No blocked items.")}</div><div class="brief-card"><h3>Recommended Action</h3><div class="brief-actions">${nextActions.map(item=>`<div>${escapeText(item)}</div>`).join("")}</div></div>`;
   setBriefStatus(`Brief ready: ${candidates.length} candidate(s), ${review.length} review item(s), ${blocked.length} blocked item(s).`,"ok");
 }
 
