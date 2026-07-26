@@ -21,6 +21,7 @@ export async function onRequest(context) {
     if (route === "admin-orders") return adminOrders(request, env);
     if (route === "admin-opportunities") return adminOpportunities(request, env);
     if (route === "admin-content-performance") return adminContentPerformance(request, env);
+    if (route === "admin-marketing-insights") return adminMarketingInsights(request, env);
     if (route === "admin-update-content-draft") return adminUpdateContentDraft(request, env);
     if (route === "admin-update-content-calendar") return adminUpdateContentCalendar(request, env);
     if (route === "admin-update-content-performance") return adminUpdateContentPerformance(request, env);
@@ -43,6 +44,7 @@ export async function onRequest(context) {
     if (route === "collect-news") return collectNewsApi(request, env);
     if (route === "run-opportunity-agent") return runOpportunityAgentApi(request, env);
     if (route === "run-writer-agent") return runWriterAgentApi(request, env);
+    if (route === "run-analyst-agent") return runAnalystAgentApi(request, env);
     if (route === "run-daily-opportunity-pipeline") return runDailyOpportunityPipelineApi(request, env);
     if (route === "telegram-diagnostic") return telegramDiagnostic(request, env);
     if (route === "telegram-notify") return telegramNotify(request, env);
@@ -530,6 +532,16 @@ async function adminContentPerformance(request, env) {
   const limit = Math.max(1, Math.min(100, Number(payload.limit || 30)));
   const rows = await supabaseSelectContentPerformance(env, { calendarId, limit });
   return jsonResponse(200, { ok: true, metrics: rows });
+}
+
+async function adminMarketingInsights(request, env) {
+  if (request.method !== "POST") return jsonResponse(405, { ok: false, error: "Method not allowed" });
+  const payload = await readJson(request);
+  const auth = requireAdmin(payload, env);
+  if (auth) return auth;
+  const limit = Math.max(1, Math.min(20, Number(payload.limit || 5)));
+  const insights = await supabaseSelectMarketingInsights(env, limit);
+  return jsonResponse(200, { ok: true, insights });
 }
 
 async function adminUpdateContentPerformance(request, env) {
@@ -1281,6 +1293,7 @@ const OPPORTUNITY_GAMES = new Set(["mlbb", "pubg", "other"]);
 const OPPORTUNITY_TYPES = new Set(["trend_post", "sales_post", "educational_post", "event_reminder", "promotion_angle", "community_reaction", "urgent_update"]);
 const WRITER_PROMPT_VERSION = "writer-agent-v1";
 const WRITER_ALLOWED_CHANNELS = new Set(["facebook", "tiktok", "telegram", "website"]);
+const ANALYST_PROMPT_VERSION = "analyst-agent-v1";
 const WRITER_AGENT_PROMPT = `You are the BestDia Writer Agent.
 
 BestDia sells MLBB diamonds, Weekly Diamond Passes, PUBG UC, and gaming top-ups in Myanmar.
@@ -1314,6 +1327,41 @@ Rules:
 - Use only products listed in the input.
 - Hashtags must be an array of short strings.
 - Nothing should imply the post has already been published.`;
+
+const ANALYST_AGENT_PROMPT = `You are the BestDia Analyst Agent.
+
+BestDia sells MLBB diamonds, Weekly Diamond Passes, PUBG UC, and gaming top-ups in Myanmar.
+
+Your job is to analyze recent published content performance and explain what BestDia should learn.
+
+Return only valid JSON with this shape:
+{
+  "title": "short insight title",
+  "summary": "plain-English summary of what happened",
+  "what_worked": ["specific pattern that performed well"],
+  "what_failed": ["specific pattern that underperformed"],
+  "channel_insights": [
+    { "channel": "facebook", "insight": "what this channel is showing" }
+  ],
+  "product_insights": ["product or offer pattern to remember"],
+  "recommendations": ["specific action BestDia should take next"],
+  "scoring_adjustments": {
+    "mlbb": "how to adjust MLBB opportunity scoring",
+    "pubg": "how to adjust PUBG opportunity scoring",
+    "facebook": "how to adjust Facebook recommendations",
+    "tiktok": "how to adjust TikTok recommendations"
+  },
+  "confidence": 0.75
+}
+
+Rules:
+- Use only the performance data in the input.
+- Do not invent orders, revenue, dates, channels, or posts.
+- If data is limited, say so clearly.
+- Prefer practical recommendations that can improve tomorrow's Opportunity Agent.
+- Mention exact numbers when useful.
+- Keep each list item short and actionable.
+- Confidence must be between 0 and 1.`;
 
 const NEWS_COLLECTOR_SOURCES = [
   {
@@ -1632,6 +1680,15 @@ async function runWriterAgentApi(request, env) {
     opportunityId,
     channels: payload.channels,
   });
+  return jsonResponse(200, { ok: true, ...result });
+}
+
+async function runAnalystAgentApi(request, env) {
+  if (request.method !== "POST") return jsonResponse(405, { ok: false, error: "Method not allowed" });
+  const payload = await readJson(request);
+  const auth = requireAdmin(payload, env);
+  if (auth) return auth;
+  const result = await runAnalystAgent(env, payload);
   return jsonResponse(200, { ok: true, ...result });
 }
 
@@ -2129,6 +2186,198 @@ function normalizeDraftHashtagsForUpdate(value) {
   return Array.from(new Set(clean)).slice(0, 8);
 }
 
+async function runAnalystAgent(env, options = {}) {
+  const days = Math.max(1, Math.min(30, Number(options.days || 7)));
+  const limit = Math.max(1, Math.min(100, Number(options.limit || 50)));
+  const periodEnd = new Date();
+  const periodStart = new Date(periodEnd.getTime() - days * 24 * 60 * 60 * 1000);
+  const metrics = await supabaseSelectContentPerformance(env, {
+    limit,
+    measuredAfter: periodStart.toISOString(),
+  });
+  if (!metrics.length) throw new Error("No performance metrics found for Analyst Agent");
+
+  const totals = summarizePerformanceMetrics(metrics);
+  const startedAt = Date.now();
+  const agentRun = await supabaseCreateNamedAgentRun(env, "analyst_agent", {
+    prompt_version: ANALYST_PROMPT_VERSION,
+    metrics_count: metrics.length,
+    period_start: periodStart.toISOString(),
+    period_end: periodEnd.toISOString(),
+  });
+
+  try {
+    const model = await callAnalystModel(env, { metrics, totals, periodStart, periodEnd });
+    const insight = validateAnalystInsight(model.result, metrics, totals);
+    const rows = await supabaseCreateMarketingInsight(env, {
+      agent_run_id: agentRun.id,
+      period_start: periodStart.toISOString(),
+      period_end: periodEnd.toISOString(),
+      title: insight.title,
+      summary: insight.summary,
+      what_worked: insight.what_worked,
+      what_failed: insight.what_failed,
+      channel_insights: insight.channel_insights,
+      product_insights: insight.product_insights,
+      recommendations: insight.recommendations,
+      scoring_adjustments: insight.scoring_adjustments,
+      confidence: insight.confidence,
+      source_metrics_count: metrics.length,
+      total_views: totals.views,
+      total_orders: totals.orders,
+      total_revenue: totals.revenue,
+      prompt_version: ANALYST_PROMPT_VERSION,
+      model: model.model,
+      metadata: {
+        source: "analyst_agent_v1",
+        channels: totals.channels,
+      },
+    });
+    await supabaseUpdateAgentRun(env, agentRun.id, {
+      status: "success",
+      finished_at: new Date().toISOString(),
+      tokens_used: Number(model.data?.usage?.total_tokens || 0),
+      duration_ms: Date.now() - startedAt,
+      metadata: { prompt_version: ANALYST_PROMPT_VERSION, insight_id: rows[0]?.id || null, metrics_count: metrics.length, model: model.model },
+    });
+    return { agentRunId: agentRun.id, insight: rows[0] || null };
+  } catch (error) {
+    const message = String(error.message || "Analyst Agent failed").slice(0, 1000);
+    await supabaseUpdateAgentRun(env, agentRun.id, {
+      status: "failed",
+      finished_at: new Date().toISOString(),
+      duration_ms: Date.now() - startedAt,
+      error: message,
+      metadata: { prompt_version: ANALYST_PROMPT_VERSION, metrics_count: metrics.length },
+    }).catch(() => null);
+    throw new Error(message);
+  }
+}
+
+async function callAnalystModel(env, context) {
+  if (!env.GROQ_API_KEY) throw new Error("GROQ_API_KEY is not configured");
+  const model = env.GROQ_MODEL || "llama-3.3-70b-versatile";
+  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${env.GROQ_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: "system", content: ANALYST_AGENT_PROMPT },
+        { role: "user", content: buildAnalystAgentInput(context) },
+      ],
+      temperature: 0.25,
+      response_format: { type: "json_object" },
+    }),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error?.message || "Groq request failed");
+  const outputText = extractGroqOutputText(data);
+  if (!outputText) throw new Error("Groq response did not include output text");
+  return { model, data, result: JSON.parse(outputText) };
+}
+
+function buildAnalystAgentInput({ metrics, totals, periodStart, periodEnd }) {
+  const rows = metrics.map((item, index) => {
+    const draft = item.content_drafts || {};
+    const opportunity = item.opportunities || {};
+    return [
+      `#${index + 1}`,
+      `Title: ${opportunity.title || draft.title || "Published content"}`,
+      `Game: ${opportunity.game || "unknown"}`,
+      `Channel: ${item.channel || ""}`,
+      `Opportunity Score: ${opportunity.overall_score || 0}`,
+      `Measured At: ${item.measured_at || ""}`,
+      `Views: ${Number(item.views || 0)}`,
+      `Likes: ${Number(item.likes || 0)}`,
+      `Comments: ${Number(item.comments || 0)}`,
+      `Shares: ${Number(item.shares || 0)}`,
+      `Clicks: ${Number(item.clicks || 0)}`,
+      `Orders: ${Number(item.orders || 0)}`,
+      `Revenue: ${Number(item.revenue || 0)}`,
+      `Draft excerpt: ${String(draft.body || "").slice(0, 360)}`,
+      `Notes: ${item.notes || ""}`,
+    ].join("\n");
+  }).join("\n\n");
+  return [
+    `Analysis period: ${periodStart.toISOString()} to ${periodEnd.toISOString()}`,
+    `Metrics count: ${metrics.length}`,
+    `Totals: ${totals.views} views, ${totals.clicks} clicks, ${totals.orders} orders, ${totals.revenue} revenue`,
+    "",
+    "Channel totals:",
+    totals.channels.map((item) => `- ${item.channel}: ${item.views} views, ${item.clicks} clicks, ${item.orders} orders, ${item.revenue} revenue`).join("\n") || "- No channel totals",
+    "",
+    "Performance rows:",
+    rows,
+  ].join("\n");
+}
+
+function validateAnalystInsight(result, metrics, totals) {
+  if (!result || typeof result !== "object") throw new Error("Analyst result must be an object");
+  return {
+    title: cleanOptionalText(result.title, 180) || "BestDia Marketing Performance Insight",
+    summary: cleanOptionalText(result.summary, 1600) || fallbackAnalystSummary(metrics, totals),
+    what_worked: normalizeInsightList(result.what_worked),
+    what_failed: normalizeInsightList(result.what_failed),
+    channel_insights: normalizeChannelInsights(result.channel_insights),
+    product_insights: normalizeInsightList(result.product_insights),
+    recommendations: normalizeInsightList(result.recommendations),
+    scoring_adjustments: result.scoring_adjustments && typeof result.scoring_adjustments === "object" ? result.scoring_adjustments : {},
+    confidence: normalizeConfidence(result.confidence, metrics.length),
+  };
+}
+
+function summarizePerformanceMetrics(metrics) {
+  const totals = metrics.reduce((sum, item) => {
+    const channel = item.channel || "unknown";
+    const current = sum.channelMap.get(channel) || { channel, views: 0, clicks: 0, orders: 0, revenue: 0 };
+    current.views += Number(item.views || 0);
+    current.clicks += Number(item.clicks || 0);
+    current.orders += Number(item.orders || 0);
+    current.revenue += Number(item.revenue || 0);
+    sum.channelMap.set(channel, current);
+    sum.views += Number(item.views || 0);
+    sum.clicks += Number(item.clicks || 0);
+    sum.orders += Number(item.orders || 0);
+    sum.revenue += Number(item.revenue || 0);
+    return sum;
+  }, { views: 0, clicks: 0, orders: 0, revenue: 0, channelMap: new Map() });
+  return {
+    views: totals.views,
+    clicks: totals.clicks,
+    orders: totals.orders,
+    revenue: normalizeMetricMoney(totals.revenue),
+    channels: [...totals.channelMap.values()].sort((a, b) => (b.revenue - a.revenue) || (b.orders - a.orders) || (b.views - a.views)),
+  };
+}
+
+function normalizeInsightList(value) {
+  const items = Array.isArray(value) ? value : [];
+  return items.map((item) => cleanOptionalText(item, 500)).filter(Boolean).slice(0, 8);
+}
+
+function normalizeChannelInsights(value) {
+  const items = Array.isArray(value) ? value : [];
+  return items.map((item) => {
+    if (!item || typeof item !== "object") return null;
+    const channel = normalizeWriterChannel(item.channel) || cleanOptionalText(item.channel, 40);
+    const insight = cleanOptionalText(item.insight, 500);
+    if (!channel || !insight) return null;
+    return { channel, insight };
+  }).filter(Boolean).slice(0, 8);
+}
+
+function normalizeConfidence(value, count) {
+  const fallback = count >= 10 ? 0.75 : (count >= 3 ? 0.55 : 0.35);
+  const number = Number(value);
+  if (!Number.isFinite(number)) return fallback;
+  return Math.max(0, Math.min(1, Math.round(number * 1000) / 1000));
+}
+
+function fallbackAnalystSummary(metrics, totals) {
+  return `BestDia recorded ${metrics.length} performance record(s), with ${totals.views} views, ${totals.orders} orders, and ${totals.revenue} revenue. Data is still limited, so treat this as an early signal.`;
+}
+
 function normalizeScheduledFor(value) {
   const date = new Date(String(value || ""));
   if (Number.isNaN(date.getTime())) return "";
@@ -2263,11 +2512,20 @@ async function supabaseSelectContentPerformance(env, options = {}) {
     limit: String(options.limit || 30),
   };
   if (options.calendarId) params.calendar_id = `eq.${options.calendarId}`;
+  if (options.measuredAfter) params.measured_at = `gte.${options.measuredAfter}`;
   return supabaseRequest(env, "GET", `content_performance?${supabaseQuery(params)}`);
 }
 
 async function supabaseCreateContentPerformance(env, row) {
   return supabaseRequest(env, "POST", "content_performance", [row], "return=representation");
+}
+
+async function supabaseSelectMarketingInsights(env, limit) {
+  return supabaseRequest(env, "GET", `weekly_marketing_insights?${supabaseQuery({ select: "*", order: "created_at.desc", limit: String(limit || 5) })}`);
+}
+
+async function supabaseCreateMarketingInsight(env, row) {
+  return supabaseRequest(env, "POST", "weekly_marketing_insights", [row], "return=representation");
 }
 
 async function supabaseUpdateArticle(env, id, updates) {
