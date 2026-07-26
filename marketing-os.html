@@ -361,6 +361,7 @@ async function updateCalendarItem(id,status){
 async function saveDraftEdits(id){
   const card=document.querySelector(`[data-draft-card="${CSS.escape(id)}"]`);
   if(!card)return;
+  const scheduleState=getDraftScheduleState();
   try{
     const data=await apiPost("/api/admin-update-content-draft",adminPayload({
       id,
@@ -371,6 +372,7 @@ async function saveDraftEdits(id){
     }));
     activeDrafts=activeDrafts.map(draft=>draft.id===id?(data.draft||draft):draft);
     showDrafts(activeDraftOpportunity,activeDrafts);
+    restoreDraftScheduleState(scheduleState);
     setStatus("Draft edits saved.","ok");
   }catch(error){setStatus(error.message||"Could not save draft edits.","warn");}
 }
@@ -694,6 +696,25 @@ function showDrafts(item,drafts){
   $("#draftTitle").textContent=`Drafts: ${item?.title||"Opportunity"}`;
   $("#draftBody").innerHTML=activeDrafts.length?`<div class="drafts">${activeDrafts.map(draft=>`<div class="draft" data-draft-card="${escapeText(draft.id)}"><b>${escapeText((draft.channel||"channel").toUpperCase())}<span class="draft-status">${escapeText(draft.status||"draft")}</span></b><label><span class="label">Title</span><input class="input" data-edit-title value="${escapeText(draft.title||"Draft")}"/></label><label><span class="label">Body</span><textarea class="textarea" data-edit-body>${escapeText(draft.body||"")}</textarea></label><label><span class="label">Call to action</span><input class="input" data-edit-cta value="${escapeText(draft.call_to_action||"")}"/></label><label><span class="label">Hashtags</span><input class="input" data-edit-tags value="${Array.isArray(draft.hashtags)?draft.hashtags.map(escapeText).join(" "):""}"/></label><div class="form-grid"><label><span class="label">Schedule for</span><input class="input" type="datetime-local" data-schedule-for/></label><label><span class="label">Schedule notes</span><input class="input" data-schedule-notes placeholder="Optional"/></label></div><div class="actions"><button class="btn" type="button" data-copy-draft="${escapeText(draft.id)}">Copy</button><button class="btn" type="button" data-save-draft="${escapeText(draft.id)}">Save Edits</button><button class="btn primary" type="button" data-schedule-draft="${escapeText(draft.id)}">Schedule Draft</button><button class="btn" type="button" data-draft-status="approved" data-id="${escapeText(draft.id)}">Approve Draft</button><button class="btn danger" type="button" data-draft-status="rejected" data-id="${escapeText(draft.id)}">Reject Draft</button></div></div>`).join("")}</div>`:`<div class="empty">No saved drafts yet. Generate one first.</div>`;
   $("#draftModal").classList.add("show");
+}
+
+function getDraftScheduleState(){
+  return [...document.querySelectorAll("[data-draft-card]")].map(card=>({
+    id:card.dataset.draftCard,
+    scheduledFor:card.querySelector("[data-schedule-for]")?.value||"",
+    notes:card.querySelector("[data-schedule-notes]")?.value||"",
+  }));
+}
+
+function restoreDraftScheduleState(state){
+  state.forEach(item=>{
+    const card=document.querySelector(`[data-draft-card="${CSS.escape(item.id)}"]`);
+    if(!card)return;
+    const scheduledFor=card.querySelector("[data-schedule-for]");
+    const notes=card.querySelector("[data-schedule-notes]");
+    if(scheduledFor)scheduledFor.value=item.scheduledFor||"";
+    if(notes)notes.value=item.notes||"";
+  });
 }
 
 function openPerformance(id){
