@@ -1723,7 +1723,9 @@ async function processOpportunityArticle(env, article, products, memoryInsights 
 
   try {
     const openai = await callOpportunityModel(env, article, products, memoryInsights);
-    const opportunity = validateOpportunityResult(openai.result, article);
+    const modelOpportunity = validateOpportunityResult(openai.result, article);
+    const scoring = applyOpportunityScoringRules(modelOpportunity, article, memoryInsights);
+    const opportunity = scoring.opportunity;
     const tokensUsed = Number(openai.data?.usage?.total_tokens || 0);
 
     if (!opportunity.should_create_opportunity) {
@@ -1733,9 +1735,9 @@ async function processOpportunityArticle(env, article, products, memoryInsights 
         finished_at: new Date().toISOString(),
         tokens_used: tokensUsed,
         duration_ms: Date.now() - startedAt,
-        metadata: { article_id: article.id, result: "no_opportunity", output: openai.result, memory_insight_ids: memoryInsightIds },
+        metadata: { article_id: article.id, result: "no_opportunity", output: openai.result, memory_insight_ids: memoryInsightIds, scoring_rules: scoring.rules, score_before: scoring.before, score_after: scoring.after },
       });
-      return { articleId: article.id, agentRunId: agentRun.id, skipped: true, reason: "no_opportunity" };
+      return { articleId: article.id, agentRunId: agentRun.id, skipped: true, reason: "no_opportunity", scoringRules: scoring.rules };
     }
 
     const productMatches = matchOpportunityProducts(opportunity.product_matches, products, opportunity.game, article, opportunity);
@@ -1769,10 +1771,10 @@ async function processOpportunityArticle(env, article, products, memoryInsights 
       finished_at: new Date().toISOString(),
       tokens_used: tokensUsed,
       duration_ms: Date.now() - startedAt,
-      metadata: { article_id: article.id, opportunity_id: createdOpportunity.id, prompt_version: OPPORTUNITY_PROMPT_VERSION, model: openai.model, memory_insight_ids: memoryInsightIds },
+      metadata: { article_id: article.id, opportunity_id: createdOpportunity.id, prompt_version: OPPORTUNITY_PROMPT_VERSION, model: openai.model, memory_insight_ids: memoryInsightIds, scoring_rules: scoring.rules, score_before: scoring.before, score_after: scoring.after },
     });
 
-    return { articleId: article.id, agentRunId: agentRun.id, opportunityId: createdOpportunity.id, memoryInsightIds, skipped: false };
+    return { articleId: article.id, agentRunId: agentRun.id, opportunityId: createdOpportunity.id, memoryInsightIds, scoringRules: scoring.rules, skipped: false };
   } catch (error) {
     const message = String(error.message || "Opportunity Agent failed").slice(0, 1000);
     await supabaseUpdateArticle(env, article.id, { processing_status: "failed", processed_at: new Date().toISOString(), last_error: message }).catch(() => null);
@@ -1914,6 +1916,211 @@ function validateOpportunityResult(result, article = {}) {
     recommended_channels: normalizeRecommendedChannels(result.recommended_channels, result),
     product_matches: Array.isArray(result.product_matches) ? result.product_matches : [],
   };
+}
+
+function applyOpportunityScoringRules(opportunity, article, memoryInsights = []) {
+  const before = opportunityScoreSnapshot(opportunity);
+  const rules = [];
+  const adjusted = {
+    ...opportunity,
+    recommended_channels: Array.isArray(opportunity.recommended_channels) ? [...opportunity.recommended_channels] : [],
+  };
+  const context = normalizeRuleText([
+    article?.title,
+    article?.summary,
+    article?.raw_content,
+    adjusted.title,
+    adjusted.description,
+    adjusted.reasoning,
+    adjusted.game,
+    adjusted.opportunity_type,
+  ].filter(Boolean).join(" "));
+  const signals = buildOpportunityScoringSignals(memoryInsights);
+
+  for (const signal of signals.positivePatterns) {
+    if (!rulePatternMatches(context, signal.pattern)) continue;
+    const boost = signal.strength === "high" ? 6 : 3;
+    adjusted.overall_score = normalizeOpportunityScore(adjusted.overall_score + boost);
+    adjusted.sales_score = normalizeOpportunityScore(adjusted.sales_score + Math.max(2, Math.round(boost / 2)));
+    rules.push({
+      rule: "memory_positive_pattern_boost",
+      insight_id: signal.insightId,
+      pattern: signal.pattern,
+      overall_delta: boost,
+      sales_delta: Math.max(2, Math.round(boost / 2)),
+      reason: "Matched a recent Analyst insight pattern that produced orders or revenue.",
+    });
+    break;
+  }
+
+  for (const signal of signals.negativePatterns) {
+    if (!rulePatternMatches(context, signal.pattern)) continue;
+    adjusted.overall_score = normalizeOpportunityScore(adjusted.overall_score - 5);
+    adjusted.trend_score = normalizeOpportunityScore(adjusted.trend_score - 3);
+    rules.push({
+      rule: "memory_negative_pattern_penalty",
+      insight_id: signal.insightId,
+      pattern: signal.pattern,
+      overall_delta: -5,
+      trend_delta: -3,
+      reason: "Matched a recent Analyst insight pattern that underperformed.",
+    });
+    break;
+  }
+
+  const channelRule = applyChannelScoringRule(adjusted, signals.channels);
+  if (channelRule) rules.push(channelRule);
+
+  if (signals.gameRevenue[adjusted.game] >= 100 && adjusted.sales_score >= 70) {
+    adjusted.overall_score = normalizeOpportunityScore(adjusted.overall_score + 4);
+    rules.push({
+      rule: "game_revenue_momentum_boost",
+      game: adjusted.game,
+      overall_delta: 4,
+      reason: `Recent ${adjusted.game.toUpperCase()} content produced revenue.`,
+    });
+  }
+
+  if (rules.length) {
+    adjusted.reasoning = appendScoringRuleNote(adjusted.reasoning, rules);
+  }
+
+  return {
+    opportunity: adjusted,
+    rules,
+    before,
+    after: opportunityScoreSnapshot(adjusted),
+  };
+}
+
+function buildOpportunityScoringSignals(insights = []) {
+  const signals = {
+    positivePatterns: [],
+    negativePatterns: [],
+    channels: new Map(),
+    gameRevenue: { mlbb: 0, pubg: 0, other: 0 },
+  };
+  for (const insight of insights) {
+    const confidence = normalizeConfidence(insight.confidence, Number(insight.source_metrics_count || 0));
+    const revenue = Number(insight.total_revenue || 0);
+    const orders = Number(insight.total_orders || 0);
+    const strength = confidence >= 0.7 && (revenue >= 100 || orders >= 2) ? "high" : "normal";
+    const metadataChannels = insight.metadata?.channels;
+
+    normalizeMemoryList(insight.what_worked)
+      .concat(normalizeMemoryList(insight.recommendations))
+      .map(extractRulePattern)
+      .filter(Boolean)
+      .forEach((pattern) => signals.positivePatterns.push({ insightId: insight.id, pattern, strength }));
+
+    normalizeMemoryList(insight.what_failed)
+      .map(extractRulePattern)
+      .filter(Boolean)
+      .forEach((pattern) => signals.negativePatterns.push({ insightId: insight.id, pattern, strength: "normal" }));
+
+    normalizeChannelInsightsForRules(insight.channel_insights).forEach((item) => {
+      const current = signals.channels.get(item.channel) || { channel: item.channel, revenue: 0, orders: 0, count: 0, insightIds: [] };
+      current.revenue += revenue;
+      current.orders += orders;
+      current.count += 1;
+      if (insight.id) current.insightIds.push(insight.id);
+      signals.channels.set(item.channel, current);
+    });
+
+    if (Array.isArray(metadataChannels)) {
+      metadataChannels.forEach((item) => {
+        const channel = normalizeWriterChannel(item.channel);
+        if (!channel) return;
+        const current = signals.channels.get(channel) || { channel, revenue: 0, orders: 0, count: 0, insightIds: [] };
+        current.revenue += Number(item.revenue || 0);
+        current.orders += Number(item.orders || 0);
+        current.count += 1;
+        if (insight.id) current.insightIds.push(insight.id);
+        signals.channels.set(channel, current);
+      });
+    }
+
+    const adjustmentText = normalizeRuleText(Object.entries(insight.scoring_adjustments || {}).map(([key, value]) => `${key} ${value}`).join(" "));
+    if (adjustmentText.includes("mlbb")) signals.gameRevenue.mlbb += revenue;
+    if (adjustmentText.includes("pubg")) signals.gameRevenue.pubg += revenue;
+  }
+  signals.positivePatterns = dedupeRuleSignals(signals.positivePatterns).slice(0, 12);
+  signals.negativePatterns = dedupeRuleSignals(signals.negativePatterns).slice(0, 8);
+  return signals;
+}
+
+function applyChannelScoringRule(opportunity, channelMap) {
+  const ranked = [...channelMap.values()].sort((a, b) => (b.revenue - a.revenue) || (b.orders - a.orders) || (b.count - a.count));
+  const top = ranked.find((item) => normalizeWriterChannel(item.channel) && (item.revenue > 0 || item.orders > 0));
+  if (!top) return null;
+  const channel = normalizeWriterChannel(top.channel);
+  if (!channel || opportunity.recommended_channels.includes(channel)) return null;
+  opportunity.recommended_channels = Array.from(new Set([channel, ...opportunity.recommended_channels])).slice(0, 4);
+  return {
+    rule: "memory_channel_insert",
+    channel,
+    insight_ids: Array.from(new Set(top.insightIds)).slice(0, 3),
+    reason: `${channel} recently produced orders or revenue, so it was added to recommended channels.`,
+  };
+}
+
+function appendScoringRuleNote(reasoning, rules) {
+  const deltas = rules
+    .filter((rule) => Number(rule.overall_delta || 0))
+    .map((rule) => `${rule.rule} ${Number(rule.overall_delta) > 0 ? "+" : ""}${rule.overall_delta}`)
+    .join(", ");
+  const note = deltas ? ` Scoring rules applied: ${deltas}.` : " Scoring rules applied from recent Analyst memory.";
+  return `${String(reasoning || "").trim()}${note}`.slice(0, 1600);
+}
+
+function opportunityScoreSnapshot(opportunity) {
+  return {
+    trend_score: normalizeOpportunityScore(opportunity.trend_score),
+    sales_score: normalizeOpportunityScore(opportunity.sales_score),
+    urgency_score: normalizeOpportunityScore(opportunity.urgency_score),
+    myanmar_interest_score: normalizeOpportunityScore(opportunity.myanmar_interest_score),
+    overall_score: normalizeOpportunityScore(opportunity.overall_score),
+    recommended_channels: Array.isArray(opportunity.recommended_channels) ? [...opportunity.recommended_channels] : [],
+  };
+}
+
+function normalizeChannelInsightsForRules(value) {
+  return Array.isArray(value)
+    ? value.map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const channel = normalizeWriterChannel(item.channel);
+      return channel ? { channel, insight: String(item.insight || "") } : null;
+    }).filter(Boolean)
+    : [];
+}
+
+function extractRulePattern(value) {
+  const text = normalizeRuleText(value);
+  if (!text || text.length < 4) return "";
+  const stop = new Set(["the", "and", "for", "with", "from", "that", "this", "bestdia", "continue", "promoting", "promotion", "promotions", "increase", "improve", "content", "offer", "offers"]);
+  const words = text.split(" ").filter((word) => word.length >= 3 && !stop.has(word));
+  return words.slice(0, 5).join(" ");
+}
+
+function rulePatternMatches(context, pattern) {
+  const words = String(pattern || "").split(/\s+/).filter(Boolean);
+  if (!words.length) return false;
+  const hits = words.filter((word) => context.includes(word)).length;
+  return hits >= Math.min(2, words.length);
+}
+
+function dedupeRuleSignals(signals) {
+  const seen = new Set();
+  return signals.filter((signal) => {
+    const key = `${signal.insightId || ""}:${signal.pattern}`;
+    if (!signal.pattern || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function normalizeRuleText(value) {
+  return String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim();
 }
 
 function fallbackOpportunityTitle(article, game, opportunityType) {
