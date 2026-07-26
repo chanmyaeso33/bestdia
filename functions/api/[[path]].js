@@ -1281,6 +1281,13 @@ Product rules:
 - MLBB articles should usually match diamonds or Weekly Diamond Pass only.
 - PUBG articles should usually match UC only.
 
+Memory rules:
+- Use Agent Memory from recent Analyst insights as scoring guidance.
+- Prefer channels, post angles, and product patterns that previously created orders or revenue.
+- Be cautious with patterns that recently failed or had weak engagement.
+- Do not treat memory as source article evidence.
+- Do not invent new dates, discounts, rewards, or official claims from memory.
+
 Safety rules:
 - Do not claim official discounts unless they appear in the article.
 - Do not add event dates unless they appear in the article.
@@ -1696,23 +1703,26 @@ async function runOpportunityAgent(env, options = {}) {
   const limit = Math.max(1, Math.min(10, Number(options.limit || 5)));
   const articles = await supabaseSelectCollectedArticles(env, limit);
   const products = await supabaseSelectActiveProducts(env);
+  const memoryInsights = await supabaseSelectMarketingInsights(env, 3).catch(() => []);
   const results = [];
   for (const article of articles) {
-    results.push(await processOpportunityArticle(env, article, products));
+    results.push(await processOpportunityArticle(env, article, products, memoryInsights));
   }
-  return { processed: results.length, results };
+  return { processed: results.length, memoryInsightsUsed: memoryInsights.map((item) => item.id), results };
 }
 
-async function processOpportunityArticle(env, article, products) {
+async function processOpportunityArticle(env, article, products, memoryInsights = []) {
   const startedAt = Date.now();
+  const memoryInsightIds = memoryInsights.map((item) => item.id).filter(Boolean);
   const agentRun = await supabaseCreateAgentRun(env, {
     article_id: article.id,
     article_title: article.title,
     prompt_version: OPPORTUNITY_PROMPT_VERSION,
+    memory_insight_ids: memoryInsightIds,
   });
 
   try {
-    const openai = await callOpportunityModel(env, article, products);
+    const openai = await callOpportunityModel(env, article, products, memoryInsights);
     const opportunity = validateOpportunityResult(openai.result, article);
     const tokensUsed = Number(openai.data?.usage?.total_tokens || 0);
 
@@ -1723,7 +1733,7 @@ async function processOpportunityArticle(env, article, products) {
         finished_at: new Date().toISOString(),
         tokens_used: tokensUsed,
         duration_ms: Date.now() - startedAt,
-        metadata: { article_id: article.id, result: "no_opportunity", output: openai.result },
+        metadata: { article_id: article.id, result: "no_opportunity", output: openai.result, memory_insight_ids: memoryInsightIds },
       });
       return { articleId: article.id, agentRunId: agentRun.id, skipped: true, reason: "no_opportunity" };
     }
@@ -1759,10 +1769,10 @@ async function processOpportunityArticle(env, article, products) {
       finished_at: new Date().toISOString(),
       tokens_used: tokensUsed,
       duration_ms: Date.now() - startedAt,
-      metadata: { article_id: article.id, opportunity_id: createdOpportunity.id, prompt_version: OPPORTUNITY_PROMPT_VERSION, model: openai.model },
+      metadata: { article_id: article.id, opportunity_id: createdOpportunity.id, prompt_version: OPPORTUNITY_PROMPT_VERSION, model: openai.model, memory_insight_ids: memoryInsightIds },
     });
 
-    return { articleId: article.id, agentRunId: agentRun.id, opportunityId: createdOpportunity.id, skipped: false };
+    return { articleId: article.id, agentRunId: agentRun.id, opportunityId: createdOpportunity.id, memoryInsightIds, skipped: false };
   } catch (error) {
     const message = String(error.message || "Opportunity Agent failed").slice(0, 1000);
     await supabaseUpdateArticle(env, article.id, { processing_status: "failed", processed_at: new Date().toISOString(), last_error: message }).catch(() => null);
@@ -1771,13 +1781,13 @@ async function processOpportunityArticle(env, article, products) {
       finished_at: new Date().toISOString(),
       duration_ms: Date.now() - startedAt,
       error: message,
-      metadata: { article_id: article.id, prompt_version: OPPORTUNITY_PROMPT_VERSION },
+      metadata: { article_id: article.id, prompt_version: OPPORTUNITY_PROMPT_VERSION, memory_insight_ids: memoryInsightIds },
     }).catch(() => null);
     return { articleId: article.id, agentRunId: agentRun.id, error: message };
   }
 }
 
-async function callOpportunityModel(env, article, products) {
+async function callOpportunityModel(env, article, products, memoryInsights = []) {
   if (!env.GROQ_API_KEY) throw new Error("GROQ_API_KEY is not configured");
   const model = env.GROQ_MODEL || "llama-3.3-70b-versatile";
   const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -1787,7 +1797,7 @@ async function callOpportunityModel(env, article, products) {
       model,
       messages: [
         { role: "system", content: OPPORTUNITY_AGENT_PROMPT },
-        { role: "user", content: buildOpportunityArticleInput(article, products) },
+        { role: "user", content: buildOpportunityArticleInput(article, products, memoryInsights) },
       ],
       temperature: 0.2,
       response_format: {
@@ -1802,12 +1812,13 @@ async function callOpportunityModel(env, article, products) {
   return { model, data, result: JSON.parse(outputText) };
 }
 
-function buildOpportunityArticleInput(article, products) {
+function buildOpportunityArticleInput(article, products, memoryInsights = []) {
   const sourceName = article.news_sources?.name || "Unknown";
   const availableProducts = products
     .filter((product) => !article.game || product.game === article.game || product.game === "other")
     .map((product) => `- ${product.name} (${product.game}, ${product.product_type})`)
     .join("\n");
+  const memory = buildOpportunityMemoryInput(memoryInsights);
   return [
     "Article:",
     `Title: ${article.title || ""}`,
@@ -1826,7 +1837,52 @@ function buildOpportunityArticleInput(article, products) {
     "",
     "Available Products:",
     availableProducts || "- No active products found",
+    "",
+    "Agent Memory From Recent Analyst Insights:",
+    memory || "- No prior performance insights available yet.",
+    "",
+    "Memory instructions:",
+    "- Use these insights as guidance, not as facts about the article.",
+    "- Boost scores and recommended channels when the article matches patterns that produced orders or revenue.",
+    "- Be more cautious when the article matches patterns that failed or had weak engagement.",
+    "- Do not invent new products, dates, discounts, or claims from memory.",
   ].join("\n");
+}
+
+function buildOpportunityMemoryInput(insights) {
+  return insights.map((insight, index) => {
+    const worked = normalizeMemoryList(insight.what_worked).join("; ");
+    const failed = normalizeMemoryList(insight.what_failed).join("; ");
+    const recommendations = normalizeMemoryList(insight.recommendations).join("; ");
+    const channelInsights = normalizeMemoryChannelInsights(insight.channel_insights).join("; ");
+    const adjustments = insight.scoring_adjustments && typeof insight.scoring_adjustments === "object"
+      ? Object.entries(insight.scoring_adjustments).map(([key, value]) => `${key}: ${String(value || "").slice(0, 220)}`).join("; ")
+      : "";
+    return [
+      `Insight #${index + 1} (${insight.id || "no-id"})`,
+      `Title: ${insight.title || ""}`,
+      `Summary: ${insight.summary || ""}`,
+      `Totals: ${Number(insight.total_views || 0)} views, ${Number(insight.total_orders || 0)} orders, ${Number(insight.total_revenue || 0)} revenue`,
+      `What worked: ${worked || "No signal"}`,
+      `What failed: ${failed || "No signal"}`,
+      `Channel insights: ${channelInsights || "No channel signal"}`,
+      `Recommendations: ${recommendations || "No recommendation"}`,
+      `Scoring adjustments: ${adjustments || "No scoring adjustment"}`,
+    ].join("\n");
+  }).join("\n\n");
+}
+
+function normalizeMemoryList(value) {
+  return Array.isArray(value) ? value.map((item) => String(item || "").trim()).filter(Boolean).slice(0, 5) : [];
+}
+
+function normalizeMemoryChannelInsights(value) {
+  return Array.isArray(value)
+    ? value.map((item) => {
+      if (!item || typeof item !== "object") return String(item || "").trim();
+      return `${item.channel || "channel"}: ${item.insight || ""}`.trim();
+    }).filter(Boolean).slice(0, 5)
+    : [];
 }
 
 function extractGroqOutputText(data) {
