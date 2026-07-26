@@ -499,7 +499,8 @@ async function adminOpportunities(request, env) {
   if (status !== "all") params.status = `eq.${status}`;
   if (game) params.game = `eq.${game}`;
   const opportunities = await supabaseRequest(env, "GET", `today_opportunities?${supabaseQuery(params)}`);
-  return jsonResponse(200, { ok: true, opportunities });
+  const enriched = await enrichOpportunitiesWithQa(env, opportunities);
+  return jsonResponse(200, { ok: true, opportunities: enriched });
 }
 
 async function adminAgentRuns(request, env) {
@@ -2297,6 +2298,99 @@ function normalizeOpportunityScore(value) {
   return Math.max(0, Math.min(100, score));
 }
 
+async function enrichOpportunitiesWithQa(env, opportunities) {
+  const ids = opportunities.map((item) => item.id).filter(Boolean);
+  if (!ids.length) return opportunities.map((item) => ({ ...item, qa: buildOpportunityQa(item, [], []) }));
+  const drafts = await supabaseSelectContentDraftsForOpportunities(env, ids).catch(() => []);
+  const calendar = await supabaseSelectContentCalendarForOpportunities(env, ids).catch(() => []);
+  const performance = await supabaseSelectContentPerformanceForOpportunities(env, ids).catch(() => []);
+  const draftsByOpportunity = groupBy(drafts, "opportunity_id");
+  const calendarByOpportunity = groupBy(calendar, "opportunity_id");
+  const performanceByOpportunity = groupBy(performance, "opportunity_id");
+  return opportunities.map((item) => ({
+    ...item,
+    qa: buildOpportunityQa(item, draftsByOpportunity.get(item.id) || [], calendarByOpportunity.get(item.id) || [], performanceByOpportunity.get(item.id) || []),
+  }));
+}
+
+function buildOpportunityQa(opportunity, drafts = [], calendarItems = [], performanceRows = []) {
+  const blockers = [];
+  const warnings = [];
+  const passed = [];
+  const products = Array.isArray(opportunity.products) ? opportunity.products : [];
+  const channels = Array.isArray(opportunity.recommended_channels) ? opportunity.recommended_channels : [];
+  const reasoning = String(opportunity.reasoning || "").trim();
+  const publishedItems = calendarItems.filter((item) => item.status === "published");
+  const scheduledItems = calendarItems.filter((item) => item.status === "scheduled");
+
+  addQaCheck(products.length > 0, blockers, passed, "No product match", "Has product match");
+  addQaCheck(channels.length > 0, blockers, passed, "No recommended channel", "Has recommended channel");
+  addQaCheck(reasoning.length >= 45, warnings, passed, "Reasoning is weak or too short", "Reasoning is clear");
+  addQaCheck(Number(opportunity.sales_score || 0) >= 60, warnings, passed, "Low sales score", "Sales score is usable");
+  addQaCheck(Number(opportunity.overall_score || 0) >= 50, warnings, passed, "Low overall opportunity score", "Overall score is usable");
+  addQaCheck(drafts.length > 0, warnings, passed, "No draft generated yet", "Draft exists");
+
+  const approvedDrafts = drafts.filter((draft) => draft.status === "approved");
+  if (drafts.length) addQaCheck(approvedDrafts.length > 0, warnings, passed, "No approved draft yet", "Approved draft exists");
+
+  const riskyClaims = findRiskyDraftClaims(drafts);
+  if (riskyClaims.length) {
+    blockers.push(`Risky draft claim: ${riskyClaims.slice(0, 3).join(", ")}`);
+  } else if (drafts.length) {
+    passed.push("No risky draft claims detected");
+  }
+
+  if (approvedDrafts.length && !scheduledItems.length && !publishedItems.length) warnings.push("Approved draft is not scheduled");
+  if (scheduledItems.length) passed.push("Content is scheduled");
+
+  if (publishedItems.length && !performanceRows.length) warnings.push("Published content is missing performance metrics");
+  if (publishedItems.length && performanceRows.length) passed.push("Published content has performance metrics");
+
+  const status = blockers.length ? "blocked" : (warnings.length ? "review" : "ready");
+  return {
+    status,
+    blockers,
+    warnings,
+    passed: passed.slice(0, 8),
+    summary: `${blockers.length} blocker(s), ${warnings.length} warning(s), ${passed.length} passed check(s)`,
+  };
+}
+
+function addQaCheck(condition, failedList, passedList, failedText, passedText) {
+  if (condition) passedList.push(passedText);
+  else failedList.push(failedText);
+}
+
+function findRiskyDraftClaims(drafts) {
+  const riskyPatterns = [
+    { label: "free", regex: /\bfree\b/i },
+    { label: "guaranteed", regex: /\bguarantee(?:d|s)?\b/i },
+    { label: "official discount", regex: /\bofficial\s+discount\b/i },
+    { label: "limited official offer", regex: /\bofficial\s+offer\b/i },
+    { label: "100% win", regex: /\b100%\s*(?:win|chance|guarantee)/i },
+  ];
+  const found = [];
+  for (const draft of drafts) {
+    const text = [draft.title, draft.body, draft.call_to_action, Array.isArray(draft.hashtags) ? draft.hashtags.join(" ") : ""].join(" ");
+    riskyPatterns.forEach((pattern) => {
+      if (pattern.regex.test(text) && !found.includes(pattern.label)) found.push(pattern.label);
+    });
+  }
+  return found;
+}
+
+function groupBy(rows, key) {
+  const map = new Map();
+  rows.forEach((row) => {
+    const value = row?.[key];
+    if (!value) return;
+    const list = map.get(value) || [];
+    list.push(row);
+    map.set(value, list);
+  });
+  return map;
+}
+
 async function runWriterAgent(env, options = {}) {
   const opportunity = await supabaseSelectOpportunityForWriter(env, options.opportunityId);
   if (!opportunity) throw new Error("Opportunity not found");
@@ -2757,6 +2851,16 @@ async function supabaseSelectContentDrafts(env, opportunityId) {
   return supabaseRequest(env, "GET", `content_drafts?${qs}`);
 }
 
+async function supabaseSelectContentDraftsForOpportunities(env, opportunityIds) {
+  if (!opportunityIds.length) return [];
+  const qs = supabaseQuery({
+    select: "id,opportunity_id,channel,title,body,call_to_action,hashtags,status,updated_at",
+    opportunity_id: `in.(${opportunityIds.join(",")})`,
+    order: "updated_at.desc",
+  });
+  return supabaseRequest(env, "GET", `content_drafts?${qs}`);
+}
+
 async function supabaseSelectContentDraftById(env, id) {
   const rows = await supabaseRequest(env, "GET", `content_drafts?${supabaseQuery({ select: "*", id: `eq.${id}`, limit: "1" })}`);
   return rows[0] || null;
@@ -2775,6 +2879,16 @@ async function supabaseSelectContentCalendar(env, options = {}) {
   };
   if (status !== "all") params.status = `eq.${status}`;
   return supabaseRequest(env, "GET", `content_calendar?${supabaseQuery(params)}`);
+}
+
+async function supabaseSelectContentCalendarForOpportunities(env, opportunityIds) {
+  if (!opportunityIds.length) return [];
+  const qs = supabaseQuery({
+    select: "id,opportunity_id,draft_id,channel,status,scheduled_for,published_url",
+    opportunity_id: `in.(${opportunityIds.join(",")})`,
+    order: "scheduled_for.desc",
+  });
+  return supabaseRequest(env, "GET", `content_calendar?${qs}`);
 }
 
 async function supabaseSelectContentCalendarItemById(env, id) {
@@ -2803,6 +2917,16 @@ async function supabaseSelectContentPerformance(env, options = {}) {
 
 async function supabaseCreateContentPerformance(env, row) {
   return supabaseRequest(env, "POST", "content_performance", [row], "return=representation");
+}
+
+async function supabaseSelectContentPerformanceForOpportunities(env, opportunityIds) {
+  if (!opportunityIds.length) return [];
+  const qs = supabaseQuery({
+    select: "id,opportunity_id,calendar_id,channel,views,orders,revenue,measured_at",
+    opportunity_id: `in.(${opportunityIds.join(",")})`,
+    order: "measured_at.desc",
+  });
+  return supabaseRequest(env, "GET", `content_performance?${qs}`);
 }
 
 async function supabaseSelectMarketingInsights(env, limit) {
