@@ -8,6 +8,10 @@ Return only valid JSON that matches the provided schema.
 Always include a non-empty opportunity_type using exactly one of:
 trend_post, sales_post, educational_post, event_reminder, promotion_angle, community_reaction, urgent_update.
 
+Language rules:
+- Write all user-facing fields in Burmese: title, description, reasoning, and product match reasons.
+- Keep enum values, channel names, game ids, product names, URLs, and hashtags unchanged.
+
 Scoring rules:
 - Scores must be integers from 0 to 100.
 - overall_score should reflect posting priority today.
