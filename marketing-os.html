@@ -1,9 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
+﻿<!DOCTYPE html>
+<html lang="my">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>BestDia Marketing OS</title>
+<title>BestDia မားကတ်တင်း OS</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -39,9 +39,9 @@ button{cursor:pointer}
 <body>
 <div class="topbar">
   <div class="topbar-inner">
-    <div class="brand"><div class="mark">BD</div><div><h1>BestDia Marketing OS</h1><span>Opportunity Agent dashboard</span></div></div>
+    <div class="brand"><div class="mark">BD</div><div><h1>BestDia မားကတ်တင်း OS</h1><span>အခွင့်အလမ်း Agent ဒက်ရှ်ဘုတ်</span></div></div>
     <div class="top-actions">
-      <a class="btn" href="admin.html">Orders Admin</a>
+      <a class="btn" href="admin.html">အော်ဒါစီမံရန်</a>
     </div>
   </div>
 </div>
@@ -50,144 +50,144 @@ button{cursor:pointer}
   <section class="hero">
     <div class="panel headline">
       <div>
-        <h2>Today's Opportunities</h2>
-        <p>Review AI-ranked MLBB and PUBG posting opportunities, matched products, channels, and reasoning. Nothing is published automatically.</p>
+        <h2>ယနေ့ အခွင့်အလမ်းများ</h2>
+        <p>AI စီထားသော MLBB နှင့် PUBG ပို့စ်အခွင့်အလမ်းများ၊ ကိုက်ညီသော product များ၊ channel များနှင့် အကြောင်းပြချက်များကို စစ်ဆေးပါ။ မည်သည့်အရာမှ အလိုအလျောက် publish မလုပ်ပါ။</p>
       </div>
-      <button class="btn primary" id="runPipelineBtn" type="button">Run Daily Pipeline</button>
+      <button class="btn primary" id="runPipelineBtn" type="button">နေ့စဉ် Pipeline လုပ်ဆောင်ရန်</button>
     </div>
     <div class="panel login">
-      <label><span class="label">Admin password</span><input class="input" id="adminPassword" type="password" autocomplete="current-password" placeholder="Enter admin password"/></label>
-      <button class="btn primary" id="unlockBtn" type="button">Load Dashboard</button>
+      <label><span class="label">Admin စကားဝှက်</span><input class="input" id="adminPassword" type="password" autocomplete="current-password" placeholder="Admin စကားဝှက်ထည့်ပါ"/></label>
+      <button class="btn primary" id="unlockBtn" type="button">ဒက်ရှ်ဘုတ်ဖွင့်ရန်</button>
     </div>
   </section>
 
   <section class="kpis" id="kpis">
-    <div class="kpi"><span>Total</span><b>0</b></div>
+    <div class="kpi"><span>စုစုပေါင်း</span><b>0</b></div>
     <div class="kpi"><span>MLBB</span><b>0</b></div>
     <div class="kpi"><span>PUBG</span><b>0</b></div>
-    <div class="kpi"><span>Top Score</span><b>0</b></div>
+    <div class="kpi"><span>အမြင့်ဆုံးအမှတ်</span><b>0</b></div>
   </section>
 
   <section class="panel" style="margin-bottom:14px">
     <div class="calendar-toolbar">
-      <div><h2 style="font-family:'Chakra Petch',sans-serif;font-size:1.1rem">Today's BestDia Brief</h2><p class="review-hint">Morning posting summary from scores, QA checks, products, and channels.</p></div>
-      <button class="btn" id="refreshBriefBtn" type="button">Refresh Brief</button>
+      <div><h2 style="font-family:'Chakra Petch',sans-serif;font-size:1.1rem">ယနေ့ BestDia အကျဉ်းချုပ်</h2><p class="review-hint">အမှတ်များ၊ QA စစ်ဆေးချက်များ၊ product များနှင့် channel များအပေါ် အခြေခံထားသော မနက်ပိုင်း ပို့စ်အကျဉ်းချုပ်။</p></div>
+      <button class="btn" id="refreshBriefBtn" type="button">အကျဉ်းချုပ် Refresh</button>
     </div>
-    <div class="status ok" id="briefStatusLine">Load the dashboard to generate the daily brief.</div>
+    <div class="status ok" id="briefStatusLine">နေ့စဉ် အကျဉ်းချုပ်ကြည့်ရန် ဒက်ရှ်ဘုတ်ကို ဖွင့်ပါ။</div>
     <div class="brief-layout" id="dailyBrief"></div>
   </section>
 
   <section class="panel">
     <div class="toolbar">
-      <input class="input" id="searchInput" placeholder="Search opportunity, reason, product..."/>
-      <select class="select" id="gameFilter"><option value="">All games</option><option value="mlbb">MLBB</option><option value="pubg">PUBG</option></select>
-      <select class="select" id="statusFilter"><option value="new">New</option><option value="all">All visible</option></select>
+      <input class="input" id="searchInput" placeholder="အခွင့်အလမ်း၊ အကြောင်းပြချက်၊ product ရှာရန်..."/>
+      <select class="select" id="gameFilter"><option value="">ဂိမ်းအားလုံး</option><option value="mlbb">MLBB</option><option value="pubg">PUBG</option></select>
+      <select class="select" id="statusFilter"><option value="new">အသစ်</option><option value="all">မြင်နိုင်သမျှ</option></select>
       <button class="btn" id="refreshBtn" type="button">Refresh</button>
     </div>
-    <div class="status" id="statusLine">Enter the admin password to load opportunities.</div>
+    <div class="status" id="statusLine">အခွင့်အလမ်းများကြည့်ရန် Admin စကားဝှက်ထည့်ပါ။</div>
     <div class="grid" id="opportunityGrid"></div>
   </section>
 
   <section class="panel" style="margin-top:14px">
     <div class="calendar-toolbar">
-      <div><h2 style="font-family:'Chakra Petch',sans-serif;font-size:1.1rem">Content Calendar</h2><p class="review-hint">Approved drafts scheduled for human publishing.</p></div>
-      <div class="actions" style="margin-top:0"><select class="select" id="calendarStatus" style="width:auto"><option value="scheduled">Scheduled</option><option value="published">Published</option><option value="cancelled">Cancelled</option><option value="all">All</option></select><button class="btn" id="refreshCalendarBtn" type="button">Refresh Calendar</button></div>
+      <div><h2 style="font-family:'Chakra Petch',sans-serif;font-size:1.1rem">Content Calendar</h2><p class="review-hint">လူကိုယ်တိုင် publish လုပ်ရန် schedule ထားသော approved draft များ။</p></div>
+      <div class="actions" style="margin-top:0"><select class="select" id="calendarStatus" style="width:auto"><option value="scheduled">Schedule ထားပြီး</option><option value="published">Publish ပြီး</option><option value="cancelled">Cancel ပြီး</option><option value="all">အားလုံး</option></select><button class="btn" id="refreshCalendarBtn" type="button">Calendar Refresh</button></div>
     </div>
-    <div class="status" id="calendarStatusLine">Load the dashboard to see scheduled content.</div>
+    <div class="status" id="calendarStatusLine">Schedule ထားသော content များကြည့်ရန် ဒက်ရှ်ဘုတ်ကို ဖွင့်ပါ။</div>
     <div class="calendar-list" id="calendarList"></div>
   </section>
 
   <section class="panel" style="margin-top:14px">
     <div class="calendar-toolbar">
-      <div><h2 style="font-family:'Chakra Petch',sans-serif;font-size:1.1rem">Performance Summary</h2><p class="review-hint">Published content results for learning what actually drives orders.</p></div>
-      <div class="actions" style="margin-top:0"><button class="btn primary" id="runAnalystBtn" type="button">Generate Insight</button><button class="btn" id="refreshPerformanceBtn" type="button">Refresh Performance</button></div>
+      <div><h2 style="font-family:'Chakra Petch',sans-serif;font-size:1.1rem">Performance အကျဉ်းချုပ်</h2><p class="review-hint">Order တက်စေသော content များကို လေ့လာရန် publish ပြီးရလဒ်များ။</p></div>
+      <div class="actions" style="margin-top:0"><button class="btn primary" id="runAnalystBtn" type="button">Insight ထုတ်ရန်</button><button class="btn" id="refreshPerformanceBtn" type="button">Performance Refresh</button></div>
     </div>
-    <div class="status" id="performanceStatusLine">Load the dashboard to see performance.</div>
+    <div class="status" id="performanceStatusLine">Performance ကြည့်ရန် ဒက်ရှ်ဘုတ်ကို ဖွင့်ပါ။</div>
     <div class="performance-grid" id="performanceKpis">
-      <div class="metric"><span>Views</span><b>0</b></div>
-      <div class="metric"><span>Orders</span><b>0</b></div>
-      <div class="metric"><span>Revenue</span><b>0</b></div>
-      <div class="metric"><span>Click Rate</span><b>0%</b></div>
+      <div class="metric"><span>ကြည့်ရှုမှု</span><b>0</b></div>
+      <div class="metric"><span>အော်ဒါ</span><b>0</b></div>
+      <div class="metric"><span>ဝင်ငွေ</span><b>0</b></div>
+      <div class="metric"><span>Click နှုန်း</span><b>0%</b></div>
     </div>
     <div class="performance-layout">
       <div>
-        <h3 style="font-family:'Chakra Petch',sans-serif;font-size:.95rem">Top Posts</h3>
+        <h3 style="font-family:'Chakra Petch',sans-serif;font-size:.95rem">အကောင်းဆုံး ပို့စ်များ</h3>
         <div class="performance-list" id="topPerformanceList"></div>
       </div>
       <div>
-        <h3 style="font-family:'Chakra Petch',sans-serif;font-size:.95rem">Channels</h3>
+        <h3 style="font-family:'Chakra Petch',sans-serif;font-size:.95rem">Channel များ</h3>
         <div class="channel-list" id="channelPerformanceList"></div>
       </div>
     </div>
     <div class="insight-box" id="latestInsightBox">
-      <h3>Latest Analyst Insight</h3>
-      <p class="review-hint">No insight loaded yet.</p>
+      <h3>နောက်ဆုံး Analyst Insight</h3>
+      <p class="review-hint">Insight မရှိသေးပါ။</p>
     </div>
   </section>
 
   <section class="panel" style="margin-top:14px">
     <div class="calendar-toolbar">
-      <div><h2 style="font-family:'Chakra Petch',sans-serif;font-size:1.1rem">Agent Runs & Scoring Audit</h2><p class="review-hint">Recent agent activity, memory usage, scoring rules, and failures.</p></div>
-      <div class="actions" style="margin-top:0"><select class="select" id="agentRunFilter" style="width:auto"><option value="">All agents</option><option value="opportunity_agent">Opportunity</option><option value="writer_agent">Writer</option><option value="analyst_agent">Analyst</option></select><button class="btn" id="refreshAgentRunsBtn" type="button">Refresh Runs</button></div>
+      <div><h2 style="font-family:'Chakra Petch',sans-serif;font-size:1.1rem">Agent Run နှင့် Scoring စစ်ဆေးချက်</h2><p class="review-hint">နောက်ဆုံး agent လုပ်ဆောင်ချက်၊ memory အသုံးပြုမှု၊ scoring rule များနှင့် error များ။</p></div>
+      <div class="actions" style="margin-top:0"><select class="select" id="agentRunFilter" style="width:auto"><option value="">Agent အားလုံး</option><option value="opportunity_agent">Opportunity</option><option value="writer_agent">Writer</option><option value="analyst_agent">Analyst</option></select><button class="btn" id="refreshAgentRunsBtn" type="button">Run များ Refresh</button></div>
     </div>
-    <div class="status" id="agentRunsStatusLine">Load the dashboard to see agent runs.</div>
+    <div class="status" id="agentRunsStatusLine">Agent run များကြည့်ရန် ဒက်ရှ်ဘုတ်ကို ဖွင့်ပါ။</div>
     <div class="agent-runs" id="agentRunsList"></div>
   </section>
 </main>
 
 <div class="modal" id="detailModal">
   <div class="modal-card">
-    <div class="modal-title" id="modalTitle">Opportunity</div>
+    <div class="modal-title" id="modalTitle">အခွင့်အလမ်း</div>
     <div class="modal-body" id="modalBody"></div>
-    <div class="actions"><button class="btn primary" type="button" id="closeModalBtn">Close</button></div>
+    <div class="actions"><button class="btn primary" type="button" id="closeModalBtn">ပိတ်ရန်</button></div>
   </div>
 </div>
 
 <div class="modal" id="reviewModal">
   <div class="modal-card">
-    <div class="modal-title" id="reviewTitle">Review Opportunity</div>
+    <div class="modal-title" id="reviewTitle">အခွင့်အလမ်း စစ်ဆေးရန်</div>
     <div class="modal-body">
       <p id="reviewSummary" class="review-hint"></p>
       <div class="form-grid">
-        <label><span class="label">Decision</span><select class="select" id="reviewDecision"><option value="reviewed">Reviewed</option><option value="approved">Approved</option><option value="used">Posted / Used</option><option value="rejected">Rejected</option></select></label>
-        <label><span class="label">Channel</span><select class="select" id="reviewChannel"><option value="">Not selected</option><option value="facebook">Facebook</option><option value="tiktok">TikTok</option><option value="telegram">Telegram</option><option value="website">Website</option></select></label>
-        <label class="wide"><span class="label">Published URL</span><input class="input" id="reviewPublishedUrl" placeholder="Paste post URL after publishing"/></label>
-        <label><span class="label">Feedback</span><select class="select" id="reviewFeedback"><option value="">Not scored yet</option><option value="good">Good</option><option value="neutral">Neutral</option><option value="bad">Bad</option></select></label>
-        <label class="wide"><span class="label">Notes</span><textarea class="textarea" id="reviewNotes" placeholder="Why approve/reject? What angle should the writer use?"></textarea></label>
+        <label><span class="label">ဆုံးဖြတ်ချက်</span><select class="select" id="reviewDecision"><option value="reviewed">စစ်ဆေးပြီး</option><option value="approved">Approve ပြီး</option><option value="used">ပို့စ်တင်ပြီး / သုံးပြီး</option><option value="rejected">Reject ပြီး</option></select></label>
+        <label><span class="label">Channel</span><select class="select" id="reviewChannel"><option value="">မရွေးရသေး</option><option value="facebook">Facebook</option><option value="tiktok">TikTok</option><option value="telegram">Telegram</option><option value="website">Website</option></select></label>
+        <label class="wide"><span class="label">Published URL</span><input class="input" id="reviewPublishedUrl" placeholder="Publish ပြီးသော post URL ထည့်ပါ"/></label>
+        <label><span class="label">Feedback</span><select class="select" id="reviewFeedback"><option value="">အမှတ်မပေးရသေး</option><option value="good">ကောင်း</option><option value="neutral">ပုံမှန်</option><option value="bad">မကောင်း</option></select></label>
+        <label class="wide"><span class="label">မှတ်ချက်</span><textarea class="textarea" id="reviewNotes" placeholder="ဘာကြောင့် approve/reject လုပ်မလဲ။ Writer သုံးရမည့် angle ကဘာလဲ။"></textarea></label>
       </div>
-      <p class="review-hint">A review saves the decision history for learning. Mark as Posted / Used when BestDia actually publishes it.</p>
+      <p class="review-hint">Review သည် နောက်ပိုင်း Agent လေ့လာရန် ဆုံးဖြတ်ချက်မှတ်တမ်းကို သိမ်းထားသည်။ BestDia တကယ် publish လုပ်ပြီးမှ ပို့စ်တင်ပြီး / သုံးပြီး ဟု သတ်မှတ်ပါ။</p>
     </div>
-    <div class="actions"><button class="btn primary" type="button" id="saveReviewBtn">Save Review</button><button class="btn" type="button" id="closeReviewBtn">Cancel</button></div>
+    <div class="actions"><button class="btn primary" type="button" id="saveReviewBtn">Review သိမ်းရန်</button><button class="btn" type="button" id="closeReviewBtn">Cancel</button></div>
   </div>
 </div>
 
 <div class="modal" id="draftModal">
   <div class="modal-card">
-    <div class="modal-title" id="draftTitle">Drafts</div>
+    <div class="modal-title" id="draftTitle">Draft များ</div>
     <div class="modal-body" id="draftBody"></div>
-    <div class="actions"><button class="btn primary" type="button" id="closeDraftBtn">Close</button></div>
+    <div class="actions"><button class="btn primary" type="button" id="closeDraftBtn">ပိတ်ရန်</button></div>
   </div>
 </div>
 
 <div class="modal" id="performanceModal">
   <div class="modal-card">
-    <div class="modal-title" id="performanceTitle">Add Performance</div>
+    <div class="modal-title" id="performanceTitle">Performance ထည့်ရန်</div>
     <div class="modal-body">
       <p class="review-hint" id="performanceSummary"></p>
       <div class="form-grid">
-        <label><span class="label">Views</span><input class="input" id="metricViews" type="number" min="0" step="1" value="0"/></label>
-        <label><span class="label">Likes</span><input class="input" id="metricLikes" type="number" min="0" step="1" value="0"/></label>
-        <label><span class="label">Comments</span><input class="input" id="metricComments" type="number" min="0" step="1" value="0"/></label>
-        <label><span class="label">Shares</span><input class="input" id="metricShares" type="number" min="0" step="1" value="0"/></label>
-        <label><span class="label">Clicks</span><input class="input" id="metricClicks" type="number" min="0" step="1" value="0"/></label>
-        <label><span class="label">Orders</span><input class="input" id="metricOrders" type="number" min="0" step="1" value="0"/></label>
-        <label><span class="label">Revenue</span><input class="input" id="metricRevenue" type="number" min="0" step="0.01" value="0"/></label>
-        <label><span class="label">Measured at</span><input class="input" id="metricMeasuredAt" type="datetime-local"/></label>
-        <label class="wide"><span class="label">Notes</span><textarea class="textarea" id="metricNotes" placeholder="What happened after publishing?"></textarea></label>
+        <label><span class="label">ကြည့်ရှုမှု</span><input class="input" id="metricViews" type="number" min="0" step="1" value="0"/></label>
+        <label><span class="label">Like</span><input class="input" id="metricLikes" type="number" min="0" step="1" value="0"/></label>
+        <label><span class="label">Comment</span><input class="input" id="metricComments" type="number" min="0" step="1" value="0"/></label>
+        <label><span class="label">Share</span><input class="input" id="metricShares" type="number" min="0" step="1" value="0"/></label>
+        <label><span class="label">Click</span><input class="input" id="metricClicks" type="number" min="0" step="1" value="0"/></label>
+        <label><span class="label">အော်ဒါ</span><input class="input" id="metricOrders" type="number" min="0" step="1" value="0"/></label>
+        <label><span class="label">ဝင်ငွေ</span><input class="input" id="metricRevenue" type="number" min="0" step="0.01" value="0"/></label>
+        <label><span class="label">တိုင်းတာချိန်</span><input class="input" id="metricMeasuredAt" type="datetime-local"/></label>
+        <label class="wide"><span class="label">မှတ်ချက်</span><textarea class="textarea" id="metricNotes" placeholder="Publish ပြီးနောက် ဘာဖြစ်ခဲ့လဲ။"></textarea></label>
       </div>
-      <p class="review-hint">These metrics become the feedback loop for future opportunity scoring.</p>
+      <p class="review-hint">ဤ metric များသည် နောက်ပိုင်း opportunity scoring အတွက် feedback loop ဖြစ်လာမည်။</p>
     </div>
-    <div class="actions"><button class="btn primary" type="button" id="savePerformanceBtn">Save Metrics</button><button class="btn" type="button" id="closePerformanceBtn">Cancel</button></div>
+    <div class="actions"><button class="btn primary" type="button" id="savePerformanceBtn">Metric သိမ်းရန်</button><button class="btn" type="button" id="closePerformanceBtn">Cancel</button></div>
   </div>
 </div>
 
@@ -202,582 +202,60 @@ function setCalendarStatus(message,type=""){const el=$("#calendarStatusLine");el
 function setPerformanceStatus(message,type=""){const el=$("#performanceStatusLine");el.textContent=message;el.className=`status ${type}`;}
 function setAgentRunsStatus(message,type=""){const el=$("#agentRunsStatusLine");el.textContent=message;el.className=`status ${type}`;}
 function setBriefStatus(message,type=""){const el=$("#briefStatusLine");el.textContent=message;el.className=`status ${type}`;}
-async function apiPost(path,payload){const res=await fetch(path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload||{})});const data=await res.json().catch(()=>({ok:false,error:"Invalid API response"}));if(!res.ok||data.ok===false)throw new Error(data.error||"API request failed");return data;}
-function adminPayload(extra={}){return {adminPassword,...extra};}
-
-async function loadOpportunities(){
-  if(!adminPassword){setStatus("Enter the admin password first.","warn");return;}
-  setStatus("Loading opportunities...");
-  try{
-    const data=await apiPost("/api/admin-opportunities",adminPayload({status:$("#statusFilter").value,game:$("#gameFilter").value,limit:30}));
-    opportunities=Array.isArray(data.opportunities)?data.opportunities:[];
-    render();
-    setStatus(`Loaded ${opportunities.length} opportunities.`,"ok");
-    loadCalendar();
-    loadPerformance();
-    loadAgentRuns();
-  }catch(error){setStatus(error.message||"Could not load opportunities.","warn");}
-}
-
-async function runPipeline(){
-  if(!adminPassword){setStatus("Enter the admin password first.","warn");return;}
-  $("#runPipelineBtn").disabled=true;
-  setStatus("Running daily pipeline...");
-  try{
-    const data=await apiPost("/api/run-daily-opportunity-pipeline",adminPayload({limitPerSource:12,agentLimit:10}));
-    const s=data.summary||{};
-    setStatus(pipelineStatusMessage(s),s.opportunities_created||s.articles_processed?"ok":"warn");
-    await loadOpportunities();
-    loadAgentRuns();
-  }catch(error){setStatus(error.message||"Pipeline failed.","warn");}
-  finally{$("#runPipelineBtn").disabled=false;}
-}
-
-function pipelineStatusMessage(s={}){
-  const base=`Pipeline complete: ${fmt(s.article_candidates)} candidates, ${fmt(s.articles_inserted)} inserted, ${fmt(s.duplicate_candidates)} duplicate, ${fmt(s.articles_processed)} processed, ${fmt(s.opportunities_created)} opportunities, ${fmt(s.skipped)} skipped, ${fmt(s.failed)} failed.`;
-  if(!Number(s.articles_inserted||0)&&!Number(s.articles_processed||0))return `${base} No new unprocessed articles were found.`;
-  if(Number(s.articles_processed||0)&&!Number(s.opportunities_created||0))return `${base} Articles were processed, but none became opportunities.`;
-  return base;
-}
-
-async function updateOpportunity(id,status,extra={}){
-  try{
-    const data=await apiPost("/api/admin-update-opportunity",adminPayload({id,status,...extra}));
-    opportunities=opportunities.filter(item=>item.id!==id);
-    render();
-    const warning=data.reviewWarning?` Review note was not saved yet: ${data.reviewWarning}`:"";
-    setStatus(`Opportunity marked ${status}.${warning}`,"ok");
-  }catch(error){setStatus(error.message||"Could not update opportunity.","warn");}
-}
-
-async function generateDraft(id){
-  if(!adminPassword){setStatus("Enter the admin password first.","warn");return;}
-  const item=opportunities.find(opp=>opp.id===id);
-  const channels=getChannels(item||{}).filter(channel=>["facebook","tiktok","telegram","website"].includes(channel));
-  setStatus("Generating draft...");
-  try{
-    const data=await apiPost("/api/run-writer-agent",adminPayload({opportunityId:id,channels:channels.length?channels:["facebook","tiktok"]}));
-    showDrafts(item,data.drafts||[]);
-    setStatus(`Generated ${(data.drafts||[]).length} draft(s).`,"ok");
-  }catch(error){setStatus(error.message||"Could not generate draft.","warn");}
-}
-
-async function viewDrafts(id){
-  if(!adminPassword){setStatus("Enter the admin password first.","warn");return;}
-  const item=opportunities.find(opp=>opp.id===id);
-  setStatus("Loading drafts...");
-  try{
-    const data=await apiPost("/api/admin-content-drafts",adminPayload({opportunityId:id}));
-    showDrafts(item,data.drafts||[]);
-    setStatus(`Loaded ${(data.drafts||[]).length} draft(s).`,"ok");
-  }catch(error){setStatus(error.message||"Could not load drafts.","warn");}
-}
-
-async function updateDraftStatus(id,status){
-  try{
-    const data=await apiPost("/api/admin-update-content-draft",adminPayload({id,status}));
-    activeDrafts=activeDrafts.map(draft=>draft.id===id?(data.draft||{...draft,status}):draft);
-    showDrafts(activeDraftOpportunity,activeDrafts);
-    setStatus(`Draft marked ${status}.`,"ok");
-  }catch(error){setStatus(error.message||"Could not update draft.","warn");}
-}
-
-async function scheduleDraft(id){
-  const card=document.querySelector(`[data-draft-card="${CSS.escape(id)}"]`);
-  if(!card)return;
-  try{
-    const data=await apiPost("/api/admin-update-content-calendar",adminPayload({
-      action:"schedule",
-      draftId:id,
-      scheduledFor:card.querySelector("[data-schedule-for]").value,
-      notes:card.querySelector("[data-schedule-notes]").value,
-    }));
-    setStatus("Draft scheduled.","ok");
-    await loadCalendar();
-    if(data.item)card.querySelector("[data-schedule-notes]").value="";
-  }catch(error){setStatus(error.message||"Could not schedule draft.","warn");}
-}
-
-async function loadCalendar(){
-  if(!adminPassword)return;
-  setCalendarStatus("Loading calendar...");
-  try{
-    const data=await apiPost("/api/admin-content-calendar",adminPayload({status:$("#calendarStatus").value,limit:40}));
-    calendarItems=Array.isArray(data.items)?data.items:[];
-    renderCalendar();
-    setCalendarStatus(`Loaded ${calendarItems.length} calendar item(s).`,"ok");
-  }catch(error){setCalendarStatus(error.message||"Could not load calendar.","warn");}
-}
-
-async function loadPerformance(){
-  if(!adminPassword)return;
-  setPerformanceStatus("Loading performance...");
-  try{
-    const data=await apiPost("/api/admin-content-performance",adminPayload({limit:100}));
-    performanceMetrics=Array.isArray(data.metrics)?data.metrics:[];
-    renderPerformance();
-    await loadInsights();
-    setPerformanceStatus(`Loaded ${performanceMetrics.length} performance record(s).`,"ok");
-  }catch(error){setPerformanceStatus(error.message||"Could not load performance.","warn");}
-}
-
-async function loadInsights(){
-  if(!adminPassword)return;
-  try{
-    const data=await apiPost("/api/admin-marketing-insights",adminPayload({limit:5}));
-    marketingInsights=Array.isArray(data.insights)?data.insights:[];
-    renderLatestInsight();
-  }catch(error){renderLatestInsight(error.message||"Could not load insight.");}
-}
-
-async function loadAgentRuns(){
-  if(!adminPassword)return;
-  setAgentRunsStatus("Loading agent runs...");
-  try{
-    const data=await apiPost("/api/admin-agent-runs",adminPayload({agentName:$("#agentRunFilter").value,limit:15}));
-    agentRuns=Array.isArray(data.runs)?data.runs:[];
-    renderAgentRuns();
-    setAgentRunsStatus(`Loaded ${agentRuns.length} agent run(s).`,"ok");
-  }catch(error){setAgentRunsStatus(error.message||"Could not load agent runs.","warn");}
-}
-
-async function runAnalystAgent(){
-  if(!adminPassword){setPerformanceStatus("Enter the admin password first.","warn");return;}
-  $("#runAnalystBtn").disabled=true;
-  setPerformanceStatus("Generating analyst insight...");
-  try{
-    const data=await apiPost("/api/run-analyst-agent",adminPayload({days:7,limit:50}));
-    if(data.insight)marketingInsights=[data.insight,...marketingInsights.filter(item=>item.id!==data.insight.id)];
-    renderLatestInsight();
-    setPerformanceStatus("Analyst insight generated.","ok");
-    loadAgentRuns();
-  }catch(error){setPerformanceStatus(error.message||"Analyst Agent failed.","warn");}
-  finally{$("#runAnalystBtn").disabled=false;}
-}
-
-async function updateCalendarItem(id,status){
-  const item=calendarItems.find(row=>row.id===id);
-  const url=status==="published"?prompt("Published URL (optional):",item?.published_url||""):"";
-  try{
-    await apiPost("/api/admin-update-content-calendar",adminPayload({action:"update",id,status,publishedUrl:url||""}));
-    await loadCalendar();
-    setCalendarStatus(`Calendar item marked ${status}.`,"ok");
-  }catch(error){setCalendarStatus(error.message||"Could not update calendar item.","warn");}
-}
-
-async function saveDraftEdits(id){
-  const card=document.querySelector(`[data-draft-card="${CSS.escape(id)}"]`);
-  if(!card)return;
-  const scheduleState=getDraftScheduleState();
-  try{
-    const data=await apiPost("/api/admin-update-content-draft",adminPayload({
-      id,
-      title:card.querySelector("[data-edit-title]").value,
-      body:card.querySelector("[data-edit-body]").value,
-      callToAction:card.querySelector("[data-edit-cta]").value,
-      hashtags:card.querySelector("[data-edit-tags]").value,
-    }));
-    activeDrafts=activeDrafts.map(draft=>draft.id===id?(data.draft||draft):draft);
-    showDrafts(activeDraftOpportunity,activeDrafts);
-    restoreDraftScheduleState(scheduleState);
-    setStatus("Draft edits saved.","ok");
-  }catch(error){setStatus(error.message||"Could not save draft edits.","warn");}
-}
-
-async function copyDraft(id){
-  const draft=activeDrafts.find(item=>item.id===id);
-  if(!draft)return;
-  const card=document.querySelector(`[data-draft-card="${CSS.escape(id)}"]`);
-  const body=card?.querySelector("[data-edit-body]")?.value||draft.body;
-  const cta=card?.querySelector("[data-edit-cta]")?.value||draft.call_to_action;
-  const tags=card?.querySelector("[data-edit-tags]")?.value||(Array.isArray(draft.hashtags)?draft.hashtags.join(" "):"");
-  const text=[body,cta,tags].filter(Boolean).join("\n\n");
-  try{
-    await navigator.clipboard.writeText(text);
-    setStatus("Draft copied.","ok");
-  }catch(error){
-    setStatus("Copy failed. Select the draft text manually.","warn");
-  }
-}
-
+function statusLabel(status){const labels={new:"အသစ်",approved:"Approve ပြီး",used:"သုံးပြီး",rejected:"Reject ပြီး",reviewed:"စစ်ဆေးပြီး",draft:"Draft",scheduled:"Schedule ထားပြီး",published:"Publish ပြီး",cancelled:"Cancel ပြီး",failed:"မအောင်မြင်ပါ",success:"အောင်မြင်သည်",unknown:"မသိပါ"};return labels[String(status||"")]||String(status||"");}
+async function apiPost(path,payload){const res=await fetch(path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload||{})});const data=await res.json().catch(()=>({ok:false,error:"API အဖြေ မမှန်ပါ"}));if(!res.ok||data.ok===false)throw new Error(data.error||"API request မအောင်မြင်ပါ");return data;}
+async function loadOpportunities(){if(!adminPassword){setStatus("Admin စကားဝှက် အရင်ထည့်ပါ။","warn");return;}setStatus("အခွင့်အလမ်းများ ဖတ်နေသည်...");try{const data=await apiPost("/api/admin-opportunities",adminPayload({status:$("#statusFilter").value,game:$("#gameFilter").value,limit:30}));opportunities=Array.isArray(data.opportunities)?data.opportunities:[];render();setStatus(`အခွင့်အလမ်း ${opportunities.length} ခု ဖတ်ပြီးပါပြီ။`,"ok");loadCalendar();loadPerformance();loadAgentRuns();}catch(error){setStatus(error.message||"အခွင့်အလမ်းများ မဖတ်နိုင်ပါ။","warn");}}
+async function runPipeline(){if(!adminPassword){setStatus("Admin စကားဝှက် အရင်ထည့်ပါ။","warn");return;}$("#runPipelineBtn").disabled=true;setStatus("နေ့စဉ် pipeline လုပ်ဆောင်နေသည်...");try{const data=await apiPost("/api/run-daily-opportunity-pipeline",adminPayload({limitPerSource:12,agentLimit:10}));const s=data.summary||{};setStatus(pipelineStatusMessage(s),s.opportunities_created||s.articles_processed?"ok":"warn");await loadOpportunities();loadAgentRuns();}catch(error){setStatus(error.message||"Pipeline မအောင်မြင်ပါ။","warn");}finally{$("#runPipelineBtn").disabled=false;}}
+function pipelineStatusMessage(s={}){const base=`Pipeline ပြီးပါပြီ: candidate ${fmt(s.article_candidates)} ခု၊ အသစ်ထည့် ${fmt(s.articles_inserted)} ခု၊ duplicate ${fmt(s.duplicate_candidates)} ခု၊ process ${fmt(s.articles_processed)} ခု၊ opportunity ${fmt(s.opportunities_created)} ခု၊ skip ${fmt(s.skipped)} ခု၊ failed ${fmt(s.failed)} ခု။`;if(!Number(s.articles_inserted||0)&&!Number(s.articles_processed||0))return `${base} လုပ်ဆောင်ရန် article အသစ် မတွေ့ပါ။`;if(Number(s.articles_processed||0)&&!Number(s.opportunities_created||0))return `${base} Article များ process ပြီးသော်လည်း opportunity မဖန်တီးပါ။`;return base;}
+async function updateOpportunity(id,status,extra={}){try{const data=await apiPost("/api/admin-update-opportunity",adminPayload({id,status,...extra}));opportunities=opportunities.filter(item=>item.id!==id);render();const warning=data.reviewWarning?` Review မှတ်ချက် မသိမ်းနိုင်သေးပါ: ${data.reviewWarning}`:"";setStatus(`Opportunity ကို ${statusLabel(status)} ဟု သတ်မှတ်ပြီးပါပြီ။${warning}`,"ok");}catch(error){setStatus(error.message||"Opportunity update မလုပ်နိုင်ပါ။","warn");}}
+async function generateDraft(id){if(!adminPassword){setStatus("Admin စကားဝှက် အရင်ထည့်ပါ။","warn");return;}const item=opportunities.find(opp=>opp.id===id);const channels=getChannels(item||{}).filter(channel=>["facebook","tiktok","telegram","website"].includes(channel));setStatus("Draft ထုတ်နေသည်...");try{const data=await apiPost("/api/run-writer-agent",adminPayload({opportunityId:id,channels:channels.length?channels:["facebook","tiktok"]}));showDrafts(item,data.drafts||[]);setStatus(`Draft ${(data.drafts||[]).length} ခု ထုတ်ပြီးပါပြီ။`,"ok");}catch(error){setStatus(error.message||"Draft မထုတ်နိုင်ပါ။","warn");}}
+async function viewDrafts(id){if(!adminPassword){setStatus("Admin စကားဝှက် အရင်ထည့်ပါ။","warn");return;}const item=opportunities.find(opp=>opp.id===id);setStatus("Draft များ ဖတ်နေသည်...");try{const data=await apiPost("/api/admin-content-drafts",adminPayload({opportunityId:id}));showDrafts(item,data.drafts||[]);setStatus(`Draft ${(data.drafts||[]).length} ခု ဖတ်ပြီးပါပြီ။`,"ok");}catch(error){setStatus(error.message||"Draft များ မဖတ်နိုင်ပါ။","warn");}}
+async function updateDraftStatus(id,status){try{const data=await apiPost("/api/admin-update-content-draft",adminPayload({id,status}));activeDrafts=activeDrafts.map(draft=>draft.id===id?(data.draft||{...draft,status}):draft);showDrafts(activeDraftOpportunity,activeDrafts);setStatus(`Draft ကို ${statusLabel(status)} ဟု သတ်မှတ်ပြီးပါပြီ။`,"ok");}catch(error){setStatus(error.message||"Draft update မလုပ်နိုင်ပါ။","warn");}}
+async function scheduleDraft(id){const card=document.querySelector(`[data-draft-card="${CSS.escape(id)}"]`);if(!card)return;try{const data=await apiPost("/api/admin-update-content-calendar",adminPayload({action:"schedule",draftId:id,scheduledFor:card.querySelector("[data-schedule-for]").value,notes:card.querySelector("[data-schedule-notes]").value}));setStatus("Draft ကို schedule ထားပြီးပါပြီ။","ok");await loadCalendar();if(data.item)card.querySelector("[data-schedule-notes]").value="";}catch(error){setStatus(error.message||"Draft schedule မလုပ်နိုင်ပါ။","warn");}}
+async function loadCalendar(){if(!adminPassword)return;setCalendarStatus("Calendar ဖတ်နေသည်...");try{const data=await apiPost("/api/admin-content-calendar",adminPayload({status:$("#calendarStatus").value,limit:40}));calendarItems=Array.isArray(data.items)?data.items:[];renderCalendar();setCalendarStatus(`Calendar item ${calendarItems.length} ခု ဖတ်ပြီးပါပြီ။`,"ok");}catch(error){setCalendarStatus(error.message||"Calendar မဖတ်နိုင်ပါ။","warn");}}
+async function loadPerformance(){if(!adminPassword)return;setPerformanceStatus("Performance ဖတ်နေသည်...");try{const data=await apiPost("/api/admin-content-performance",adminPayload({limit:100}));performanceMetrics=Array.isArray(data.metrics)?data.metrics:[];renderPerformance();await loadInsights();setPerformanceStatus(`Performance record ${performanceMetrics.length} ခု ဖတ်ပြီးပါပြီ။`,"ok");}catch(error){setPerformanceStatus(error.message||"Performance မဖတ်နိုင်ပါ။","warn");}}
+async function loadInsights(){if(!adminPassword)return;try{const data=await apiPost("/api/admin-marketing-insights",adminPayload({limit:5}));marketingInsights=Array.isArray(data.insights)?data.insights:[];renderLatestInsight();}catch(error){renderLatestInsight(error.message||"Insight မဖတ်နိုင်ပါ။");}}
+async function loadAgentRuns(){if(!adminPassword)return;setAgentRunsStatus("Agent run များ ဖတ်နေသည်...");try{const data=await apiPost("/api/admin-agent-runs",adminPayload({agentName:$("#agentRunFilter").value,limit:15}));agentRuns=Array.isArray(data.runs)?data.runs:[];renderAgentRuns();setAgentRunsStatus(`Agent run ${agentRuns.length} ခု ဖတ်ပြီးပါပြီ။`,"ok");}catch(error){setAgentRunsStatus(error.message||"Agent run များ မဖတ်နိုင်ပါ။","warn");}}
+async function runAnalystAgent(){if(!adminPassword){setPerformanceStatus("Admin စကားဝှက် အရင်ထည့်ပါ။","warn");return;}$("#runAnalystBtn").disabled=true;setPerformanceStatus("Analyst insight ထုတ်နေသည်...");try{const data=await apiPost("/api/run-analyst-agent",adminPayload({days:7,limit:50}));if(data.insight)marketingInsights=[data.insight,...marketingInsights.filter(item=>item.id!==data.insight.id)];renderLatestInsight();setPerformanceStatus("Analyst insight ထုတ်ပြီးပါပြီ။","ok");loadAgentRuns();}catch(error){setPerformanceStatus(error.message||"Analyst Agent မအောင်မြင်ပါ။","warn");}finally{$("#runAnalystBtn").disabled=false;}}
+async function updateCalendarItem(id,status){const item=calendarItems.find(row=>row.id===id);const url=status==="published"?prompt("Publish ပြီးသော URL (ရှိလျှင်):",item?.published_url||""):"";try{await apiPost("/api/admin-update-content-calendar",adminPayload({action:"update",id,status,publishedUrl:url||""}));await loadCalendar();setCalendarStatus(`Calendar item ကို ${statusLabel(status)} ဟု သတ်မှတ်ပြီးပါပြီ။`,"ok");}catch(error){setCalendarStatus(error.message||"Calendar item update မလုပ်နိုင်ပါ။","warn");}}
+async function saveDraftEdits(id){const card=document.querySelector(`[data-draft-card="${CSS.escape(id)}"]`);if(!card)return;const scheduleState=getDraftScheduleState();try{const data=await apiPost("/api/admin-update-content-draft",adminPayload({id,title:card.querySelector("[data-edit-title]").value,body:card.querySelector("[data-edit-body]").value,callToAction:card.querySelector("[data-edit-cta]").value,hashtags:card.querySelector("[data-edit-tags]").value}));activeDrafts=activeDrafts.map(draft=>draft.id===id?(data.draft||draft):draft);showDrafts(activeDraftOpportunity,activeDrafts);restoreDraftScheduleState(scheduleState);setStatus("Draft edit များ သိမ်းပြီးပါပြီ။","ok");}catch(error){setStatus(error.message||"Draft edit များ မသိမ်းနိုင်ပါ။","warn");}}
+async function copyDraft(id){const draft=activeDrafts.find(item=>item.id===id);if(!draft)return;const card=document.querySelector(`[data-draft-card="${CSS.escape(id)}"]`);const body=card?.querySelector("[data-edit-body]")?.value||draft.body;const cta=card?.querySelector("[data-edit-cta]")?.value||draft.call_to_action;const tags=card?.querySelector("[data-edit-tags]")?.value||(Array.isArray(draft.hashtags)?draft.hashtags.join(" "):"");const text=[body,cta,tags].filter(Boolean).join("\n\n");try{await navigator.clipboard.writeText(text);setStatus("Draft copy လုပ်ပြီးပါပြီ။","ok");}catch(error){setStatus("Copy မအောင်မြင်ပါ။ Draft text ကို ကိုယ်တိုင် select လုပ်ပါ။","warn");}}
 function getProducts(item){return Array.isArray(item.products)?item.products:[];}
 function getChannels(item){return Array.isArray(item.recommended_channels)?item.recommended_channels:[];}
-function visibleOpportunities(){
-  const q=$("#searchInput").value.trim().toLowerCase();
-  return opportunities.filter(item=>{
-    const products=getProducts(item).map(p=>p.product_name).join(" ");
-    const text=[item.title,item.reasoning,item.game,item.opportunity_type,products].join(" ").toLowerCase();
-    return !q||text.includes(q);
-  });
-}
-function renderKpis(list){
-  const top=Math.max(0,...list.map(item=>Number(item.overall_score||0)));
-  $("#kpis").innerHTML=[
-    ["Total",list.length],
-    ["MLBB",list.filter(item=>item.game==="mlbb").length],
-    ["PUBG",list.filter(item=>item.game==="pubg").length],
-    ["Top Score",top],
-  ].map(([label,value])=>`<div class="kpi"><span>${escapeText(label)}</span><b>${fmt(value)}</b></div>`).join("");
-}
-function render(){
-  const list=visibleOpportunities();
-  renderKpis(list);
-  renderDailyBrief(opportunities);
-  $("#opportunityGrid").innerHTML=list.length?list.map(renderOpportunity).join(""):`<div class="empty">No opportunities match this view.</div>`;
-}
-
-function renderDailyBrief(sourceList){
-  const list=[...sourceList].sort((a,b)=>Number(b.overall_score||0)-Number(a.overall_score||0));
-  if(!list.length){
-    $("#dailyBrief").innerHTML=`<div class="brief-card"><h3>No brief yet</h3><p class="brief-empty">Load opportunities or run the daily pipeline.</p></div>`;
-    setBriefStatus("No opportunities loaded yet.","warn");
-    return;
-  }
-  const ready=list.filter(item=>item.qa?.status==="ready").slice(0,3);
-  const review=list.filter(item=>item.qa?.status==="review").slice(0,4);
-  const blocked=list.filter(item=>item.qa?.status==="blocked").slice(0,4);
-  const candidates=ready;
-  const nextActions=buildBriefActions(candidates, review, blocked);
-  $("#dailyBrief").innerHTML=`<div class="brief-card"><h3>Post Candidates</h3>${renderBriefList(candidates,"candidate","No QA-ready post candidates yet.")}</div><div class="brief-card"><h3>Needs Human Review</h3>${renderBriefList(review,"review","No review items.")}</div><div class="brief-card"><h3>Do Not Post Yet</h3>${renderBriefList(blocked,"blocked","No blocked items.")}</div><div class="brief-card"><h3>Recommended Action</h3><div class="brief-actions">${nextActions.map(item=>`<div>${escapeText(item)}</div>`).join("")}</div></div>`;
-  setBriefStatus(`Brief ready: ${candidates.length} candidate(s), ${review.length} review item(s), ${blocked.length} blocked item(s).`,"ok");
-}
-
-function renderBriefList(items,type,emptyText){
-  if(!items.length)return `<p class="brief-empty">${escapeText(emptyText)}</p>`;
-  return `<div class="brief-list">${items.map(item=>`<div class="brief-item"><div class="brief-title"><span>${escapeText(item.title||"Untitled opportunity")}</span><span>${fmt(item.overall_score)}</span></div><div class="meta"><span class="pill gold">${escapeText((item.game||"other").toUpperCase())}</span><span class="pill ${escapeText(qaPillClass(item.qa?.status))}">${escapeText(qaLabel(item.qa?.status))}</span>${getChannels(item).slice(0,2).map(channel=>`<span class="pill">${escapeText(channel)}</span>`).join("")}</div><div class="brief-reason">${escapeText(briefReason(item))}</div>${renderBriefButtons(item,type)}</div>`).join("")}</div>`;
-}
-
-function renderBriefButtons(item,type){
-  const id=escapeText(item.id);
-  if(type==="candidate")return `<div class="actions"><button class="btn" type="button" data-view="${id}">Details</button><button class="btn" type="button" data-view-drafts="${id}">Drafts</button><button class="btn primary" type="button" data-draft="${id}">Generate Draft</button><button class="btn" type="button" data-review="${id}" data-decision="approved">Approve</button></div>`;
-  if(type==="review")return `<div class="actions"><button class="btn" type="button" data-view="${id}">Details</button><button class="btn" type="button" data-view-drafts="${id}">Drafts</button><button class="btn primary" type="button" data-draft="${id}">Generate Draft</button><button class="btn" type="button" data-review="${id}" data-decision="reviewed">Review</button></div>`;
-  if(type==="blocked")return `<div class="actions"><button class="btn" type="button" data-view="${id}">Details</button><button class="btn" type="button" data-view-drafts="${id}">Drafts</button><button class="btn danger" type="button" data-review="${id}" data-decision="rejected">Reject</button></div>`;
-  return "";
-}
-
-function briefReason(item){
-  const qa=item.qa||{};
-  const blockers=asArray(qa.blockers);
-  const warnings=asArray(qa.warnings);
-  if(blockers.length)return blockers[0];
-  if(warnings.length)return warnings[0];
-  const products=getProducts(item).map(product=>product.product_name).filter(Boolean).slice(0,2).join(", ");
-  if(products)return `Product angle: ${products}`;
-  return item.reasoning||"Review this opportunity.";
-}
-
-function buildBriefActions(candidates, review, blocked){
-  const actions=[];
-  if(candidates.length){
-    actions.push(`Generate or review drafts for: ${candidates.slice(0,2).map(item=>item.title).join("; ")}.`);
-  }else if(review.length){
-    actions.push(`Review the top QA Review item before generating drafts: ${review[0].title}.`);
-  }else{
-    actions.push("Run the daily pipeline or collect more news before posting.");
-  }
-  if(review.length)actions.push(`${review.length} item(s) need human judgement before publishing.`);
-  if(blocked.length)actions.push(`Do not publish ${blocked.length} blocked item(s) until QA issues are fixed.`);
-  if(!blocked.length&&candidates.length)actions.push("No blocked items in the current brief.");
-  return actions;
-}
-
-function renderCalendar(){
-  $("#calendarList").innerHTML=calendarItems.length?calendarItems.map(renderCalendarItem).join(""):`<div class="empty">No calendar items match this view.</div>`;
-}
-
-function renderCalendarItem(item){
-  const draft=item.content_drafts||{};
-  const opp=item.opportunities||{};
-  let actions="";
-  if(item.status==="scheduled")actions=`<div class="actions"><button class="btn primary" type="button" data-calendar-status="published" data-calendar-id="${escapeText(item.id)}">Mark Published</button><button class="btn danger" type="button" data-calendar-status="cancelled" data-calendar-id="${escapeText(item.id)}">Cancel</button></div>`;
-  if(item.status==="published")actions=`<div class="actions"><button class="btn primary" type="button" data-performance="${escapeText(item.id)}">Add Metrics</button></div>`;
-  return `<article class="calendar-item"><b>${escapeText((item.channel||"").toUpperCase())} - ${escapeText(item.status||"scheduled")}</b><span>${escapeText(formatDateTime(item.scheduled_for))}</span><span>${escapeText(opp.title||draft.title||"Scheduled draft")}</span><pre>${escapeText(draft.body||"")}</pre>${item.published_url?`<span>${escapeText(item.published_url)}</span>`:""}${actions}</article>`;
-}
-
-function renderPerformance(){
-  const totals=performanceMetrics.reduce((sum,item)=>({
-    views:sum.views+Number(item.views||0),
-    likes:sum.likes+Number(item.likes||0),
-    comments:sum.comments+Number(item.comments||0),
-    shares:sum.shares+Number(item.shares||0),
-    clicks:sum.clicks+Number(item.clicks||0),
-    orders:sum.orders+Number(item.orders||0),
-    revenue:sum.revenue+Number(item.revenue||0),
-  }),{views:0,likes:0,comments:0,shares:0,clicks:0,orders:0,revenue:0});
-  const clickRate=totals.views?`${((totals.clicks/totals.views)*100).toFixed(1)}%`:"0%";
-  $("#performanceKpis").innerHTML=[
-    ["Views",fmt(totals.views)],
-    ["Orders",fmt(totals.orders)],
-    ["Revenue",fmtMoney(totals.revenue)],
-    ["Click Rate",clickRate],
-  ].map(([label,value])=>`<div class="metric"><span>${escapeText(label)}</span><b>${escapeText(value)}</b></div>`).join("");
-  const ranked=[...performanceMetrics].sort((a,b)=>(Number(b.revenue||0)-Number(a.revenue||0))||(Number(b.orders||0)-Number(a.orders||0))||(Number(b.views||0)-Number(a.views||0))).slice(0,8);
-  $("#topPerformanceList").innerHTML=ranked.length?ranked.map(renderPerformanceItem).join(""):`<div class="empty">No performance metrics saved yet.</div>`;
-  const channels=groupPerformanceByChannel(performanceMetrics);
-  $("#channelPerformanceList").innerHTML=channels.length?channels.map(renderChannelPerformance).join(""):`<div class="empty">No channel data yet.</div>`;
-}
-
-function groupPerformanceByChannel(rows){
-  const map=new Map();
-  rows.forEach(item=>{
-    const channel=item.channel||"unknown";
-    const current=map.get(channel)||{channel,views:0,clicks:0,orders:0,revenue:0,posts:0};
-    current.views+=Number(item.views||0);
-    current.clicks+=Number(item.clicks||0);
-    current.orders+=Number(item.orders||0);
-    current.revenue+=Number(item.revenue||0);
-    current.posts+=1;
-    map.set(channel,current);
-  });
-  return [...map.values()].sort((a,b)=>(b.revenue-a.revenue)||(b.orders-a.orders)||(b.views-a.views));
-}
-
-function renderPerformanceItem(item){
-  const draft=item.content_drafts||{};
-  const opp=item.opportunities||{};
-  const title=opp.title||draft.title||"Published content";
-  const game=opp.game?`${String(opp.game).toUpperCase()} - `:"";
-  return `<article class="performance-item"><div class="performance-rank"><b>${escapeText(title)}</b><strong>${escapeText(fmtMoney(item.revenue))}</strong></div><span>${escapeText(game)}${escapeText(item.channel||"channel")} - ${escapeText(formatDateTime(item.measured_at))}</span><div class="meta"><span class="pill">Views ${fmt(item.views)}</span><span class="pill">Clicks ${fmt(item.clicks)}</span><span class="pill">Orders ${fmt(item.orders)}</span><span class="pill gold">Revenue ${escapeText(fmtMoney(item.revenue))}</span></div></article>`;
-}
-
-function renderChannelPerformance(item){
-  const clickRate=item.views?`${((item.clicks/item.views)*100).toFixed(1)}%`:"0%";
-  return `<article class="channel-item"><div class="performance-rank"><b>${escapeText(item.channel.toUpperCase())}</b><strong>${escapeText(fmtMoney(item.revenue))}</strong></div><span>${fmt(item.posts)} post(s), ${fmt(item.views)} views, ${fmt(item.orders)} orders, ${clickRate} click rate</span></article>`;
-}
-
-function renderLatestInsight(errorMessage=""){
-  const box=$("#latestInsightBox");
-  if(errorMessage){
-    box.innerHTML=`<h3>Latest Analyst Insight</h3><p class="review-hint">${escapeText(errorMessage)}</p>`;
-    return;
-  }
-  const insight=marketingInsights[0];
-  if(!insight){
-    box.innerHTML=`<h3>Latest Analyst Insight</h3><p class="review-hint">No insight generated yet.</p>`;
-    return;
-  }
-  const worked=asArray(insight.what_worked);
-  const failed=asArray(insight.what_failed);
-  const recs=asArray(insight.recommendations);
-  const channels=asArray(insight.channel_insights).map(item=>typeof item==="object"?`${item.channel}: ${item.insight}`:String(item));
-  box.innerHTML=`<h3>${escapeText(insight.title||"Latest Analyst Insight")}</h3><p>${escapeText(insight.summary||"")}</p><div class="meta"><span class="pill">Views ${fmt(insight.total_views)}</span><span class="pill">Orders ${fmt(insight.total_orders)}</span><span class="pill gold">Revenue ${escapeText(fmtMoney(insight.total_revenue))}</span><span class="pill">Confidence ${Math.round(Number(insight.confidence||0)*100)}%</span></div><div class="insight-cols"><div><b>What worked</b>${renderInsightList(worked)}</div><div><b>What failed</b>${renderInsightList(failed)}</div><div><b>Channel signals</b>${renderInsightList(channels)}</div><div><b>Recommendations</b>${renderInsightList(recs)}</div></div>`;
-}
-
-function renderAgentRuns(){
-  $("#agentRunsList").innerHTML=agentRuns.length?agentRuns.map(renderAgentRun).join(""):`<div class="empty">No agent runs found.</div>`;
-}
-
-function renderAgentRun(run){
-  const metadata=run.metadata&&typeof run.metadata==="object"?run.metadata:{};
-  const before=metadata.score_before||{};
-  const after=metadata.score_after||{};
-  const rules=asArray(metadata.scoring_rules);
-  const memoryIds=asArray(metadata.memory_insight_ids);
-  const title=metadata.article_title||metadata.article_id||metadata.opportunity_id||metadata.insight_id||run.run_type||"Agent run";
-  const overallDelta=Number(after.overall_score||0)-Number(before.overall_score||0);
-  const deltaText=before.overall_score!==undefined&&after.overall_score!==undefined?`${fmt(before.overall_score)} -> ${fmt(after.overall_score)} (${overallDelta>=0?"+":""}${overallDelta})`:"-";
-  const statusClass=run.status==="success"?"green":(run.status==="failed"?"danger":"");
-  return `<article class="run-item"><div class="run-head"><div><div class="run-title">${escapeText(run.agent_name||"agent")}</div><div class="run-meta">${escapeText(formatDateTime(run.started_at||run.created_at))} - ${escapeText(title)}</div></div><span class="pill ${statusClass}">${escapeText(run.status||"unknown")}</span></div><div class="run-grid"><div><span class="label">Score Change</span><div class="score-delta">${escapeText(deltaText)}</div><div class="meta">${renderScorePills(before,after)}</div></div><div><span class="label">Memory Used</span><p>${memoryIds.length?memoryIds.map(shortId).map(escapeText).join(", "):"No memory insight used."}</p></div><div><span class="label">Rules</span>${renderRunRules(rules)}</div><div><span class="label">Model / Error</span><p>${escapeText(metadata.model||run.error||"")}</p></div></div></article>`;
-}
-
-function renderScorePills(before,after){
-  const keys=[["trend_score","Trend"],["sales_score","Sales"],["urgency_score","Urgency"],["myanmar_interest_score","Myanmar"]];
-  return keys.map(([key,label])=>{
-    if(before[key]===undefined||after[key]===undefined)return "";
-    const delta=Number(after[key]||0)-Number(before[key]||0);
-    return `<span class="pill">${escapeText(label)} ${fmt(before[key])}->${fmt(after[key])} ${delta?`(${delta>=0?"+":""}${delta})`:""}</span>`;
-  }).join("");
-}
-
-function renderRunRules(rules){
-  return rules.length?`<div class="meta">${rules.map(rule=>`<span class="pill gold">${escapeText(rule.rule||"rule")}</span>`).join("")}</div>`:`<p>No deterministic scoring rules applied.</p>`;
-}
-
-function shortId(value){
-  const text=String(value||"");
-  return text.length>8?`${text.slice(0,8)}...`:text;
-}
-
-function handleOpportunityActionClick(event){
-  const view=event.target.closest("[data-view]");
-  const review=event.target.closest("[data-review]");
-  const draft=event.target.closest("[data-draft]");
-  const savedDrafts=event.target.closest("[data-view-drafts]");
-  if(view)showDetails(view.dataset.view);
-  if(review)openReview(review.dataset.review,review.dataset.decision);
-  if(draft)generateDraft(draft.dataset.draft);
-  if(savedDrafts)viewDrafts(savedDrafts.dataset.viewDrafts);
-}
-
-function renderInsightList(items){
-  return items.length?`<ul class="insight-list">${items.map(item=>`<li>${escapeText(item)}</li>`).join("")}</ul>`:`<p class="review-hint">No signal yet.</p>`;
-}
-
-function asArray(value){
-  return Array.isArray(value)?value:[];
-}
-
-function formatDateTime(value){
-  if(!value)return "-";
-  const date=new Date(value);
-  return Number.isNaN(date.getTime())?"-":date.toLocaleString([], { dateStyle:"medium", timeStyle:"short" });
-}
-function fmtMoney(value){return Number(value||0).toLocaleString(undefined,{maximumFractionDigits:2});}
-function renderOpportunity(item){
-  const products=getProducts(item);
-  const channels=getChannels(item);
-  const qa=item.qa||{};
-  return `<article class="panel opp">
-    <div class="opp-head"><div><h3>${escapeText(item.title||"Untitled opportunity")}</h3><div class="meta"><span class="pill gold">${escapeText((item.game||"other").toUpperCase())}</span><span class="pill">${escapeText(item.opportunity_type||"trend_post")}</span><span class="pill green">${escapeText(item.status||"new")}</span><span class="pill ${escapeText(qaPillClass(qa.status))}">${escapeText(qaLabel(qa.status))}</span></div></div><div class="score">${fmt(item.overall_score)}</div></div>
-    <div class="meta"><span class="pill">Trend ${fmt(item.trend_score)}</span><span class="pill">Sales ${fmt(item.sales_score)}</span><span class="pill">Urgency ${fmt(item.urgency_score)}</span><span class="pill">Myanmar ${fmt(item.myanmar_interest_score)}</span></div>
-    <p class="reason">${escapeText(item.reasoning||"No reasoning provided.")}</p>
-    ${renderQaSummary(qa)}
-    <div class="meta">${channels.length?channels.map(c=>`<span class="pill">${escapeText(c)}</span>`).join(""):`<span class="pill">facebook</span>`}</div>
-    <div class="products">${products.length?products.map(p=>`<div class="product"><b>${escapeText(p.product_name||"Product")}</b><span>${fmt(p.relevance_score)} relevance. ${escapeText(p.reason||"Matched product.")}</span></div>`).join(""):`<div class="product"><b>No product match</b><span>Review this before posting.</span></div>`}</div>
-    <div class="actions"><button class="btn" type="button" data-view="${escapeText(item.id)}">Details</button><button class="btn" type="button" data-view-drafts="${escapeText(item.id)}">View Drafts</button><button class="btn primary" type="button" data-draft="${escapeText(item.id)}">Generate Draft</button><button class="btn" type="button" data-review="${escapeText(item.id)}" data-decision="approved">Approve</button><button class="btn" type="button" data-review="${escapeText(item.id)}" data-decision="used">Posted</button><button class="btn danger" type="button" data-review="${escapeText(item.id)}" data-decision="rejected">Reject</button></div>
-  </article>`;
-}
-
-function renderQaSummary(qa={}){
-  const blockers=asArray(qa.blockers);
-  const warnings=asArray(qa.warnings);
-  const issues=[...blockers.map(item=>({type:"blocker",text:item})),...warnings.map(item=>({type:"warning",text:item}))].slice(0,4);
-  if(!issues.length)return `<div class="qa-box"><b class="qa-ready">QA Ready</b><span>${escapeText(qa.summary||"No issues found.")}</span></div>`;
-  return `<div class="qa-box"><b class="${escapeText(qa.status==="blocked"?"qa-blocked":"qa-review")}">${escapeText(qaLabel(qa.status))}</b><span>${escapeText(qa.summary||"Needs review.")}</span><ul class="qa-list">${issues.map(item=>`<li>${escapeText(item.type)}: ${escapeText(item.text)}</li>`).join("")}</ul></div>`;
-}
-
-function renderQaDetails(qa={}){
-  return `<div class="qa-box"><b class="${escapeText(qa.status==="blocked"?"qa-blocked":(qa.status==="review"?"qa-review":"qa-ready"))}">${escapeText(qaLabel(qa.status))}</b><span>${escapeText(qa.summary||"No QA data.")}</span><div class="insight-cols"><div><span class="label">Blockers</span>${renderInsightList(asArray(qa.blockers))}</div><div><span class="label">Warnings</span>${renderInsightList(asArray(qa.warnings))}</div><div><span class="label">Passed</span>${renderInsightList(asArray(qa.passed))}</div></div></div>`;
-}
-
-function qaLabel(status){
-  if(status==="blocked")return "QA Blocked";
-  if(status==="review")return "QA Review";
-  if(status==="ready")return "QA Ready";
-  return "QA Unknown";
-}
-
-function qaPillClass(status){
-  if(status==="blocked")return "danger";
-  if(status==="review")return "gold";
-  if(status==="ready")return "green";
-  return "";
-}
-
-function showDetails(id){
-  const item=opportunities.find(opp=>opp.id===id);
-  if(!item)return;
-  $("#modalTitle").textContent=item.title||"Opportunity";
-  const rows=[
-    ["Game",(item.game||"").toUpperCase()],
-    ["Type",item.opportunity_type],
-    ["Overall",item.overall_score],
-    ["Article",item.article_title||"-"],
-    ["URL",item.article_url||"-"],
-    ["Published",item.published_at||"-"],
-    ["Channels",getChannels(item).join(", ")||"-"],
-    ["Reasoning",item.reasoning||"-"],
-  ];
-  $("#modalBody").innerHTML=rows.map(([k,v])=>`<div class="row"><span>${escapeText(k)}</span><div>${escapeText(v)}</div></div>`).join("")+renderQaDetails(item.qa||{});
-  $("#detailModal").classList.add("show");
-}
-
-function openReview(id,decision="reviewed"){
-  const item=opportunities.find(opp=>opp.id===id);
-  if(!item)return;
-  reviewTargetId=id;
-  $("#reviewTitle").textContent=`Review: ${item.title||"Opportunity"}`;
-  $("#reviewSummary").textContent=`${(item.game||"other").toUpperCase()} - Score ${fmt(item.overall_score)} - ${item.reasoning||"No reasoning provided."}`;
-  $("#reviewDecision").value=decision;
-  const channels=getChannels(item);
-  $("#reviewChannel").value=channels.includes("facebook")?"facebook":(channels[0]||"");
-  $("#reviewPublishedUrl").value="";
-  $("#reviewFeedback").value=decision==="approved"||decision==="used"?"good":(decision==="rejected"?"bad":"");
-  $("#reviewNotes").value="";
-  $("#reviewModal").classList.add("show");
-}
-
-function showDrafts(item,drafts){
-  activeDraftOpportunity=item||activeDraftOpportunity;
-  activeDrafts=Array.isArray(drafts)?drafts:[];
-  $("#draftTitle").textContent=`Drafts: ${item?.title||"Opportunity"}`;
-  $("#draftBody").innerHTML=activeDrafts.length?`<div class="drafts">${activeDrafts.map(draft=>`<div class="draft" data-draft-card="${escapeText(draft.id)}"><b>${escapeText((draft.channel||"channel").toUpperCase())}<span class="draft-status">${escapeText(draft.status||"draft")}</span></b><label><span class="label">Title</span><input class="input" data-edit-title value="${escapeText(draft.title||"Draft")}"/></label><label><span class="label">Body</span><textarea class="textarea" data-edit-body>${escapeText(draft.body||"")}</textarea></label><label><span class="label">Call to action</span><input class="input" data-edit-cta value="${escapeText(draft.call_to_action||"")}"/></label><label><span class="label">Hashtags</span><input class="input" data-edit-tags value="${Array.isArray(draft.hashtags)?draft.hashtags.map(escapeText).join(" "):""}"/></label><div class="form-grid"><label><span class="label">Schedule for</span><input class="input" type="datetime-local" data-schedule-for/></label><label><span class="label">Schedule notes</span><input class="input" data-schedule-notes placeholder="Optional"/></label></div><div class="actions"><button class="btn" type="button" data-copy-draft="${escapeText(draft.id)}">Copy</button><button class="btn" type="button" data-save-draft="${escapeText(draft.id)}">Save Edits</button><button class="btn primary" type="button" data-schedule-draft="${escapeText(draft.id)}">Schedule Draft</button><button class="btn" type="button" data-draft-status="approved" data-id="${escapeText(draft.id)}">Approve Draft</button><button class="btn danger" type="button" data-draft-status="rejected" data-id="${escapeText(draft.id)}">Reject Draft</button></div></div>`).join("")}</div>`:`<div class="empty">No saved drafts yet. Generate one first.</div>`;
-  $("#draftModal").classList.add("show");
-}
-
-function getDraftScheduleState(){
-  return [...document.querySelectorAll("[data-draft-card]")].map(card=>({
-    id:card.dataset.draftCard,
-    scheduledFor:card.querySelector("[data-schedule-for]")?.value||"",
-    notes:card.querySelector("[data-schedule-notes]")?.value||"",
-  }));
-}
-
-function restoreDraftScheduleState(state){
-  state.forEach(item=>{
-    const card=document.querySelector(`[data-draft-card="${CSS.escape(item.id)}"]`);
-    if(!card)return;
-    const scheduledFor=card.querySelector("[data-schedule-for]");
-    const notes=card.querySelector("[data-schedule-notes]");
-    if(scheduledFor)scheduledFor.value=item.scheduledFor||"";
-    if(notes)notes.value=item.notes||"";
-  });
-}
-
-function openPerformance(id){
-  const item=calendarItems.find(row=>row.id===id);
-  if(!item)return;
-  const draft=item.content_drafts||{};
-  const opp=item.opportunities||{};
-  activePerformanceCalendarId=id;
-  $("#performanceTitle").textContent=`Performance: ${(item.channel||"channel").toUpperCase()}`;
-  $("#performanceSummary").textContent=opp.title||draft.title||"Published content";
-  ["Views","Likes","Comments","Shares","Clicks","Orders"].forEach(name=>{$(`#metric${name}`).value=0;});
-  $("#metricRevenue").value=0;
-  $("#metricMeasuredAt").value=new Date().toISOString().slice(0,16);
-  $("#metricNotes").value="";
-  $("#performanceModal").classList.add("show");
-}
-
-async function savePerformance(){
-  if(!activePerformanceCalendarId)return;
-  $("#savePerformanceBtn").disabled=true;
-  const measuredAt=$("#metricMeasuredAt").value;
-  try{
-    await apiPost("/api/admin-update-content-performance",adminPayload({
-      calendarId:activePerformanceCalendarId,
-      views:$("#metricViews").value,
-      likes:$("#metricLikes").value,
-      comments:$("#metricComments").value,
-      shares:$("#metricShares").value,
-      clicks:$("#metricClicks").value,
-      orders:$("#metricOrders").value,
-      revenue:$("#metricRevenue").value,
-      measuredAt:measuredAt?new Date(measuredAt).toISOString():"",
-      notes:$("#metricNotes").value,
-    }));
-    $("#performanceModal").classList.remove("show");
-    activePerformanceCalendarId="";
-    setCalendarStatus("Performance metrics saved.","ok");
-    loadPerformance();
-  }catch(error){setCalendarStatus(error.message||"Could not save performance metrics.","warn");}
-  finally{$("#savePerformanceBtn").disabled=false;}
-}
-
-async function saveReview(){
-  if(!reviewTargetId)return;
-  $("#saveReviewBtn").disabled=true;
-  await updateOpportunity(reviewTargetId,$("#reviewDecision").value,{
-    selectedChannel:$("#reviewChannel").value,
-    publishedUrl:$("#reviewPublishedUrl").value,
-    feedbackLabel:$("#reviewFeedback").value,
-    notes:$("#reviewNotes").value,
-  });
-  $("#saveReviewBtn").disabled=false;
-  $("#reviewModal").classList.remove("show");
-  reviewTargetId="";
-}
-
+function visibleOpportunities(){const q=$("#searchInput").value.trim().toLowerCase();return opportunities.filter(item=>{const products=getProducts(item).map(p=>p.product_name).join(" ");const text=[item.title,item.reasoning,item.game,item.opportunity_type,products].join(" ").toLowerCase();return !q||text.includes(q);});}
+function renderKpis(list){const top=Math.max(0,...list.map(item=>Number(item.overall_score||0)));$("#kpis").innerHTML=[["စုစုပေါင်း",list.length],["MLBB",list.filter(item=>item.game==="mlbb").length],["PUBG",list.filter(item=>item.game==="pubg").length],["အမြင့်ဆုံးအမှတ်",top]].map(([label,value])=>`<div class="kpi"><span>${escapeText(label)}</span><b>${fmt(value)}</b></div>`).join("");}
+function render(){const list=visibleOpportunities();renderKpis(list);renderDailyBrief(opportunities);$("#opportunityGrid").innerHTML=list.length?list.map(renderOpportunity).join(""):`<div class="empty">ဒီ view နဲ့ ကိုက်တဲ့ opportunity မရှိပါ။</div>`;}
+function renderDailyBrief(sourceList){const list=[...sourceList].sort((a,b)=>Number(b.overall_score||0)-Number(a.overall_score||0));if(!list.length){$("#dailyBrief").innerHTML=`<div class="brief-card"><h3>အကျဉ်းချုပ် မရှိသေးပါ</h3><p class="brief-empty">အခွင့်အလမ်းများကို ဖတ်ပါ သို့မဟုတ် နေ့စဉ် pipeline ကို run ပါ။</p></div>`;setBriefStatus("အခွင့်အလမ်း မတင်ရသေးပါ။","warn");return;}const ready=list.filter(item=>item.qa?.status==="ready").slice(0,3);const review=list.filter(item=>item.qa?.status==="review").slice(0,4);const blocked=list.filter(item=>item.qa?.status==="blocked").slice(0,4);const nextActions=buildBriefActions(ready,review,blocked);$("#dailyBrief").innerHTML=`<div class="brief-card"><h3>တင်ရန် အဆင်သင့် Candidate များ</h3>${renderBriefList(ready,"candidate","QA အောင်ပြီး တင်ရန် candidate မရှိသေးပါ။")}</div><div class="brief-card"><h3>လူကိုယ်တိုင် စစ်ဆေးရန်</h3>${renderBriefList(review,"review","စစ်ဆေးရန် item မရှိပါ။")}</div><div class="brief-card"><h3>မတင်သေးပါနှင့်</h3>${renderBriefList(blocked,"blocked","ပိတ်ထားသော item မရှိပါ။")}</div><div class="brief-card"><h3>အကြံပြုလုပ်ဆောင်ချက်</h3><div class="brief-actions">${nextActions.map(item=>`<div>${escapeText(item)}</div>`).join("")}</div></div>`;setBriefStatus(`အကျဉ်းချုပ် အဆင်သင့်: candidate ${ready.length} ခု၊ review ${review.length} ခု၊ blocked ${blocked.length} ခု။`,"ok");}
+function renderBriefList(items,type,emptyText){if(!items.length)return `<p class="brief-empty">${escapeText(emptyText)}</p>`;return `<div class="brief-list">${items.map(item=>`<div class="brief-item"><div class="brief-title"><span>${escapeText(item.title||"ခေါင်းစဉ်မရှိသော opportunity")}</span><span>${fmt(item.overall_score)}</span></div><div class="meta"><span class="pill gold">${escapeText((item.game||"other").toUpperCase())}</span><span class="pill ${escapeText(qaPillClass(item.qa?.status))}">${escapeText(qaLabel(item.qa?.status))}</span>${getChannels(item).slice(0,2).map(channel=>`<span class="pill">${escapeText(channel)}</span>`).join("")}</div><div class="brief-reason">${escapeText(briefReason(item))}</div>${renderBriefButtons(item,type)}</div>`).join("")}</div>`;}
+function renderBriefButtons(item,type){const id=escapeText(item.id);if(type==="candidate")return `<div class="actions"><button class="btn" type="button" data-view="${id}">အသေးစိတ်</button><button class="btn" type="button" data-view-drafts="${id}">Draft များ</button><button class="btn primary" type="button" data-draft="${id}">Draft ထုတ်ရန်</button><button class="btn" type="button" data-review="${id}" data-decision="approved">Approve</button></div>`;if(type==="review")return `<div class="actions"><button class="btn" type="button" data-view="${id}">အသေးစိတ်</button><button class="btn" type="button" data-view-drafts="${id}">Draft များ</button><button class="btn primary" type="button" data-draft="${id}">Draft ထုတ်ရန်</button><button class="btn" type="button" data-review="${id}" data-decision="reviewed">စစ်ဆေးရန်</button></div>`;if(type==="blocked")return `<div class="actions"><button class="btn" type="button" data-view="${id}">အသေးစိတ်</button><button class="btn" type="button" data-view-drafts="${id}">Draft များ</button><button class="btn danger" type="button" data-review="${id}" data-decision="rejected">Reject</button></div>`;return "";}
+function briefReason(item){const qa=item.qa||{};const blockers=asArray(qa.blockers);const warnings=asArray(qa.warnings);if(blockers.length)return blockers[0];if(warnings.length)return warnings[0];const products=getProducts(item).map(product=>product.product_name).filter(Boolean).slice(0,2).join(", ");if(products)return `Product angle: ${products}`;return item.reasoning||"ဒီ opportunity ကို စစ်ဆေးပါ။";}
+function buildBriefActions(candidates,review,blocked){const actions=[];if(candidates.length)actions.push(`Draft ထုတ်ရန် သို့မဟုတ် စစ်ဆေးရန်: ${candidates.slice(0,2).map(item=>item.title).join("; ")}။`);else if(review.length)actions.push(`Draft မထုတ်ခင် အမြင့်ဆုံး QA Review item ကို စစ်ပါ: ${review[0].title}။`);else actions.push("မတင်ခင် နေ့စဉ် pipeline ကို run ပါ သို့မဟုတ် news အသစ် ထပ်စုပါ။");if(review.length)actions.push(`Publish မလုပ်ခင် လူကိုယ်တိုင် ဆုံးဖြတ်ရန် item ${review.length} ခု ရှိသည်။`);if(blocked.length)actions.push(`QA ပြဿနာ မဖြေရှင်းမချင်း blocked item ${blocked.length} ခုကို မ publish ပါနှင့်။`);if(!blocked.length&&candidates.length)actions.push("လက်ရှိ brief ထဲတွင် blocked item မရှိပါ။");return actions;}
+function renderCalendar(){$("#calendarList").innerHTML=calendarItems.length?calendarItems.map(renderCalendarItem).join(""):`<div class="empty">ဒီ view နဲ့ ကိုက်တဲ့ calendar item မရှိပါ။</div>`;}
+function renderCalendarItem(item){const draft=item.content_drafts||{};const opp=item.opportunities||{};let actions="";if(item.status==="scheduled")actions=`<div class="actions"><button class="btn primary" type="button" data-calendar-status="published" data-calendar-id="${escapeText(item.id)}">Publish ပြီးဟု မှတ်ရန်</button><button class="btn danger" type="button" data-calendar-status="cancelled" data-calendar-id="${escapeText(item.id)}">Cancel</button></div>`;if(item.status==="published")actions=`<div class="actions"><button class="btn primary" type="button" data-performance="${escapeText(item.id)}">Metric ထည့်ရန်</button></div>`;return `<article class="calendar-item"><b>${escapeText((item.channel||"").toUpperCase())} - ${escapeText(statusLabel(item.status||"scheduled"))}</b><span>${escapeText(formatDateTime(item.scheduled_for))}</span><span>${escapeText(opp.title||draft.title||"Schedule ထားသော draft")}</span><pre>${escapeText(draft.body||"")}</pre>${item.published_url?`<span>${escapeText(item.published_url)}</span>`:""}${actions}</article>`;}
+function renderPerformance(){const totals=performanceMetrics.reduce((sum,item)=>({views:sum.views+Number(item.views||0),likes:sum.likes+Number(item.likes||0),comments:sum.comments+Number(item.comments||0),shares:sum.shares+Number(item.shares||0),clicks:sum.clicks+Number(item.clicks||0),orders:sum.orders+Number(item.orders||0),revenue:sum.revenue+Number(item.revenue||0)}),{views:0,likes:0,comments:0,shares:0,clicks:0,orders:0,revenue:0});const clickRate=totals.views?`${((totals.clicks/totals.views)*100).toFixed(1)}%`:"0%";$("#performanceKpis").innerHTML=[["ကြည့်ရှုမှု",fmt(totals.views)],["အော်ဒါ",fmt(totals.orders)],["ဝင်ငွေ",fmtMoney(totals.revenue)],["Click နှုန်း",clickRate]].map(([label,value])=>`<div class="metric"><span>${escapeText(label)}</span><b>${escapeText(value)}</b></div>`).join("");const ranked=[...performanceMetrics].sort((a,b)=>(Number(b.revenue||0)-Number(a.revenue||0))||(Number(b.orders||0)-Number(a.orders||0))||(Number(b.views||0)-Number(a.views||0))).slice(0,8);$("#topPerformanceList").innerHTML=ranked.length?ranked.map(renderPerformanceItem).join(""):`<div class="empty">Performance metric မသိမ်းရသေးပါ။</div>`;const channels=groupPerformanceByChannel(performanceMetrics);$("#channelPerformanceList").innerHTML=channels.length?channels.map(renderChannelPerformance).join(""):`<div class="empty">Channel data မရှိသေးပါ။</div>`;}
+function groupPerformanceByChannel(rows){const map=new Map();rows.forEach(item=>{const channel=item.channel||"unknown";const current=map.get(channel)||{channel,views:0,clicks:0,orders:0,revenue:0,posts:0};current.views+=Number(item.views||0);current.clicks+=Number(item.clicks||0);current.orders+=Number(item.orders||0);current.revenue+=Number(item.revenue||0);current.posts+=1;map.set(channel,current);});return [...map.values()].sort((a,b)=>(b.revenue-a.revenue)||(b.orders-a.orders)||(b.views-a.views));}
+function renderPerformanceItem(item){const draft=item.content_drafts||{};const opp=item.opportunities||{};const title=opp.title||draft.title||"Publish ပြီးသော content";const game=opp.game?`${String(opp.game).toUpperCase()} - `:"";return `<article class="performance-item"><div class="performance-rank"><b>${escapeText(title)}</b><strong>${escapeText(fmtMoney(item.revenue))}</strong></div><span>${escapeText(game)}${escapeText(item.channel||"channel")} - ${escapeText(formatDateTime(item.measured_at))}</span><div class="meta"><span class="pill">ကြည့်ရှုမှု ${fmt(item.views)}</span><span class="pill">Click ${fmt(item.clicks)}</span><span class="pill">အော်ဒါ ${fmt(item.orders)}</span><span class="pill gold">ဝင်ငွေ ${escapeText(fmtMoney(item.revenue))}</span></div></article>`;}
+function renderChannelPerformance(item){const clickRate=item.views?`${((item.clicks/item.views)*100).toFixed(1)}%`:"0%";return `<article class="channel-item"><div class="performance-rank"><b>${escapeText(item.channel.toUpperCase())}</b><strong>${escapeText(fmtMoney(item.revenue))}</strong></div><span>ပို့စ် ${fmt(item.posts)} ခု၊ ကြည့်ရှုမှု ${fmt(item.views)}၊ အော်ဒါ ${fmt(item.orders)}၊ click နှုန်း ${clickRate}</span></article>`;}
+function renderLatestInsight(errorMessage=""){const box=$("#latestInsightBox");if(errorMessage){box.innerHTML=`<h3>နောက်ဆုံး Analyst Insight</h3><p class="review-hint">${escapeText(errorMessage)}</p>`;return;}const insight=marketingInsights[0];if(!insight){box.innerHTML=`<h3>နောက်ဆုံး Analyst Insight</h3><p class="review-hint">Insight မထုတ်ရသေးပါ။</p>`;return;}const worked=asArray(insight.what_worked);const failed=asArray(insight.what_failed);const recs=asArray(insight.recommendations);const channels=asArray(insight.channel_insights).map(item=>typeof item==="object"?`${item.channel}: ${item.insight}`:String(item));box.innerHTML=`<h3>${escapeText(insight.title||"နောက်ဆုံး Analyst Insight")}</h3><p>${escapeText(insight.summary||"")}</p><div class="meta"><span class="pill">ကြည့်ရှုမှု ${fmt(insight.total_views)}</span><span class="pill">အော်ဒါ ${fmt(insight.total_orders)}</span><span class="pill gold">ဝင်ငွေ ${escapeText(fmtMoney(insight.total_revenue))}</span><span class="pill">ယုံကြည်မှု ${Math.round(Number(insight.confidence||0)*100)}%</span></div><div class="insight-cols"><div><b>အလုပ်ဖြစ်ခဲ့သည်</b>${renderInsightList(worked)}</div><div><b>အားနည်းခဲ့သည်</b>${renderInsightList(failed)}</div><div><b>Channel signal များ</b>${renderInsightList(channels)}</div><div><b>အကြံပြုချက်များ</b>${renderInsightList(recs)}</div></div>`;}
+function renderAgentRuns(){$("#agentRunsList").innerHTML=agentRuns.length?agentRuns.map(renderAgentRun).join(""):`<div class="empty">Agent run မရှိသေးပါ။</div>`;}
+function renderAgentRun(run){const metadata=run.metadata&&typeof run.metadata==="object"?run.metadata:{};const before=metadata.score_before||{};const after=metadata.score_after||{};const rules=asArray(metadata.scoring_rules);const memoryIds=asArray(metadata.memory_insight_ids);const title=metadata.article_title||metadata.article_id||metadata.opportunity_id||metadata.insight_id||run.run_type||"Agent run";const overallDelta=Number(after.overall_score||0)-Number(before.overall_score||0);const deltaText=before.overall_score!==undefined&&after.overall_score!==undefined?`${fmt(before.overall_score)} -> ${fmt(after.overall_score)} (${overallDelta>=0?"+":""}${overallDelta})`:"-";const statusClass=run.status==="success"?"green":(run.status==="failed"?"danger":"");return `<article class="run-item"><div class="run-head"><div><div class="run-title">${escapeText(run.agent_name||"agent")}</div><div class="run-meta">${escapeText(formatDateTime(run.started_at||run.created_at))} - ${escapeText(title)}</div></div><span class="pill ${statusClass}">${escapeText(statusLabel(run.status||"unknown"))}</span></div><div class="run-grid"><div><span class="label">အမှတ်ပြောင်းလဲမှု</span><div class="score-delta">${escapeText(deltaText)}</div><div class="meta">${renderScorePills(before,after)}</div></div><div><span class="label">Memory အသုံးပြုမှု</span><p>${memoryIds.length?memoryIds.map(shortId).map(escapeText).join(", "):"Memory insight မသုံးထားပါ။"}</p></div><div><span class="label">Rule များ</span>${renderRunRules(rules)}</div><div><span class="label">Model / Error</span><p>${escapeText(metadata.model||run.error||"")}</p></div></div></article>`;}
+function renderScorePills(before,after){const keys=[["trend_score","Trend"],["sales_score","Sales"],["urgency_score","Urgency"],["myanmar_interest_score","Myanmar"]];return keys.map(([key,label])=>{if(before[key]===undefined||after[key]===undefined)return "";const delta=Number(after[key]||0)-Number(before[key]||0);return `<span class="pill">${escapeText(label)} ${fmt(before[key])}->${fmt(after[key])} ${delta?`(${delta>=0?"+":""}${delta})`:""}</span>`;}).join("");}
+function renderRunRules(rules){return rules.length?`<div class="meta">${rules.map(rule=>`<span class="pill gold">${escapeText(rule.rule||"rule")}</span>`).join("")}</div>`:`<p>သတ်မှတ်ထားသော scoring rule မသုံးထားပါ။</p>`;}
+function renderInsightList(items){return items.length?`<ul class="insight-list">${items.map(item=>`<li>${escapeText(item)}</li>`).join("")}</ul>`:`<p class="review-hint">Signal မရှိသေးပါ။</p>`;}
+function handleOpportunityActionClick(event){const view=event.target.closest("[data-view]");const review=event.target.closest("[data-review]");const draft=event.target.closest("[data-draft]");const savedDrafts=event.target.closest("[data-view-drafts]");if(view)showDetails(view.dataset.view);if(review)openReview(review.dataset.review,review.dataset.decision);if(draft)generateDraft(draft.dataset.draft);if(savedDrafts)viewDrafts(savedDrafts.dataset.viewDrafts);}
+function renderOpportunity(item){const products=getProducts(item);const channels=getChannels(item);const qa=item.qa||{};return `<article class="panel opp"><div class="opp-head"><div><h3>${escapeText(item.title||"ခေါင်းစဉ်မရှိသော opportunity")}</h3><div class="meta"><span class="pill gold">${escapeText((item.game||"other").toUpperCase())}</span><span class="pill">${escapeText(item.opportunity_type||"trend_post")}</span><span class="pill green">${escapeText(statusLabel(item.status||"new"))}</span><span class="pill ${escapeText(qaPillClass(qa.status))}">${escapeText(qaLabel(qa.status))}</span></div></div><div class="score">${fmt(item.overall_score)}</div></div><div class="meta"><span class="pill">Trend ${fmt(item.trend_score)}</span><span class="pill">Sales ${fmt(item.sales_score)}</span><span class="pill">Urgency ${fmt(item.urgency_score)}</span><span class="pill">Myanmar ${fmt(item.myanmar_interest_score)}</span></div><p class="reason">${escapeText(item.reasoning||"အကြောင်းပြချက် မရှိသေးပါ။")}</p>${renderQaSummary(qa)}<div class="meta">${channels.length?channels.map(c=>`<span class="pill">${escapeText(c)}</span>`).join(""):`<span class="pill">facebook</span>`}</div><div class="products">${products.length?products.map(p=>`<div class="product"><b>${escapeText(p.product_name||"Product")}</b><span>ကိုက်ညီမှု ${fmt(p.relevance_score)}။ ${escapeText(p.reason||"ကိုက်ညီသော product ဖြစ်သည်။")}</span></div>`).join(""):`<div class="product"><b>Product match မရှိပါ</b><span>မတင်ခင် ပြန်စစ်ပါ။</span></div>`}</div><div class="actions"><button class="btn" type="button" data-view="${escapeText(item.id)}">အသေးစိတ်</button><button class="btn" type="button" data-view-drafts="${escapeText(item.id)}">Draft များ</button><button class="btn primary" type="button" data-draft="${escapeText(item.id)}">Draft ထုတ်ရန်</button><button class="btn" type="button" data-review="${escapeText(item.id)}" data-decision="approved">Approve</button><button class="btn" type="button" data-review="${escapeText(item.id)}" data-decision="used">တင်ပြီး</button><button class="btn danger" type="button" data-review="${escapeText(item.id)}" data-decision="rejected">Reject</button></div></article>`;}
+function renderQaSummary(qa={}){const blockers=asArray(qa.blockers);const warnings=asArray(qa.warnings);const issues=[...blockers.map(item=>({type:"blocker",text:item})),...warnings.map(item=>({type:"warning",text:item}))].slice(0,4);if(!issues.length)return `<div class="qa-box"><b class="qa-ready">QA အဆင်သင့်</b><span>${escapeText(qa.summary||"ပြဿနာ မတွေ့ပါ။")}</span></div>`;return `<div class="qa-box"><b class="${escapeText(qa.status==="blocked"?"qa-blocked":"qa-review")}">${escapeText(qaLabel(qa.status))}</b><span>${escapeText(qa.summary||"စစ်ဆေးရန်လိုသည်။")}</span><ul class="qa-list">${issues.map(item=>`<li>${escapeText(item.type)}: ${escapeText(item.text)}</li>`).join("")}</ul></div>`;}
+function renderQaDetails(qa={}){return `<div class="qa-box"><b class="${escapeText(qa.status==="blocked"?"qa-blocked":(qa.status==="review"?"qa-review":"qa-ready"))}">${escapeText(qaLabel(qa.status))}</b><span>${escapeText(qa.summary||"QA data မရှိပါ။")}</span><div class="insight-cols"><div><span class="label">Blocker များ</span>${renderInsightList(asArray(qa.blockers))}</div><div><span class="label">Warning များ</span>${renderInsightList(asArray(qa.warnings))}</div><div><span class="label">အောင်မြင်သော Check များ</span>${renderInsightList(asArray(qa.passed))}</div></div></div>`;}
+function qaLabel(status){if(status==="blocked")return "QA ပိတ်ထားသည်";if(status==="review")return "QA စစ်ဆေးရန်";if(status==="ready")return "QA အဆင်သင့်";return "QA မသိပါ";}
+function qaPillClass(status){if(status==="blocked")return "danger";if(status==="review")return "gold";if(status==="ready")return "green";return "";}
+function showDetails(id){const item=opportunities.find(opp=>opp.id===id);if(!item)return;$("#modalTitle").textContent=item.title||"Opportunity";const rows=[["ဂိမ်း",(item.game||"").toUpperCase()],["အမျိုးအစား",item.opportunity_type],["စုစုပေါင်းအမှတ်",item.overall_score],["Article",item.article_title||"-"],["URL",item.article_url||"-"],["Publish အချိန်",item.published_at||"-"],["Channel များ",getChannels(item).join(", ")||"-"],["အကြောင်းပြချက်",item.reasoning||"-"]];$("#modalBody").innerHTML=rows.map(([k,v])=>`<div class="row"><span>${escapeText(k)}</span><div>${escapeText(v)}</div></div>`).join("")+renderQaDetails(item.qa||{});$("#detailModal").classList.add("show");}
+function openReview(id,decision="reviewed"){const item=opportunities.find(opp=>opp.id===id);if(!item)return;reviewTargetId=id;$("#reviewTitle").textContent=`စစ်ဆေးရန်: ${item.title||"Opportunity"}`;$("#reviewSummary").textContent=`${(item.game||"other").toUpperCase()} - အမှတ် ${fmt(item.overall_score)} - ${item.reasoning||"အကြောင်းပြချက် မရှိသေးပါ။"}`;$("#reviewDecision").value=decision;const channels=getChannels(item);$("#reviewChannel").value=channels.includes("facebook")?"facebook":(channels[0]||"");$("#reviewPublishedUrl").value="";$("#reviewFeedback").value=decision==="approved"||decision==="used"?"good":(decision==="rejected"?"bad":"");$("#reviewNotes").value="";$("#reviewModal").classList.add("show");}
+function showDrafts(item,drafts){activeDraftOpportunity=item||activeDraftOpportunity;activeDrafts=Array.isArray(drafts)?drafts:[];$("#draftTitle").textContent=`Draft များ: ${item?.title||"Opportunity"}`;$("#draftBody").innerHTML=activeDrafts.length?`<div class="drafts">${activeDrafts.map(draft=>`<div class="draft" data-draft-card="${escapeText(draft.id)}"><b>${escapeText((draft.channel||"channel").toUpperCase())}<span class="draft-status">${escapeText(statusLabel(draft.status||"draft"))}</span></b><label><span class="label">ခေါင်းစဉ်</span><input class="input" data-edit-title value="${escapeText(draft.title||"Draft")}"/></label><label><span class="label">စာကိုယ်</span><textarea class="textarea" data-edit-body>${escapeText(draft.body||"")}</textarea></label><label><span class="label">Call to Action</span><input class="input" data-edit-cta value="${escapeText(draft.call_to_action||"")}"/></label><label><span class="label">Hashtag များ</span><input class="input" data-edit-tags value="${Array.isArray(draft.hashtags)?draft.hashtags.map(escapeText).join(" "):""}"/></label><div class="form-grid"><label><span class="label">တင်ရန်အချိန်</span><input class="input" type="datetime-local" data-schedule-for/></label><label><span class="label">Schedule မှတ်ချက်</span><input class="input" data-schedule-notes placeholder="ရှိလျှင် ထည့်ပါ"/></label></div><div class="actions"><button class="btn" type="button" data-copy-draft="${escapeText(draft.id)}">Copy</button><button class="btn" type="button" data-save-draft="${escapeText(draft.id)}">Edit သိမ်းရန်</button><button class="btn primary" type="button" data-schedule-draft="${escapeText(draft.id)}">Schedule ထားရန်</button><button class="btn" type="button" data-draft-status="approved" data-id="${escapeText(draft.id)}">Draft Approve</button><button class="btn danger" type="button" data-draft-status="rejected" data-id="${escapeText(draft.id)}">Draft Reject</button></div></div>`).join("")}</div>`:`<div class="empty">သိမ်းထားသော draft မရှိသေးပါ။ အရင် draft ထုတ်ပါ။</div>`;$("#draftModal").classList.add("show");}
+function getDraftScheduleState(){return [...document.querySelectorAll("[data-draft-card]")].map(card=>({id:card.dataset.draftCard,scheduledFor:card.querySelector("[data-schedule-for]")?.value||"",notes:card.querySelector("[data-schedule-notes]")?.value||""}));}
+function restoreDraftScheduleState(state){state.forEach(item=>{const card=document.querySelector(`[data-draft-card="${CSS.escape(item.id)}"]`);if(!card)return;const scheduledFor=card.querySelector("[data-schedule-for]");const notes=card.querySelector("[data-schedule-notes]");if(scheduledFor)scheduledFor.value=item.scheduledFor||"";if(notes)notes.value=item.notes||"";});}
+function openPerformance(id){const item=calendarItems.find(row=>row.id===id);if(!item)return;const draft=item.content_drafts||{};const opp=item.opportunities||{};activePerformanceCalendarId=id;$("#performanceTitle").textContent=`Performance ထည့်ရန်: ${(item.channel||"channel").toUpperCase()}`;$("#performanceSummary").textContent=opp.title||draft.title||"Publish ပြီးသော content";["Views","Likes","Comments","Shares","Clicks","Orders"].forEach(name=>{$(`#metric${name}`).value=0;});$("#metricRevenue").value=0;$("#metricMeasuredAt").value=new Date().toISOString().slice(0,16);$("#metricNotes").value="";$("#performanceModal").classList.add("show");}
+async function savePerformance(){if(!activePerformanceCalendarId)return;$("#savePerformanceBtn").disabled=true;const measuredAt=$("#metricMeasuredAt").value;try{await apiPost("/api/admin-update-content-performance",adminPayload({calendarId:activePerformanceCalendarId,views:$("#metricViews").value,likes:$("#metricLikes").value,comments:$("#metricComments").value,shares:$("#metricShares").value,clicks:$("#metricClicks").value,orders:$("#metricOrders").value,revenue:$("#metricRevenue").value,measuredAt:measuredAt?new Date(measuredAt).toISOString():"",notes:$("#metricNotes").value}));$("#performanceModal").classList.remove("show");activePerformanceCalendarId="";setCalendarStatus("Performance metric သိမ်းပြီးပါပြီ။","ok");loadPerformance();}catch(error){setCalendarStatus(error.message||"Performance metric မသိမ်းနိုင်ပါ။","warn");}finally{$("#savePerformanceBtn").disabled=false;}}
+async function saveReview(){if(!reviewTargetId)return;$("#saveReviewBtn").disabled=true;await updateOpportunity(reviewTargetId,$("#reviewDecision").value,{selectedChannel:$("#reviewChannel").value,publishedUrl:$("#reviewPublishedUrl").value,feedbackLabel:$("#reviewFeedback").value,notes:$("#reviewNotes").value});$("#saveReviewBtn").disabled=false;$("#reviewModal").classList.remove("show");reviewTargetId="";}
 $("#unlockBtn").addEventListener("click",()=>{adminPassword=$("#adminPassword").value.trim();localStorage.setItem("bestdia_marketing_os_admin",adminPassword);loadOpportunities();});
 $("#refreshBtn").addEventListener("click",loadOpportunities);
 $("#refreshBriefBtn").addEventListener("click",()=>renderDailyBrief(opportunities));
@@ -824,3 +302,4 @@ if($("#adminPassword").value){adminPassword=$("#adminPassword").value;loadOpport
 </script>
 </body>
 </html>
+
