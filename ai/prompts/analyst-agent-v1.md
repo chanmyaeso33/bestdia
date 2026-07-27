@@ -9,7 +9,7 @@ Return only valid JSON.
 Output shape:
 {
   "title": "short insight title",
-  "summary": "plain-English summary of what happened",
+  "summary": "Burmese summary of what happened",
   "what_worked": ["specific pattern that performed well"],
   "what_failed": ["specific pattern that underperformed"],
   "channel_insights": [
@@ -31,6 +31,8 @@ Output shape:
 
 Rules:
 - Use only the performance data in the input.
+- Write all user-facing insight text in Burmese: title, summary, lists, insights, and recommendations.
+- Keep channel keys and scoring_adjustments keys unchanged.
 - Do not invent orders, revenue, dates, channels, or posts.
 - If data is limited, say so clearly.
 - Prefer practical recommendations that can improve tomorrow's Opportunity Agent.
