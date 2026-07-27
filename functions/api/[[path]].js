@@ -1279,6 +1279,10 @@ Return only valid JSON that matches the provided schema.
 Always include a non-empty opportunity_type using exactly one of:
 trend_post, sales_post, educational_post, event_reminder, promotion_angle, community_reaction, urgent_update.
 
+Language rules:
+- Write all user-facing fields in Burmese: title, description, reasoning, and product match reasons.
+- Keep enum values, channel names, game ids, product names, URLs, and hashtags unchanged.
+
 Scoring rules:
 - Scores must be integers from 0 to 100.
 - overall_score should reflect posting priority today.
@@ -1326,9 +1330,9 @@ Return only valid JSON with this shape:
     {
       "channel": "facebook",
       "draft_type": "post",
-      "title": "short internal title",
-      "body": "post body",
-      "call_to_action": "clear CTA",
+      "title": "short Burmese internal title",
+      "body": "Burmese post body",
+      "call_to_action": "clear Burmese CTA",
       "hashtags": ["#BestDia"]
     }
   ]
@@ -1339,7 +1343,8 @@ Rules:
 - Allowed channels: facebook, tiktok, telegram, website.
 - Do not claim official discounts unless the opportunity/article says so.
 - Do not invent dates, rewards, skins, crates, prices, or product availability.
-- Write for Myanmar mobile gamers, but keep the copy in simple English for V1.
+- Write all user-facing draft copy in natural Burmese for Myanmar mobile gamers.
+- Product names, game names, and hashtags may stay in English when that is what customers recognize.
 - Mention BestDia naturally.
 - Keep Facebook body under 900 characters.
 - Keep TikTok body/caption under 300 characters.
@@ -1357,7 +1362,7 @@ Your job is to analyze recent published content performance and explain what Bes
 Return only valid JSON with this shape:
 {
   "title": "short insight title",
-  "summary": "plain-English summary of what happened",
+  "summary": "Burmese summary of what happened",
   "what_worked": ["specific pattern that performed well"],
   "what_failed": ["specific pattern that underperformed"],
   "channel_insights": [
@@ -1376,6 +1381,8 @@ Return only valid JSON with this shape:
 
 Rules:
 - Use only the performance data in the input.
+- Write all user-facing insight text in Burmese: title, summary, lists, insights, and recommendations.
+- Keep channel keys and scoring_adjustments keys unchanged.
 - Do not invent orders, revenue, dates, channels, or posts.
 - If data is limited, say so clearly.
 - Prefer practical recommendations that can improve tomorrow's Opportunity Agent.
@@ -2084,7 +2091,7 @@ function appendScoringRuleNote(reasoning, rules) {
     .filter((rule) => Number(rule.overall_delta || 0))
     .map((rule) => `${rule.rule} ${Number(rule.overall_delta) > 0 ? "+" : ""}${rule.overall_delta}`)
     .join(", ");
-  const note = deltas ? ` Scoring rules applied: ${deltas}.` : " Scoring rules applied from recent Analyst memory.";
+  const note = deltas ? ` Scoring rule သက်ရောက်မှု: ${deltas}။` : " နောက်ဆုံး Analyst memory မှ scoring rule များ အသုံးပြုထားသည်။";
   return `${String(reasoning || "").trim()}${note}`.slice(0, 1600);
 }
 
@@ -2141,15 +2148,15 @@ function normalizeRuleText(value) {
 function fallbackOpportunityTitle(article, game, opportunityType) {
   const gameLabel = game === "mlbb" ? "MLBB" : (game === "pubg" ? "PUBG" : "Gaming");
   const sourceTitle = String(article?.title || "").trim();
-  if (sourceTitle) return `Promote ${sourceTitle}`.slice(0, 180);
-  if (opportunityType === "sales_post") return `Promote ${gameLabel} Top-Up Demand`;
-  if (opportunityType === "urgent_update") return `Post Urgent ${gameLabel} Update`;
-  return `Post About ${gameLabel} Trend`;
+  if (sourceTitle) return `${sourceTitle} အကြောင်း BestDia ပို့စ်တင်ရန်`.slice(0, 180);
+  if (opportunityType === "sales_post") return `${gameLabel} Top-Up ဝယ်လိုအားအတွက် ပို့စ်တင်ရန်`;
+  if (opportunityType === "urgent_update") return `${gameLabel} urgent update အတွက် ပို့စ်တင်ရန်`;
+  return `${gameLabel} trend အကြောင်း ပို့စ်တင်ရန်`;
 }
 
 function fallbackOpportunityDescription(article) {
   const text = String(article?.summary || article?.raw_content || "").trim();
-  return text ? text.slice(0, 600) : "BestDia should review this gaming news item for a possible marketing post.";
+  return text ? text.slice(0, 600) : "BestDia အနေဖြင့် ဒီ gaming news ကို marketing post အဖြစ် သုံးလို့ရမရ စစ်ဆေးသင့်သည်။";
 }
 
 function fallbackOpportunityReasoning(article, game, opportunityType, result = {}) {
@@ -2161,12 +2168,12 @@ function fallbackOpportunityReasoning(article, game, opportunityType, result = {
   ].join(", ");
   const articleHint = String(article?.summary || article?.title || "").trim();
   if (opportunityType === "sales_post") {
-    return `This ${gameLabel} item appears useful for BestDia because it can create top-up purchase intent. Scores: ${scoreParts}. ${articleHint}`.trim();
+    return `ဒီ ${gameLabel} သတင်းသည် top-up ဝယ်လိုအား ဖန်တီးနိုင်သောကြောင့် BestDia အတွက် အသုံးဝင်နိုင်သည်။ အမှတ်များ: ${scoreParts}။ ${articleHint}`.trim();
   }
   if (opportunityType === "urgent_update") {
-    return `This ${gameLabel} item is time-sensitive and may be worth posting quickly. Scores: ${scoreParts}. ${articleHint}`.trim();
+    return `ဒီ ${gameLabel} သတင်းသည် အချိန်အရေးကြီးသောကြောင့် မြန်မြန်ပို့စ်တင်သင့်နိုင်သည်။ အမှတ်များ: ${scoreParts}။ ${articleHint}`.trim();
   }
-  return `This ${gameLabel} item may be useful as a timely marketing post for BestDia. Scores: ${scoreParts}. ${articleHint}`.trim();
+  return `ဒီ ${gameLabel} သတင်းသည် BestDia အတွက် timely marketing post အဖြစ် အသုံးဝင်နိုင်သည်။ အမှတ်များ: ${scoreParts}။ ${articleHint}`.trim();
 }
 
 function normalizeRecommendedChannels(value, result = {}) {
@@ -2221,7 +2228,7 @@ function matchOpportunityProducts(productMatches, products, game, article, oppor
   const matches = productMatches.map((match) => {
     const product = findMatchingProduct(String(match.product_name || ""), allowedProducts);
     if (!product) return null;
-    return { product, relevance_score: normalizeOpportunityScore(match.relevance_score), reason: String(match.reason || "").trim() || `Matched from agent product suggestion: ${match.product_name}` };
+    return { product, relevance_score: normalizeOpportunityScore(match.relevance_score), reason: String(match.reason || "").trim() || `Agent product suggestion မှ ကိုက်ညီသည်: ${match.product_name}` };
   }).filter(Boolean);
   const inferred = inferOpportunityProducts(allowedProducts, game, article, opportunity);
   return dedupeProductMatches([...matches, ...inferred]).slice(0, 3);
@@ -2260,9 +2267,9 @@ function inferOpportunityProducts(products, game, article, opportunity) {
     const weeklyPass = sorted.find((product) => /weekly.*pass|pass/.test(normalizeProductText(product.name)) || product.product_type === "weekly_pass");
     const diamondProducts = sorted.filter((product) => product.product_type === "diamonds" || /diamond/.test(normalizeProductText(product.name)));
     const picks = [];
-    if (/weekly.*pass|diamond.*pass/.test(context) && weeklyPass) picks.push({ product: weeklyPass, relevance_score: 88, reason: "Inferred from MLBB article context mentioning pass or recurring diamond demand." });
+    if (/weekly.*pass|diamond.*pass/.test(context) && weeklyPass) picks.push({ product: weeklyPass, relevance_score: 88, reason: "MLBB article context တွင် pass သို့မဟုတ် recurring diamond demand ပါသောကြောင့် ခန့်မှန်းကိုက်ညီသည်။" });
     for (const product of diamondProducts.slice(0, 2)) {
-      picks.push({ product, relevance_score: 90, reason: "Inferred from MLBB article context with diamond top-up demand." });
+      picks.push({ product, relevance_score: 90, reason: "MLBB article context တွင် diamond top-up demand ရှိသောကြောင့် ခန့်မှန်းကိုက်ညီသည်။" });
     }
     return picks.slice(0, 2);
   }
@@ -2271,10 +2278,10 @@ function inferOpportunityProducts(products, game, article, opportunity) {
     return sorted
       .filter((product) => product.product_type === "uc" || /\buc\b/.test(normalizeProductText(product.name)))
       .slice(0, 2)
-      .map((product) => ({ product, relevance_score: 90, reason: "Inferred from PUBG article context with UC top-up demand." }));
+      .map((product) => ({ product, relevance_score: 90, reason: "PUBG article context တွင် UC top-up demand ရှိသောကြောင့် ခန့်မှန်းကိုက်ညီသည်။" }));
   }
 
-  return sorted.slice(0, 1).map((product) => ({ product, relevance_score: 75, reason: "Inferred fallback product match from active products." }));
+  return sorted.slice(0, 1).map((product) => ({ product, relevance_score: 75, reason: "Active product များမှ fallback အဖြစ် ခန့်မှန်းကိုက်ညီသည်။" }));
 }
 
 function dedupeProductMatches(matches) {
@@ -2325,28 +2332,28 @@ function buildOpportunityQa(opportunity, drafts = [], calendarItems = [], perfor
   const publishedItems = calendarItems.filter((item) => item.status === "published");
   const scheduledItems = calendarItems.filter((item) => item.status === "scheduled");
 
-  addQaCheck(products.length > 0, blockers, passed, "No product match", "Has product match");
-  addQaCheck(channels.length > 0, blockers, passed, "No recommended channel", "Has recommended channel");
-  addQaCheck(reasoning.length >= 45, warnings, passed, "Reasoning is weak or too short", "Reasoning is clear");
-  addQaCheck(Number(opportunity.sales_score || 0) >= 60, warnings, passed, "Low sales score", "Sales score is usable");
-  addQaCheck(Number(opportunity.overall_score || 0) >= 50, warnings, passed, "Low overall opportunity score", "Overall score is usable");
-  addQaCheck(drafts.length > 0, warnings, passed, "No draft generated yet", "Draft exists");
+  addQaCheck(products.length > 0, blockers, passed, "Product match မရှိပါ", "Product match ရှိသည်");
+  addQaCheck(channels.length > 0, blockers, passed, "အကြံပြု channel မရှိပါ", "အကြံပြု channel ရှိသည်");
+  addQaCheck(reasoning.length >= 45, warnings, passed, "အကြောင်းပြချက် အားနည်းသည် သို့မဟုတ် တိုလွန်းသည်", "အကြောင်းပြချက် ရှင်းလင်းသည်");
+  addQaCheck(Number(opportunity.sales_score || 0) >= 60, warnings, passed, "Sales score နည်းသည်", "Sales score သုံးလို့ရသည်");
+  addQaCheck(Number(opportunity.overall_score || 0) >= 50, warnings, passed, "Overall opportunity score နည်းသည်", "Overall score သုံးလို့ရသည်");
+  addQaCheck(drafts.length > 0, warnings, passed, "Draft မထုတ်ရသေးပါ", "Draft ရှိသည်");
 
   const approvedDrafts = drafts.filter((draft) => draft.status === "approved");
-  if (drafts.length) addQaCheck(approvedDrafts.length > 0, warnings, passed, "No approved draft yet", "Approved draft exists");
+  if (drafts.length) addQaCheck(approvedDrafts.length > 0, warnings, passed, "Approved draft မရှိသေးပါ", "Approved draft ရှိသည်");
 
   const riskyClaims = findRiskyDraftClaims(drafts);
   if (riskyClaims.length) {
     blockers.push(`Risky draft claim: ${riskyClaims.slice(0, 3).join(", ")}`);
   } else if (drafts.length) {
-    passed.push("No risky draft claims detected");
+    passed.push("Risky draft claim မတွေ့ပါ");
   }
 
-  if (approvedDrafts.length && !scheduledItems.length && !publishedItems.length) warnings.push("Approved draft is not scheduled");
-  if (scheduledItems.length) passed.push("Content is scheduled");
+  if (approvedDrafts.length && !scheduledItems.length && !publishedItems.length) warnings.push("Approved draft ကို schedule မထားရသေးပါ");
+  if (scheduledItems.length) passed.push("Content ကို schedule ထားပြီး");
 
-  if (publishedItems.length && !performanceRows.length) warnings.push("Published content is missing performance metrics");
-  if (publishedItems.length && performanceRows.length) passed.push("Published content has performance metrics");
+  if (publishedItems.length && !performanceRows.length) warnings.push("Published content တွင် performance metric မရှိသေးပါ");
+  if (publishedItems.length && performanceRows.length) passed.push("Published content တွင် performance metric ရှိသည်");
 
   const status = blockers.length ? "blocked" : (warnings.length ? "review" : "ready");
   return {
@@ -2354,7 +2361,7 @@ function buildOpportunityQa(opportunity, drafts = [], calendarItems = [], perfor
     blockers,
     warnings,
     passed: passed.slice(0, 8),
-    summary: `${blockers.length} blocker(s), ${warnings.length} warning(s), ${passed.length} passed check(s)`,
+    summary: `blocker ${blockers.length} ခု၊ warning ${warnings.length} ခု၊ passed check ${passed.length} ခု`,
   };
 }
 
@@ -2518,7 +2525,7 @@ function validateWriterDrafts(result, requestedChannels) {
       draft_type: String(draft.draft_type || "post").trim().slice(0, 40) || "post",
       title: String(draft.title || "").trim().slice(0, 180) || `${channel} draft`,
       body: body.slice(0, channel === "tiktok" ? 300 : 900),
-      call_to_action: String(draft.call_to_action || "").trim().slice(0, 220) || "Message BestDia to top up today.",
+      call_to_action: String(draft.call_to_action || "").trim().slice(0, 220) || "Top-up လုပ်ရန် BestDia ကို message ပို့ပါ။",
       hashtags: normalizeDraftHashtags(draft.hashtags),
     };
   }).filter(Boolean);
@@ -2566,7 +2573,7 @@ async function runAnalystAgent(env, options = {}) {
     limit,
     measuredAfter: periodStart.toISOString(),
   });
-  if (!metrics.length) throw new Error("No performance metrics found for Analyst Agent");
+  if (!metrics.length) throw new Error("Analyst Agent အတွက် performance metric မတွေ့ပါ");
 
   const totals = summarizePerformanceMetrics(metrics);
   const startedAt = Date.now();
@@ -2654,7 +2661,7 @@ function buildAnalystAgentInput({ metrics, totals, periodStart, periodEnd }) {
     const opportunity = item.opportunities || {};
     return [
       `#${index + 1}`,
-      `Title: ${opportunity.title || draft.title || "Published content"}`,
+      `Title: ${opportunity.title || draft.title || "Publish ပြီးသော content"}`,
       `Game: ${opportunity.game || "unknown"}`,
       `Channel: ${item.channel || ""}`,
       `Opportunity Score: ${opportunity.overall_score || 0}`,
