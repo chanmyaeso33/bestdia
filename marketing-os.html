@@ -224,13 +224,20 @@ async function runPipeline(){
   $("#runPipelineBtn").disabled=true;
   setStatus("Running daily pipeline...");
   try{
-    const data=await apiPost("/api/run-daily-opportunity-pipeline",adminPayload({limitPerSource:5,agentLimit:10}));
+    const data=await apiPost("/api/run-daily-opportunity-pipeline",adminPayload({limitPerSource:12,agentLimit:10}));
     const s=data.summary||{};
-    setStatus(`Pipeline complete: ${fmt(s.articles_inserted)} inserted, ${fmt(s.opportunities_created)} opportunities created, ${fmt(s.failed)} failed.`,"ok");
+    setStatus(pipelineStatusMessage(s),s.opportunities_created||s.articles_processed?"ok":"warn");
     await loadOpportunities();
     loadAgentRuns();
   }catch(error){setStatus(error.message||"Pipeline failed.","warn");}
   finally{$("#runPipelineBtn").disabled=false;}
+}
+
+function pipelineStatusMessage(s={}){
+  const base=`Pipeline complete: ${fmt(s.article_candidates)} candidates, ${fmt(s.articles_inserted)} inserted, ${fmt(s.duplicate_candidates)} duplicate, ${fmt(s.articles_processed)} processed, ${fmt(s.opportunities_created)} opportunities, ${fmt(s.skipped)} skipped, ${fmt(s.failed)} failed.`;
+  if(!Number(s.articles_inserted||0)&&!Number(s.articles_processed||0))return `${base} No new unprocessed articles were found.`;
+  if(Number(s.articles_processed||0)&&!Number(s.opportunities_created||0))return `${base} Articles were processed, but none became opportunities.`;
+  return base;
 }
 
 async function updateOpportunity(id,status,extra={}){
