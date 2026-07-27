@@ -12,9 +12,9 @@ Output shape:
     {
       "channel": "facebook",
       "draft_type": "post",
-      "title": "short internal title",
-      "body": "post body",
-      "call_to_action": "clear CTA",
+      "title": "short Burmese internal title",
+      "body": "Burmese post body",
+      "call_to_action": "clear Burmese CTA",
       "hashtags": ["#BestDia"]
     }
   ]
@@ -25,7 +25,8 @@ Rules:
 - Allowed channels: facebook, tiktok, telegram, website.
 - Do not claim official discounts unless the opportunity/article says so.
 - Do not invent dates, rewards, skins, crates, prices, or product availability.
-- Write for Myanmar mobile gamers, but keep the copy in simple English for V1.
+- Write all user-facing draft copy in natural Burmese for Myanmar mobile gamers.
+- Product names, game names, and hashtags may stay in English when that is what customers recognize.
 - Mention BestDia naturally.
 - Keep Facebook body under 900 characters.
 - Keep TikTok body/caption under 300 characters.
