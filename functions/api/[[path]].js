@@ -1447,6 +1447,7 @@ async function runDailyOpportunityPipelineApi(request, env) {
       sources_checked: collection.sources,
       article_candidates: collection.candidates,
       articles_inserted: collection.inserted,
+      duplicate_candidates: collection.duplicates,
       articles_processed: opportunities.processed,
       opportunities_created: opportunities.results.filter((item) => item.opportunityId).length,
       skipped: opportunities.results.filter((item) => item.skipped).length,
@@ -1456,7 +1457,7 @@ async function runDailyOpportunityPipelineApi(request, env) {
 }
 
 async function collectNews(env, options = {}) {
-  const limitPerSource = Math.max(1, Math.min(20, Number(options.limitPerSource || 5)));
+  const limitPerSource = Math.max(1, Math.min(20, Number(options.limitPerSource || 12)));
   const game = options.game ? normalizeOpportunityGame(options.game) : "";
   const enabledSources = NEWS_COLLECTOR_SOURCES.filter((source) => !game || source.game === game);
   const results = [];
@@ -1469,6 +1470,7 @@ async function collectNews(env, options = {}) {
     sources: results.length,
     inserted: results.reduce((sum, item) => sum + Number(item.inserted || 0), 0),
     candidates: results.reduce((sum, item) => sum + Number(item.candidates || 0), 0),
+    duplicates: results.reduce((sum, item) => sum + Math.max(0, Number(item.candidates || 0) - Number(item.inserted || 0)), 0),
     results,
   };
 }
@@ -1498,7 +1500,7 @@ async function collectNewsSource(env, sourceDef, limitPerSource) {
     })).filter((item) => item.external_id && item.title);
     const inserted = await supabaseInsertNewsArticles(env, rows);
     await supabaseUpdateNewsSourceCollectedAt(env, source.id);
-    return { source: sourceDef.name, ok: true, candidates: rows.length, inserted: inserted.length };
+    return { source: sourceDef.name, ok: true, candidates: rows.length, inserted: inserted.length, duplicates: Math.max(0, rows.length - inserted.length) };
   } catch (error) {
     return { source: sourceDef.name, ok: false, error: String(error.message || "Collector failed").slice(0, 500), candidates: 0, inserted: 0 };
   }
