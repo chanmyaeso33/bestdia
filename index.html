@@ -405,6 +405,45 @@ const PKG_IMG={
   pubgPack:assetUrl("assets/first-purchase-pack.png")
 };
 const pubgAsset=name=>assetUrl(`assets/${name}.png`);
+const PUBG_UC_ART=[
+  assetUrl("assets/pubg/uc-tier-1.png"),
+  assetUrl("assets/pubg/uc-tier-2.png"),
+  assetUrl("assets/pubg/uc-tier-3.png"),
+  assetUrl("assets/pubg/uc-tier-4.png"),
+  assetUrl("assets/pubg/uc-tier-5.png")
+];
+const PUBG_UC_ART_INDEX={
+  "60":0,"120":0,
+  "180":1,"325":1,"385":1,
+  "660":2,"720":2,"985":2,
+  "1045":3,"1320":3,"1800":3,"1920":3,
+  "2125":4,"2460":4,"3850":4,"8100":4,"16200":4,"24300":4,"72900":4
+};
+const HOK_IMG="https://cdn.moogold.com/2023/09/honor-of-kings.jpg";
+const HOK_TOKEN_ART=[
+  assetUrl("assets/hok/tokens-16.png"),
+  assetUrl("assets/hok/tokens-80-240.png"),
+  assetUrl("assets/hok/tokens-400-830.png"),
+  assetUrl("assets/hok/tokens-1245-2508.png"),
+  assetUrl("assets/hok/tokens-4180.png"),
+  assetUrl("assets/hok/tokens-8360.png")
+];
+const HOK_TOKEN_ART_INDEX=[0,1,1,2,2,2,3,3,4,5];
+const HOK_ENABLED=false;
+const MLBB_DIAMOND_ART=[
+  assetUrl("assets/mlbb/diamonds-tier-1.png"),
+  assetUrl("assets/mlbb/diamonds-tier-2.png"),
+  assetUrl("assets/mlbb/diamonds-tier-3.png"),
+  assetUrl("assets/mlbb/diamonds-tier-4.png"),
+  assetUrl("assets/mlbb/diamonds-tier-5.png")
+];
+const mlbbDiamondArt=(id,diamonds)=>{
+  if(Number(id)===1||Number(id)===11)return MLBB_DIAMOND_ART[0];
+  if(Number(diamonds)<500)return MLBB_DIAMOND_ART[1];
+  if(Number(diamonds)<1000)return MLBB_DIAMOND_ART[2];
+  if(Number(diamonds)<=5000)return MLBB_DIAMOND_ART[3];
+  return MLBB_DIAMOND_ART[4];
+};
 const MLBB_PKGS=[
   {id:1,title:"50+5 Diamonds",name:"Special Bonus",diamonds:55,baseDiamonds:50,regularBonus:5,firstBonus:50,supplierPriceThb:26.13,img:PKG_IMG.diamonds,popular:true,mxshopStockReleaseId:"169991"},
   {id:2,title:"150+15 Diamonds",name:"Special Bonus",diamonds:165,baseDiamonds:150,regularBonus:15,firstBonus:150,supplierPriceThb:78.32,img:PKG_IMG.diamonds,mxshopStockReleaseId:"169992"},
@@ -430,11 +469,11 @@ const MLBB_PKGS=[
   {id:22,title:"3688 Diamonds",name:"3099 + 589 Bonus",diamonds:3688,supplierPriceThb:1541.66,img:PKG_IMG.diamonds,mxshopStockReleaseId:"170025"},
   {id:23,title:"5532 Diamonds",name:"4649 + 883 Bonus",diamonds:5532,supplierPriceThb:2322.15,img:PKG_IMG.diamonds,mxshopStockReleaseId:"170026"},
   {id:24,title:"9288 Diamonds",name:"7740 + 1548 Bonus",diamonds:9288,supplierPriceThb:3844.36,img:PKG_IMG.diamonds,mxshopStockReleaseId:"170027"}
-];
+].map(p=>p.diamonds?{...p,img:mlbbDiamondArt(p.id,p.diamonds),fallbackImg:PKG_IMG.diamonds}:p);
 const PUBG_MX_IDS={"60":"431","120":"452","180":"544","325":"432","385":"456","660":"433","720":"474","985":"458","1320":"460","1800":"434","2125":"660","2460":"468","3850":"435","8100":"436","16200":"466","24300":"470"};
 const PUBG_PKGS=[
   ["60",32.10,true],["120",64.20,true],["180",96.30],["325",148.50,true],["385",180.60],["660",295.01,true],["720",325.01],["985",443.50],["1045",475.50],["1320",589.01],["1800",730.01,true],["1920",789.20],["2125",874.50],["2460",1020.01],["3850",1435.01],["8100",2835.01,true],["16200",5670.02],["24300",8505.03],["72900",25515.09]
-].map(([uc,thb,popular])=>({id:`pubg-${uc}`,title:`${uc} UC`,name:"",uc:Number(uc),supplierPriceThb:thb,img:pubgAsset(`uc-${uc}`),popular:Boolean(popular),mxshopStockReleaseId:PUBG_MX_IDS[uc]||""})).concat([
+].map(([uc,thb,popular])=>({id:`pubg-${uc}`,title:`${uc} UC`,name:"",uc:Number(uc),supplierPriceThb:thb,img:PUBG_UC_ART[PUBG_UC_ART_INDEX[uc]],fallbackImg:pubgAsset(`uc-${uc}`),popular:Boolean(popular),mxshopStockReleaseId:PUBG_MX_IDS[uc]||""})).concat([
   {id:"pubg-first-purchase-pack",title:"First Purchase Pack",name:"Special Pack",supplierPriceThb:32.10,img:pubgAsset("official-first-purchase-pack"),fallbackImg:pubgAsset("first-purchase-pack"),popular:true,wideArt:true},
   {id:"pubg-prime-1-month",title:"Prime 1 Month",name:"Subscription",supplierPriceThb:33.01,img:pubgAsset("official-prime-1-month"),fallbackImg:pubgAsset("prime-1-month"),wideArt:true,mxshopStockReleaseId:"190504"},
   {id:"pubg-firearm-materials-pack",title:"Upgradable Firearm Materials Pack",name:"Materials Pack",supplierPriceThb:89.10,img:pubgAsset("official-firearm-materials-pack"),fallbackImg:pubgAsset("firearm-materials-pack"),wideArt:true,mxshopStockReleaseId:"190506"},
@@ -443,10 +482,16 @@ const PUBG_PKGS=[
   {id:"pubg-prime-plus-1-month",title:"Prime Plus 1 Month",name:"Subscription",supplierPriceThb:299.01,img:pubgAsset("official-prime-plus-1-month"),fallbackImg:pubgAsset("prime-plus-1-month"),wideArt:true,mxshopStockReleaseId:"190505"},
   {id:"pubg-prime-plus-3-month",title:"Prime Plus 3 Month",name:"Subscription",supplierPriceThb:890.01,img:pubgAsset("official-prime-plus-3-month"),fallbackImg:pubgAsset("prime-plus-3-month"),wideArt:true}
 ]);
+const HOK_PKGS=[
+  ["16",6.42,"5177683"],["80",29.38,"5177684"],["240",88.82,"5177685"],["400",148.26,"5177686"],["560",207.69,"5177688"],
+  ["800 + 30",296.85,"5177689"],["1200 + 45",445.45,"5177690"],["2400 + 108",891.23,"5177691"],["4000 + 180",1485.61,"5177694"],["8000 + 360",2971.55,"5177696"]
+].map(([tokens,thb,variationId],i)=>({id:`hok-${tokens.replace(/\s*\+\s*/g,"-")}`,title:`${tokens} Tokens`,name:"",tokens,supplierPriceThb:thb,img:HOK_TOKEN_ART[HOK_TOKEN_ART_INDEX[i]],fallbackImg:HOK_IMG,popular:[1,5,7].includes(i),supplier:"moogold",moogoldProductId:"5177311",moogoldVariationId:variationId}));
 const PRODUCTS={
   mlbb:{key:"mlbb",name:"Mobile Legends",shortName:"MLBB",unit:"Diamonds",tagline:"စိန်များ၊ လက်မှတ်များနှင့် ပက်ကေ့ချ်များ",userLabel:"MLBB အသုံးပြုသူ ID",userPlaceholder:"ဥပမာ - 123456789",zoneLabel:"ဇုန် ID",zonePlaceholder:"ဥပမာ - 12345",requiresZone:true,lookup:true,heroIds:[11,7,10,5],bestIds:[11,12,13,7,5,10],img:PKG_IMG.mlbbLogo,packages:MLBB_PKGS},
-  pubg:{key:"pubg",name:"PUBG Mobile",shortName:"PUBG",unit:"UC",tagline:"UC နှင့် စာရင်းသွင်းပက်ကေ့ချ်များ",userLabel:"PUBG ကစားသူ ID",userPlaceholder:"ဥပမာ - 5123456789",requiresZone:false,lookup:false,heroIds:["pubg-60","pubg-660","pubg-1800","pubg-prime-plus-1-month"],bestIds:["pubg-60","pubg-325","pubg-660","pubg-1800","pubg-8100","pubg-prime-plus-1-month"],img:PKG_IMG.pubgLogo,packages:PUBG_PKGS}
+  pubg:{key:"pubg",name:"PUBG Mobile",shortName:"PUBG",unit:"UC",tagline:"UC နှင့် စာရင်းသွင်းပက်ကေ့ချ်များ",userLabel:"PUBG ကစားသူ ID",userPlaceholder:"ဥပမာ - 5123456789",requiresZone:false,lookup:false,heroIds:["pubg-60","pubg-660","pubg-1800","pubg-prime-plus-1-month"],bestIds:["pubg-60","pubg-325","pubg-660","pubg-1800","pubg-8100","pubg-prime-plus-1-month"],img:PKG_IMG.pubgLogo,packages:PUBG_PKGS},
+  hok:{key:"hok",name:"Honor of Kings",shortName:"HOK",unit:"Tokens",tagline:"Tokens များကို Player ID ဖြင့် တိုက်ရိုက်ဖြည့်ပါ",userLabel:"Honor of Kings Player ID",userPlaceholder:"ဥပမာ - 123456789",requiresZone:false,lookup:false,heroIds:["hok-80","hok-800-30","hok-2400-108","hok-8000-360"],bestIds:["hok-16","hok-80","hok-240","hok-800-30","hok-1200-45","hok-2400-108"],img:HOK_IMG,packages:HOK_PKGS}
 };
+if(!HOK_ENABLED)delete PRODUCTS.hok;
 
 const priceMarginByThb=thb=>thb<150?.05:(thb<500?.03:.02);
 const roundKsToLast2=ks=>Math.round(ks/100)*100;
@@ -480,10 +525,10 @@ const netProfitKs=o=>Number(o?.pkg?.price||0)-supplierCostKs(o)-Math.round(Numbe
 const netLabel=o=>supplierThb(o)>0?`${fmt(netProfitKs(o))} Ks`:"ကုန်ကျစရိတ်ထည့်ရန်";
 const allProductPackages=()=>Object.values(PRODUCTS).flatMap(product=>product.packages);
 const currentPkgById=id=>allProductPackages().find(p=>String(p.id)===String(id))||{};
-const hasMxPackageMapping=o=>Boolean(o?.pkg?.mxshopStockReleaseId||currentPkgById(o?.pkg?.id).mxshopStockReleaseId);
+const hasMxPackageMapping=o=>Boolean(o?.pkg?.mxshopStockReleaseId||o?.pkg?.moogoldVariationId||currentPkgById(o?.pkg?.id).mxshopStockReleaseId||currentPkgById(o?.pkg?.id).moogoldVariationId);
 const hasMxAttempt=o=>Boolean(o?.mxshopTopup);
 const canSendMxTopup=o=>hasMxPackageMapping(o)&&o?.status==="processing"&&!hasMxAttempt(o);
-const canCompleteOrder=o=>o?.status==="processing"&&(!hasMxPackageMapping(o)||(hasMxAttempt(o)&&o.mxshopTopup?.status==="success"));
+const canCompleteOrder=o=>o?.status==="processing"&&(!hasMxPackageMapping(o)||(hasMxAttempt(o)&&(o.mxshopTopup?.status==="success"||(o.pkg?.moogoldVariationId&&o.mxshopTopup?.status==="submitted"))));
 const mxTopupText=o=>{const t=o?.mxshopTopup;if(!hasMxPackageMapping(o))return"လက်ဖြင့် ဖြည့်ပေးရန်";if(!t)return"မပို့ရသေး";if(t.status==="success")return"ပို့ပြီး";if(t.status==="submitted")return"MXShop လက်ခံထားသည်";if(t.status==="sending")return"ပို့နေ";if(t.status==="failed")return"ပေးသွင်းသူ စစ်ရန်";return t.status||"မသိရသေး";};
 const fmtT=ts=>{if(!ts)return "-";const d=ts.toDate?ts.toDate():new Date(ts);return Number.isNaN(d.getTime())?"-":d.toLocaleString("my-MM",{month:"short",day:"2-digit",hour:"2-digit",minute:"2-digit"});};
 
@@ -580,7 +625,7 @@ async function submitOrder(){
   btn.disabled=true;
   btn.textContent="Submitting...";
   const oid="BD"+Date.now().toString().slice(-6);
-  const order={id:oid,gameKey:activeProduct.key,gameName:activeProduct.name,userId:uid,zoneId:activeProduct.requiresZone?zid:"",contact,ign:currentIgn,accountId:currentAccount()?.id||"",pkg:{id:sPkg.id,name:sPkg.name,title:sPkg.title,diamonds:sPkg.diamonds||0,price:sPkg.price,priceThb:sPkg.priceThb||packagePriceThb(sPkg),img:sPkg.img,gameKey:activeProduct.key,gameName:activeProduct.name,unit:activeProduct.unit,uc:sPkg.uc||0,mxshopStockReleaseId:sPkg.mxshopStockReleaseId||"",baseDiamonds:sPkg.baseDiamonds||0,regularBonus:sPkg.regularBonus||0,firstBonus:sPkg.firstBonus||0,supplierPriceThb:sPkg.supplierPriceThb||0,exchangeRateThbToKs:THB_TO_KS},payment:PAY[sPay].name,payKey:sPay};
+  const order={id:oid,gameKey:activeProduct.key,gameName:activeProduct.name,userId:uid,zoneId:activeProduct.requiresZone?zid:"",contact,ign:currentIgn,accountId:currentAccount()?.id||"",pkg:{id:sPkg.id,name:sPkg.name,title:sPkg.title,diamonds:sPkg.diamonds||0,price:sPkg.price,priceThb:sPkg.priceThb||packagePriceThb(sPkg),img:sPkg.img,gameKey:activeProduct.key,gameName:activeProduct.name,unit:activeProduct.unit,uc:sPkg.uc||0,tokens:sPkg.tokens||"",supplier:sPkg.supplier||"mxshop",mxshopStockReleaseId:sPkg.mxshopStockReleaseId||"",moogoldProductId:sPkg.moogoldProductId||"",moogoldVariationId:sPkg.moogoldVariationId||"",baseDiamonds:sPkg.baseDiamonds||0,regularBonus:sPkg.regularBonus||0,firstBonus:sPkg.firstBonus||0,supplierPriceThb:sPkg.supplierPriceThb||0,exchangeRateThbToKs:THB_TO_KS},payment:PAY[sPay].name,payKey:sPay};
   try{
     const data=await apiPost("/api/create-order",{order,slipDataUrl,slipFileName});
     const finalId=data.orderId||oid;
@@ -623,7 +668,7 @@ async function cancelBalanceTopup(docId){if(!confirm("Cancel this balance top up
 async function resetAdminData(){if(!adminUnlocked)return showToast("အက်ဒမင်အတွက်သာ","warn");if(!allOrders.length)return showToast("ရှင်းရန် အော်ဒါမရှိပါ");if(!confirm(`လက်ရှိ အော်ဒါ ${allOrders.length} ခုကို သိမ်းဆည်းပြီး ရှင်းမည်လား။`))return;try{await adminApi("/api/admin-archive-orders");allOrders=[];renderKPI();renderTable();showToast("စာမျက်နှာကို ရှင်းပြီးပါပြီ");}catch(e){showToast("ရှင်းလင်းမှု မအောင်မြင်ပါ","warn");}}
 async function updStatus(docId,status){const o=allOrders.find(x=>x.docId===docId);if(status==="completed"&&!canCompleteOrder(o))return showToast("MXShop ဖြည့်ပေးမှုကို အရင်ပို့ပါ။","warn");if(status==="completed"&&o?.mxshopTopup?.status==="failed"&&!confirm("ပေးသွင်းသူ စစ်ရန်အခြေအနေ ဖြစ်နေပါသည်။ ပို့ပြီးကြောင်း သေချာမှ ဆက်လုပ်ပါ။"))return;try{let order=null;try{const data=await adminApi("/api/admin-update-order",{docId,status});order=data.order||null;}catch(apiError){order=await updateOrderInFirebase(docId,{status,timeline:[...(o?.timeline||[]),{status,time:Date.now()}]});}if(order){const idx=allOrders.findIndex(x=>x.docId===docId);if(idx>=0)allOrders[idx]=order;}const effectiveStatus=order?.status||status;const telegramStatus=effectiveStatus==="completed"?"delivered":(sLabel[effectiveStatus]||effectiveStatus);renderKPI();renderTable();showToast(sLabel[effectiveStatus]||"ပြင်ဆင်ပြီးပါပြီ");if(o)await tgNotify(`<b>[Order Updated]</b>\n${o.id} -> ${telegramStatus}\n${productForOrder(o).name} | ${pkgSummary(o.pkg)} | Player: ${playerLine(o)}\n${o.contact}`);}catch(e){console.error("Status update failed",e);showToast(`အခြေအနေပြင်ဆင်မှု မအောင်မြင်ပါ: ${e.message||""}`,"warn");}}
 async function sendMxTopup(docId){const order=allOrders.find(x=>x.docId===docId);if(!order)return;if(order.mxshopTopup?.status==="success"||order.mxshopTopup?.status==="submitted")return showToast("MXShop ဖြည့်ပေးမှု ပို့ပြီးသားဖြစ်ပါသည်။","warn");try{const sending={status:"sending",startedAt:new Date().toISOString()};await adminApi("/api/admin-update-order",{docId,mxshopTopup:sending});order.mxshopTopup=sending;renderTable();showToast("MXShop ဖြည့်ပေးမှု ပို့နေပါသည်...");const topup=await requestMxTopup(order);if(topup.status==="success")topup.completedAt=new Date().toISOString();const updated=await adminApi("/api/admin-update-order",{docId,mxshopTopup:topup});if(updated.order){const idx=allOrders.findIndex(x=>x.docId===docId);if(idx>=0)allOrders[idx]=updated.order;}renderTable();alert(topup.status==="success"?"MXShop ဖြည့်ပေးမှု အောင်မြင်ပါပြီ။":"MXShop က request ကို လက်ခံထားသည်။ Diamond မရောက်သေးပါက ပေးသွင်းသူ response ကို စစ်ဆေးပါ။");}catch(e){const failed={status:"failed",error:e.message,request:e.mxshopRequest||null,response:e.mxshopResponse||null,failedAt:new Date().toISOString()};await adminApi("/api/admin-update-order",{docId,mxshopTopup:failed}).catch(()=>{});showToast("ဖြည့်ပေးမှု မအောင်မြင်ပါ","warn");alert("MXShop ဖြည့်ပေးမှု မအောင်မြင်ပါ။ ပေးသွင်းသူကို စစ်ဆေးပါ။");}}
-async function requestMxTopup(order){const res=await fetch("/api/mxshop-topup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({adminPassword:adminPasswordCache,order})});const data=await res.json().catch(()=>({ok:false,error:"MXShop ဖြည့်ပေးမှုမှ မှန်ကန်သောအဖြေ မရရှိပါ။"}));if(!res.ok||!data.ok){const err=new Error(data.error||data.message||"MXShop ဖြည့်ပေးမှု မအောင်မြင်ပါ");err.mxshopRequest=data.request||null;err.mxshopResponse=data.mxshop||data||null;throw err;}const status=data.status||(data.skipped?"skipped":"submitted");return{status,skipped:Boolean(data.skipped),request:data.request||null,response:data.mxshop||null,submittedAt:status==="submitted"?new Date().toISOString():""};}
+async function requestMxTopup(order){const isMoo=Boolean(order?.pkg?.moogoldVariationId),provider=isMoo?"MooGold":"MXShop";const res=await fetch(isMoo?"/api/moogold-topup":"/api/mxshop-topup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({adminPassword:adminPasswordCache,order})});const data=await res.json().catch(()=>({ok:false,error:`${provider} returned an invalid response.`}));if(!res.ok||!data.ok){const err=new Error(data.error||data.message||`${provider} top-up failed`);err.mxshopRequest=data.request||null;err.mxshopResponse=data.moogold||data.mxshop||data||null;throw err;}const status=data.status||(data.skipped?"skipped":"submitted");return{status,skipped:Boolean(data.skipped),provider,request:data.request||null,response:data.moogold||data.mxshop||null,submittedAt:status==="submitted"?new Date().toISOString():""};}
 function viewOrder(docId){const o=allOrders.find(x=>x.docId===docId);if(!o)return;$("#vmTitle").innerHTML=`အော်ဒါ <span class="gold">${escapeText(o.id)}</span>`;$("#vmBody").innerHTML=`<div class="detail-grid"><div class="detail-item"><div class="detail-lbl">အခြေအနေ</div><div class="detail-val">${escapeText(sLabel[o.status]||o.status)}</div></div><div class="detail-item"><div class="detail-lbl">ဂိမ်း</div><div class="detail-val">${escapeText(productForOrder(o).name)}</div></div><div class="detail-item"><div class="detail-lbl">ပက်ကေ့ချ်</div><div class="detail-val">${escapeText(pkgSummary(o.pkg))}</div></div><div class="detail-item"><div class="detail-lbl">ပမာဏ</div><div class="detail-val gold">${fmt(o.pkg?.price)} Ks</div></div><div class="detail-item"><div class="detail-lbl">ကစားသူ</div><div class="detail-val">${escapeText(playerLine(o))}</div></div><div class="detail-item"><div class="detail-lbl">ဂိမ်းအမည်</div><div class="detail-val">${escapeText(o.ign||"အတည်မပြုရသေး")}</div></div><div class="detail-item"><div class="detail-lbl">ဆက်သွယ်ရန်</div><div class="detail-val">${escapeText(o.contact||"")}</div></div><div class="detail-item"><div class="detail-lbl">ဖြည့်ပေးမှု</div><div class="detail-val">${escapeText(mxTopupText(o))}</div></div></div>${o.slip?.url?`<img src="${escapeText(o.slip.url)}" alt="ငွေလွှဲစလစ်" style="width:100%;max-width:320px;border-radius:10px;border:1px solid rgba(91,227,255,.18)"/>`:""}`;$("#vmActs").innerHTML=`<button class="btn" type="button" data-close-view>ပိတ်မည်</button>`;$("#viewModal").classList.add("show");$("[data-close-view]").addEventListener("click",()=>$("#viewModal").classList.remove("show"));}
 
 function renderTrustTicker(){const items=publicTickerItems.slice(0,24);$("#ticker").innerHTML=items.length?[...items,...items].map(x=>`<span class="ticker-item"><span class="ticker-dot"></span>${escapeText(x)}</span>`).join(""):"";}
