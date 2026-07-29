@@ -77,3 +77,15 @@ X-BestDia-Secret: PAYMENT_WEBHOOK_SECRET
 - If KBZPay or Wave gives you official merchant API/webhook access, use this webhook endpoint.
 - If they only provide a static merchant QR and screenshots, do not auto-deliver. Keep manual admin approval.
 - If using a payment gateway that supports KBZPay/Wave, configure its webhook to include the BestDia order ID as the reference.
+
+## Honor of Kings via MooGold
+
+Honor of Kings packages use MooGold product `5177311`. Configure these server-side variables:
+
+```txt
+MOOGOLD_PARTNER_ID=...
+MOOGOLD_SECRET_KEY=...
+MOOGOLD_AUTO_TOPUP_ENABLED=true
+```
+
+`MOOGOLD_API_URL` is optional and defaults to MooGold's production create-order endpoint. Never expose the partner ID or secret key in browser code.
