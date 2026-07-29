@@ -36,6 +36,7 @@ export async function onRequest(context) {
     if (route === "create-balance-topup") return createBalanceTopup(request, env);
     if (route === "create-order") return createOrder(request, env);
     if (route === "mlbb-lookup") return mlbbLookup(request, env);
+    if (route === "moogold-topup") return moogoldTopup(request, env);
     if (route === "mxshop-diagnostic") return mxshopDiagnostic(request, env);
     if (route === "mxshop-packages") return mxshopPackages(request, env);
     if (route === "mxshop-topup") return mxshopTopup(request, env);
@@ -66,6 +67,7 @@ async function adminAuth(request, env) {
 
 const THB_TO_KS = 133.5;
 const BALANCE_THB_TO_KS = 133.5;
+const HOK_ENABLED = false;
 const PAYMENTS = {
   kbz: { key: "kbz", name: "KBZPay" },
   wave: { key: "wave", name: "Wave Money" },
@@ -90,6 +92,7 @@ const withPrice = (pkg, product) => ({
 const PRODUCTS = (() => {
   const mlbb = { key: "mlbb", name: "Mobile Legends", unit: "Diamonds", requiresZone: true };
   const pubg = { key: "pubg", name: "PUBG Mobile", unit: "UC", requiresZone: false };
+  const hok = { key: "hok", name: "Honor of Kings", unit: "Tokens", requiresZone: false };
   mlbb.packages = [
     { id: 1, title: "50+5 Diamonds", name: "Special Bonus", diamonds: 55, baseDiamonds: 50, regularBonus: 5, firstBonus: 50, supplierPriceThb: 26.13, mxshopStockReleaseId: "169991" },
     { id: 2, title: "150+15 Diamonds", name: "Special Bonus", diamonds: 165, baseDiamonds: 150, regularBonus: 15, firstBonus: 150, supplierPriceThb: 78.32, mxshopStockReleaseId: "169992" },
@@ -128,7 +131,22 @@ const PRODUCTS = (() => {
     { id: "pubg-prime-plus-1-month", title: "Prime Plus 1 Month", name: "Subscription", supplierPriceThb: 299.01, mxshopStockReleaseId: "190505" },
     { id: "pubg-prime-plus-3-month", title: "Prime Plus 3 Month", name: "Subscription", supplierPriceThb: 890.01 },
   ].map((pkg) => withPrice(pkg, pubg)));
-  return { mlbb, pubg };
+  hok.packages = [
+    ["16", 6.42, "5177683"], ["80", 29.38, "5177684"], ["240", 88.82, "5177685"],
+    ["400", 148.26, "5177686"], ["560", 207.69, "5177688"], ["800 + 30", 296.85, "5177689"],
+    ["1200 + 45", 445.45, "5177690"], ["2400 + 108", 891.23, "5177691"],
+    ["4000 + 180", 1485.61, "5177694"], ["8000 + 360", 2971.55, "5177696"],
+  ].map(([tokens, thb, variationId]) => withPrice({
+    id: `hok-${tokens.replace(/\s*\+\s*/g, "-")}`,
+    title: `${tokens} Tokens`,
+    name: "",
+    tokens,
+    supplierPriceThb: thb,
+    supplier: "moogold",
+    moogoldProductId: "5177311",
+    moogoldVariationId: variationId,
+  }, hok));
+  return { mlbb, pubg, ...(HOK_ENABLED ? { hok } : {}) };
 })();
 
 async function catalog(request, env) {
@@ -342,11 +360,14 @@ async function createOrder(request, env) {
   let autoTopup = null;
   let finalOrder = cleanOrder;
   if (trustedPay.key === "balance") {
-    autoTopup = await tryAutoFulfillMxshopOrder(env, cleanOrder);
+    autoTopup = trustedPkg.supplier === "moogold"
+      ? await tryAutoFulfillMoogoldOrder(env, cleanOrder)
+      : await tryAutoFulfillMxshopOrder(env, cleanOrder);
     const topupNow = new Date().toISOString();
     const timeline = Array.isArray(cleanOrder.timeline) ? [...cleanOrder.timeline] : [];
     const orderUpdates = {
-      mxshopTopup: autoTopup,
+      supplierTopup: autoTopup,
+      ...(trustedPkg.supplier === "moogold" ? { moogoldTopup: autoTopup } : { mxshopTopup: autoTopup }),
       updatedAt: topupNow,
       timeline,
     };
@@ -1078,6 +1099,86 @@ async function mxshopTopup(request, env) {
       request: error.request || null,
     });
   }
+}
+
+async function moogoldTopup(request, env) {
+  if (request.method !== "POST") return jsonResponse(405, { ok: false, error: "Method not allowed" });
+  const payload = await readJson(request);
+  if (!env.ADMIN_PASSWORD) return jsonResponse(500, { ok: false, error: "ADMIN_PASSWORD is not configured" });
+  if (String(payload.adminPassword || "") !== env.ADMIN_PASSWORD) return jsonResponse(401, { ok: false, error: "Wrong admin password" });
+  try {
+    const topup = await performMoogoldTopup(env, payload.order || {});
+    return jsonResponse(200, { ok: true, status: topup.status, moogold: topup.response, request: topup.request });
+  } catch (error) {
+    return jsonResponse(error.status || 502, { ok: false, error: error.message || "MooGold purchase failed", moogold: error.moogold || null, request: error.request || null });
+  }
+}
+
+async function tryAutoFulfillMoogoldOrder(env, order) {
+  try {
+    const topup = await performMoogoldTopup(env, order);
+    const now = new Date().toISOString();
+    return { status: topup.status, skipped: false, transactionId: topup.transactionId, request: topup.request, response: topup.response, completedAt: topup.status === "success" ? now : "", submittedAt: topup.status === "submitted" ? now : "" };
+  } catch (error) {
+    return { status: "failed", error: error.message || "MooGold purchase failed", request: error.request || null, response: error.moogold || null, failedAt: new Date().toISOString() };
+  }
+}
+
+async function performMoogoldTopup(env, order) {
+  if (env.MOOGOLD_AUTO_TOPUP_ENABLED !== "true") return { status: "skipped", skipped: true, reason: "MOOGOLD_AUTO_TOPUP_ENABLED is not true", response: null, request: null, transactionId: "" };
+  if (!env.MOOGOLD_PARTNER_ID || !env.MOOGOLD_SECRET_KEY) {
+    const error = new Error("MooGold credentials are not configured. Set MOOGOLD_PARTNER_ID and MOOGOLD_SECRET_KEY.");
+    error.status = 500;
+    throw error;
+  }
+  const productId = String(order.pkg?.moogoldProductId || "").trim();
+  const variationId = String(order.pkg?.moogoldVariationId || "").trim();
+  const userId = String(order.userId || "").trim();
+  if (!productId || !variationId || !userId) {
+    const error = new Error("Missing MooGold product mapping or Honor of Kings Player ID");
+    error.status = 400;
+    throw error;
+  }
+  const path = "order/create_order";
+  const requestBody = {
+    path,
+    data: { category: "1", "product-id": variationId, quantity: "1", "User ID": userId },
+    partnerOrderId: String(order.id || "").trim(),
+  };
+  const payload = JSON.stringify(requestBody);
+  const timestamp = Math.floor(Date.now() / 1000).toString();
+  const auth = await hmacSha256Hex(payload + timestamp + path, env.MOOGOLD_SECRET_KEY);
+  const basic = encodeBasicAuth(`${env.MOOGOLD_PARTNER_ID}:${env.MOOGOLD_SECRET_KEY}`);
+  const response = await fetch(env.MOOGOLD_API_URL || "https://moogold.com/wp-json/v1/api/order/create_order", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Basic ${basic}`, auth, timestamp },
+    body: payload,
+  });
+  const text = await response.text();
+  const data = safeJson(text) ?? String(text || "").trim();
+  const accepted = response.ok && (data?.status === true || String(data?.status || "").toLowerCase() === "true" || Boolean(data?.order_id || data?.account_details?.order_id));
+  if (!accepted) {
+    const error = new Error(data?.message || data?.error || response.statusText || "MooGold purchase failed");
+    error.status = 502;
+    error.moogold = data;
+    error.request = requestBody;
+    throw error;
+  }
+  return { status: "submitted", skipped: false, transactionId: String(data?.order_id || data?.account_details?.order_id || ""), response: data, request: requestBody };
+}
+
+async function hmacSha256Hex(value, secret) {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey("raw", encoder.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(value));
+  return Array.from(new Uint8Array(signature), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+function encodeBasicAuth(value) {
+  const bytes = new TextEncoder().encode(value);
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary);
 }
 
 async function tryAutoFulfillMxshopOrder(env, order) {
