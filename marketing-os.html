@@ -197,6 +197,10 @@ const API_BASE=location.protocol==="file:"?"https://bestdia.pages.dev":"";
 const $=sel=>document.querySelector(sel);
 const escapeText=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
 const fmt=n=>Number(n||0).toLocaleString();
+const asArray=value=>Array.isArray(value)?value:[];
+const fmtMoney=value=>Number(value||0).toLocaleString(undefined,{maximumFractionDigits:0});
+const shortId=value=>String(value||"").slice(0,8);
+function formatDateTime(value){if(!value)return "-";const date=new Date(value);if(Number.isNaN(date.getTime()))return String(value);return date.toLocaleString(undefined,{year:"numeric",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});}
 
 function setStatus(message,type=""){const el=$("#statusLine");el.textContent=message;el.className=`status ${type}`;}
 function setCalendarStatus(message,type=""){const el=$("#calendarStatusLine");el.textContent=message;el.className=`status ${type}`;}
