@@ -67,7 +67,7 @@ async function adminAuth(request, env) {
 
 const THB_TO_KS = 133.5;
 const BALANCE_THB_TO_KS = 133.5;
-const HOK_ENABLED = false;
+const HOK_ENABLED = true;
 const PAYMENTS = {
   kbz: { key: "kbz", name: "KBZPay" },
   wave: { key: "wave", name: "Wave Money" },
@@ -132,19 +132,17 @@ const PRODUCTS = (() => {
     { id: "pubg-prime-plus-3-month", title: "Prime Plus 3 Month", name: "Subscription", supplierPriceThb: 890.01 },
   ].map((pkg) => withPrice(pkg, pubg)));
   hok.packages = [
-    ["16", 6.42, "5177683"], ["80", 29.38, "5177684"], ["240", 88.82, "5177685"],
-    ["400", 148.26, "5177686"], ["560", 207.69, "5177688"], ["800 + 30", 296.85, "5177689"],
-    ["1200 + 45", 445.45, "5177690"], ["2400 + 108", 891.23, "5177691"],
-    ["4000 + 180", 1485.61, "5177694"], ["8000 + 360", 2971.55, "5177696"],
-  ].map(([tokens, thb, variationId]) => withPrice({
+    ["16", 6.42, "5177683"], ["80", 29.36, "5177684"], ["240", 83.10, "5177685"],
+    ["400", 143.86, "5177686"], ["560", 197.24, "5177688"], ["800 + 30", 272.80, "5177689"],
+    ["1200 + 45", 409.65, "5177690"], ["2400 + 108", 816.26, "5177691"],
+    ["4000 + 180", 1451.23, "5177694"], ["8000 + 360", 2700.61, "5177696"],
+  ].map(([tokens, thb]) => withPrice({
     id: `hok-${tokens.replace(/\s*\+\s*/g, "-")}`,
     title: `${tokens} Tokens`,
     name: "",
     tokens,
     supplierPriceThb: thb,
-    supplier: "moogold",
-    moogoldProductId: "5177311",
-    moogoldVariationId: variationId,
+    supplier: "manual",
   }, hok));
   return { mlbb, pubg, ...(HOK_ENABLED ? { hok } : {}) };
 })();
@@ -313,6 +311,7 @@ async function createOrder(request, env) {
   if (trustedProduct.requiresZone && !String(order.zoneId || "").trim()) return jsonResponse(400, { ok: false, error: "Missing Zone ID" });
   const trustedPay = PAYMENTS[String(order.payKey || "").trim()];
   if (!trustedPay || String(order.payment || "").trim() !== trustedPay.name) return jsonResponse(400, { ok: false, error: "Invalid payment method" });
+  if (trustedProduct.key === "hok" && trustedPay.key === "balance") return jsonResponse(400, { ok: false, error: "BestDia Balance is unavailable for manually fulfilled Honor of Kings orders" });
 
   const now = new Date().toISOString();
   const initialStatus = trustedPay.key === "balance" ? "processing" : "pending";
