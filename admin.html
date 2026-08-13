@@ -67,14 +67,23 @@ h1 span:first-child{margin-top:0;font-size:1.08em;font-weight:800}
 .section{max-width:980px;margin:0 auto;padding:0 14px 44px;scroll-margin-top:76px}
 .section-title{display:flex;align-items:center;gap:10px;margin-bottom:15px;color:var(--muted);font-family:"Chakra Petch",sans-serif;font-size:.9rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
 .section-title::after{content:"";height:1px;flex:1;background:linear-gradient(90deg,rgba(91,227,255,.2),transparent)}
-.game-switch{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin-bottom:20px}
+.game-switch{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:22px}
 .best-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px;align-items:stretch;margin-bottom:20px}
 .game-card,.best-card,.pkg-card,.order-box,.status-card,.admin-card,.feature{background:linear-gradient(180deg,rgba(31,40,64,.98),rgba(14,18,32,.98));border:1px solid rgba(91,227,255,.12);border-radius:12px}
-.game-card{display:flex;align-items:center;gap:13px;min-height:90px;padding:14px;text-align:left;color:var(--text)}
-.game-card.active{border-color:var(--gold);box-shadow:0 0 0 1px rgba(245,197,66,.34)}
-.game-card img{width:58px;height:58px;border-radius:14px;object-fit:cover}
-.game-card b{display:block;font-family:"Chakra Petch",sans-serif}
-.game-card span{display:block;color:var(--muted);font-size:.72rem;margin-top:3px}
+.game-card{--game-accent:var(--diamond);position:relative;isolation:isolate;overflow:hidden;display:flex;align-items:center;gap:14px;min-height:104px;padding:16px;text-align:left;color:var(--text);border-color:rgba(255,255,255,.1);background:linear-gradient(135deg,rgba(31,40,64,.98),rgba(10,14,27,.98));box-shadow:0 10px 28px rgba(0,0,0,.18);transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease}
+.game-card[data-game="mlbb"]{--game-accent:#6EDBFF}.game-card[data-game="pubg"]{--game-accent:#F4B84A}.game-card[data-game="hok"]{--game-accent:#FF625F}
+.game-card::before{content:"";position:absolute;z-index:-1;width:130px;height:130px;left:-34px;top:-50px;border-radius:50%;background:var(--game-accent);filter:blur(52px);opacity:.16;transition:opacity .22s ease,transform .22s ease}
+.game-card::after{content:"✓";position:absolute;right:12px;top:12px;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--game-accent);color:#07101A;font:900 .72rem/1 "Chakra Petch",sans-serif;box-shadow:0 0 18px color-mix(in srgb,var(--game-accent) 55%,transparent);opacity:0;transform:scale(.65);transition:.22s ease}
+.game-card:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--game-accent) 58%,transparent);box-shadow:0 15px 34px rgba(0,0,0,.26)}
+.game-card:hover::before,.game-card.active::before{opacity:.28;transform:scale(1.12)}
+.game-card.active{border-color:var(--game-accent);box-shadow:0 0 0 1px color-mix(in srgb,var(--game-accent) 38%,transparent),0 16px 36px rgba(0,0,0,.28)}
+.game-card.active::after{opacity:1;transform:scale(1)}
+.game-card:focus-visible{outline:2px solid var(--game-accent);outline-offset:3px}
+.game-card img{width:66px;height:66px;flex:0 0 66px;border-radius:17px;object-fit:cover;box-shadow:0 8px 22px rgba(0,0,0,.36),0 0 0 1px rgba(255,255,255,.14);transition:transform .22s ease}
+.game-card:hover img,.game-card.active img{transform:scale(1.04)}
+.game-card span{display:block;min-width:0}
+.game-card b{display:block;font-family:"Chakra Petch",sans-serif;font-size:clamp(.88rem,1.6vw,1.05rem);font-weight:800;line-height:1.22;letter-spacing:.01em;color:#F7FAFF}
+@media(max-width:620px){.game-switch{display:flex;overflow-x:auto;gap:9px;margin-left:-14px;margin-right:-14px;padding:2px 14px 14px;scroll-snap-type:x mandatory;scrollbar-width:none}.game-switch::-webkit-scrollbar{display:none}.game-card{flex:0 0:min(74vw,250px);min-height:88px;padding:12px;scroll-snap-align:start}.game-card img{width:58px;height:58px;flex-basis:58px;border-radius:15px}.game-card b{font-size:.9rem}}
 .topup-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
 .topup-title{display:flex;align-items:center;gap:12px}
 .topup-title img{width:58px;height:58px;border-radius:14px;object-fit:cover}
@@ -340,7 +349,7 @@ const PUBG_UC_ART_INDEX={
   "1045":3,"1320":3,"1800":3,"1920":3,
   "2125":4,"2460":4,"3850":4,"8100":4,"16200":4,"24300":4,"72900":4
 };
-const HOK_IMG="https://cdn.moogold.com/2023/09/honor-of-kings.jpg";
+const HOK_IMG=assetUrl("assets/hok/game-icon.png");
 const HOK_TOKEN_ART=[
   assetUrl("assets/hok/tokens-16.png"),
   assetUrl("assets/hok/tokens-80-240.png"),
@@ -350,7 +359,7 @@ const HOK_TOKEN_ART=[
   assetUrl("assets/hok/tokens-8360.png")
 ];
 const HOK_TOKEN_ART_INDEX=[0,1,1,2,2,2,3,3,4,5];
-const HOK_ENABLED=false;
+const HOK_ENABLED=true;
 const MLBB_DIAMOND_ART=[
   assetUrl("assets/mlbb/diamonds-tier-1.png"),
   assetUrl("assets/mlbb/diamonds-tier-2.png"),
@@ -404,9 +413,9 @@ const PUBG_PKGS=[
   {id:"pubg-prime-plus-3-month",title:"Prime Plus 3 Month",name:"Subscription",supplierPriceThb:890.01,img:pubgAsset("official-prime-plus-3-month"),fallbackImg:pubgAsset("prime-plus-3-month"),wideArt:true}
 ]);
 const HOK_PKGS=[
-  ["16",6.42,"5177683"],["80",29.38,"5177684"],["240",88.82,"5177685"],["400",148.26,"5177686"],["560",207.69,"5177688"],
-  ["800 + 30",296.85,"5177689"],["1200 + 45",445.45,"5177690"],["2400 + 108",891.23,"5177691"],["4000 + 180",1485.61,"5177694"],["8000 + 360",2971.55,"5177696"]
-].map(([tokens,thb,variationId],i)=>({id:`hok-${tokens.replace(/\s*\+\s*/g,"-")}`,title:`${tokens} Tokens`,name:"",tokens,supplierPriceThb:thb,img:HOK_TOKEN_ART[HOK_TOKEN_ART_INDEX[i]],fallbackImg:HOK_IMG,popular:[1,5,7].includes(i),supplier:"moogold",moogoldProductId:"5177311",moogoldVariationId:variationId}));
+  ["16",6.42,"5177683"],["80",29.36,"5177684"],["240",83.10,"5177685"],["400",143.86,"5177686"],["560",197.24,"5177688"],
+  ["800 + 30",272.80,"5177689"],["1200 + 45",409.65,"5177690"],["2400 + 108",816.26,"5177691"],["4000 + 180",1451.23,"5177694"],["8000 + 360",2700.61,"5177696"]
+].map(([tokens,thb],i)=>({id:`hok-${tokens.replace(/\s*\+\s*/g,"-")}`,title:`${tokens} Tokens`,name:"",tokens,supplierPriceThb:thb,img:HOK_TOKEN_ART[HOK_TOKEN_ART_INDEX[i]],fallbackImg:HOK_IMG,popular:[1,5,7].includes(i),supplier:"manual"}));
 const PRODUCTS={
   mlbb:{key:"mlbb",name:"Mobile Legends",shortName:"MLBB",unit:"Diamonds",tagline:"စိန်များ၊ လက်မှတ်များနှင့် ပက်ကေ့ချ်များ",userLabel:"MLBB အသုံးပြုသူ ID",userPlaceholder:"ဥပမာ - 123456789",zoneLabel:"ဇုန် ID",zonePlaceholder:"ဥပမာ - 12345",requiresZone:true,lookup:true,heroIds:[11,7,10,5],bestIds:[11,12,13,7,5,10],img:PKG_IMG.mlbbLogo,packages:MLBB_PKGS},
   pubg:{key:"pubg",name:"PUBG Mobile",shortName:"PUBG",unit:"UC",tagline:"UC နှင့် စာရင်းသွင်းပက်ကေ့ချ်များ",userLabel:"PUBG ကစားသူ ID",userPlaceholder:"ဥပမာ - 5123456789",requiresZone:false,lookup:false,heroIds:["pubg-60","pubg-660","pubg-1800","pubg-prime-plus-1-month"],bestIds:["pubg-60","pubg-325","pubg-660","pubg-1800","pubg-8100","pubg-prime-plus-1-month"],img:PKG_IMG.pubgLogo,packages:PUBG_PKGS},
@@ -483,7 +492,7 @@ $$("[data-page]").forEach(el=>el.addEventListener("click",()=>showPage(el.datase
 $$("[data-close]").forEach(el=>el.addEventListener("click",()=>$("#"+el.dataset.close).classList.remove("show")));
 if(document.body.dataset.adminPage==="true")showPage("admin");
 
-function renderGameSwitch(){ $("#gameSwitch").innerHTML=Object.values(PRODUCTS).map(p=>`<button class="game-card ${p.key===activeGameKey?"active":""}" type="button" data-game="${p.key}"><img src="${escapeText(p.img)}" alt="${escapeText(p.name)}"/><span><b>${escapeText(p.name)}</b><span>${escapeText(p.tagline)}</span></span></button>`).join("");$$("[data-game]").forEach(btn=>btn.addEventListener("click",()=>openGame(btn.dataset.game)));}
+function renderGameSwitch(){ $("#gameSwitch").innerHTML=Object.values(PRODUCTS).map(p=>`<button class="game-card ${p.key===activeGameKey?"active":""}" type="button" data-game="${p.key}" aria-pressed="${p.key===activeGameKey}"><img src="${escapeText(p.img)}" alt=""/><span><b>${escapeText(p.name)}</b></span></button>`).join("");$$("[data-game]").forEach(btn=>btn.addEventListener("click",()=>openGame(btn.dataset.game)));}
 function packageFallbackImg(p){
   if(p?.fallbackImg)return p.fallbackImg;
   if(activeProduct.key!=="pubg")return activeProduct.img;
