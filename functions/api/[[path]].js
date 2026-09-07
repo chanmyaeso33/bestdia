@@ -861,16 +861,18 @@ async function adminUpdateBalanceTopup(request, env) {
   if (!docId || /[/?#]/.test(docId)) return jsonResponse(400, { ok: false, error: "Invalid top up document ID" });
   if (!["pending", "verifying", "rejected", "expired"].includes(status)) return jsonResponse(400, { ok: false, error: "Invalid payment status" });
   const firestore = await firestoreClient(env);
-  const current = await getCollectionDoc(firestore, "balance_topups", docId);
-  if (!current) return jsonResponse(404, { ok: false, error: "Top up not found" });
+  const located = await findBalanceTopup(firestore, docId);
+  if (!located) return jsonResponse(404, { ok: false, error: "Top up not found" });
+  const docIdResolved = located.docId;
+  const current = located.data;
   if (current.balanceCreditStatus === "credited" || current.verificationStatus === "verified") return jsonResponse(400, { ok: false, error: "Credited payment cannot be changed here" });
   const timeline = Array.isArray(current.timeline) ? [...current.timeline] : [];
   timeline.push({ status, time: Date.now() });
   const reason = status === "rejected" ? String(payload.reason || "Payment could not be verified").trim().slice(0, 500) : "";
   const reviewRequired = payload.reviewRequired === true;
-  const updated = await updateCollectionDoc(firestore, "balance_topups", docId, { status, verificationStatus: status, reviewRequired, rejectionReason: reason, timeline, updatedAt: new Date().toISOString() });
+  const updated = await updateCollectionDoc(firestore, "balance_topups", docIdResolved, { status, verificationStatus: status, reviewRequired, rejectionReason: reason, timeline, updatedAt: new Date().toISOString() });
   await writeAuditLog(firestore, "admin", `payment_${status}`, current.id || docId, current, updated, reason);
-  return jsonResponse(200, { ok: true, topup: { docId, ...updated } });
+  return jsonResponse(200, { ok: true, topup: { docId: docIdResolved, ...updated } });
 }
 
 async function adminConfirmBalanceTopup(request, env) {
@@ -934,18 +936,19 @@ async function adminReverseBalanceTopup(request, env) {
   const payload = await readJson(request); const auth = requireAdmin(payload, env); if (auth) return auth;
   const docId = String(payload.docId || "").trim(); const reason = String(payload.reason || "").trim().slice(0, 500);
   if (!docId || /[/?#]/.test(docId) || !reason) return jsonResponse(400, { ok: false, error: "A payment ID and reversal reason are required" });
-  const firestore = await firestoreClient(env); const payment = await getCollectionDoc(firestore, "balance_topups", docId);
-  if (!payment) return jsonResponse(404, { ok: false, error: "Payment not found" });
+  const firestore = await firestoreClient(env); const located = await findBalanceTopup(firestore, docId);
+  if (!located) return jsonResponse(404, { ok: false, error: "Payment not found" });
+  const paymentDocId = located.docId; const payment = located.data;
   if (payment.balanceCreditStatus === "reversed" || payment.reversedAt) return jsonResponse(409, { ok: false, error: "Payment has already been reversed" });
-  if (payment.balanceCreditStatus !== "credited") return jsonResponse(400, { ok: false, error: "Payment has not been credited" });
+  if (payment.balanceCreditStatus !== "credited" && payment.status !== "confirmed") return jsonResponse(400, { ok: false, error: "Payment has not been credited" });
   const accountId = normalizeAccountId(payment.accountId); const amount = Math.round(Number(payment.balanceCreditAmount || payment.amount || 0));
   const account = await getAccountBalanceDoc(firestore, accountId);
   if (!account || amount <= 0 || Number(account.balance || 0) < amount) return jsonResponse(400, { ok: false, error: "Insufficient current balance for reversal; investigate manually" });
   const at = new Date().toISOString(); const balanceAfter = Number(account.balance || 0) - amount;
   const nextPayment = { ...payment, status: "reversed", verificationStatus: "reversed", balanceCreditStatus: "reversed", reversedAt: at, reversalReason: reason, updatedAt: at };
-  await commitBalanceTopupVerification(firestore, docId, nextPayment, accountId, { accountId, balance: balanceAfter, balanceStatus: account.balanceStatus || "active", history: [{ type: "reversal", title: `Reversed ${payment.id}`, amount: -amount, topupId: payment.id, at }, ...(account.history || [])].slice(0, 40), updatedAt: at }, { transactionId: `reversal_${docId}`, userId: accountId, type: "reversal", amount: -amount, currency: "BD", balanceBefore: Number(account.balance || 0), balanceAfter, referenceType: "payment", referenceId: payment.id || docId, description: reason, createdBy: "admin", createdAt: at, reversesTransactionId: `topup_${docId}` });
+  await commitBalanceTopupVerification(firestore, paymentDocId, nextPayment, accountId, { accountId, balance: balanceAfter, balanceStatus: account.balanceStatus || "active", history: [{ type: "reversal", title: `Reversed ${payment.id}`, amount: -amount, topupId: payment.id, at }, ...(account.history || [])].slice(0, 40), updatedAt: at }, { transactionId: `reversal_${paymentDocId}`, userId: accountId, type: "reversal", amount: -amount, currency: "BD", balanceBefore: Number(account.balance || 0), balanceAfter, referenceType: "payment", referenceId: payment.id || docId, description: reason, createdBy: "admin", createdAt: at, reversesTransactionId: `topup_${paymentDocId}` });
   await writeAuditLog(firestore, "admin", "balance_reversed", payment.id || docId, payment, nextPayment, reason);
-  return jsonResponse(200, { ok: true, balance: balanceAfter, topup: { docId, ...nextPayment } });
+  return jsonResponse(200, { ok: true, balance: balanceAfter, topup: { docId: paymentDocId, ...nextPayment } });
 }
 
 async function adminArchiveOrders(request, env) {
@@ -3717,6 +3720,15 @@ async function listCollectionDocs(firestore, collectionId, limit = 250) {
   const data = await response.json();
   if (!response.ok) throw new Error(data.error?.message || `Could not list ${collectionId}`);
   return (Array.isArray(data) ? data : []).filter((item) => item.document).map((item) => decodeDocument(item.document));
+}
+
+// Admin screens display the human payment ID (BT...), while Firestore actions use
+// document IDs. Accept either, so a manual admin action cannot target the wrong row.
+async function findBalanceTopup(firestore, idOrDocId) {
+  const direct = await getCollectionDoc(firestore, "balance_topups", idOrDocId);
+  if (direct) return { docId: idOrDocId, data: direct };
+  const items = await listCollectionDocs(firestore, "balance_topups");
+  return items.find((item) => String(item.data.id || "") === String(idOrDocId)) || null;
 }
 
 async function getCollectionDoc(firestore, collectionId, docId) {
