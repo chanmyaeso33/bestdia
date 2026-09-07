@@ -371,6 +371,11 @@ footer{position:relative;z-index:1;text-align:center;color:var(--muted);font-siz
         <div class="section-title">BestDia Balance Top Ups</div>
         <div class="table-wrap"><table><thead><tr><th>Request</th><th>Account</th><th>Amount</th><th>Payment</th><th>Status</th><th>Action</th></tr></thead><tbody id="topupTbody"></tbody></table></div>
       </div>
+      <div class="admin-card">
+        <div class="section-title">Balance access control</div>
+        <p class="hero-sub" style="margin:0 0 12px;font-size:.78rem">Freezing preserves the customer's Balance but blocks Balance-funded orders until you unfreeze it.</p>
+        <div class="admin-login"><input class="form-input" id="balanceControlAccountId" inputmode="numeric" maxlength="10" placeholder="Customer BestDia account ID"/><button class="btn" type="button" id="freezeBalanceBtn">Freeze Balance</button><button class="btn primary" type="button" id="unfreezeBalanceBtn">Unfreeze Balance</button></div>
+      </div>
     </div>
   </section>
 </main>
@@ -696,6 +701,8 @@ $("#topupAmount").addEventListener("input",renderTopupPayInfo);
 $("#topupSlip").addEventListener("change",async()=>{const file=$("#topupSlip").files?.[0];topupSlipDataUrl="";topupSlipFileName="";$("#topupSlipPreview").classList.remove("show");if(!file)return;if(!file.type.startsWith("image/")){showToast("Please upload an image slip.","warn");$("#topupSlip").value="";return;}if(file.size>6*1024*1024){showToast("Slip image must be under 6MB.","warn");$("#topupSlip").value="";return;}topupSlipFileName=file.name;topupSlipDataUrl=await compressSlip(file);$("#topupSlipPreview img").src=topupSlipDataUrl;$("#topupSlipName").textContent=file.name;$("#topupSlipPreview").classList.add("show");});
 $("#topupBtn").addEventListener("click",async()=>{if(!ensureAccount())return;const acc=currentAccount(),amount=Math.round(Number($("#topupAmount").value||0));if(amount<1)return showToast("Top up amount must be at least 1 BD.","warn");if(!topupPay)return showToast("Choose a payment method.","warn");if(!topupSlipDataUrl)return showToast("Upload payment slip.","warn");const btn=$("#topupBtn");btn.disabled=true;btn.textContent="Submitting...";try{const data=await apiPost("/api/create-balance-topup",{accountId:acc.id,accountName:acc.name,amount,payKey:topupPay,payment:PAY[topupPay].name,slipDataUrl:topupSlipDataUrl,slipFileName:topupSlipFileName});addAccountHistory("topup-pending",`Pending balance top up ${data.topupId||""}`,amount,{topupId:data.topupId});$("#topupAmount").value="";$("#topupSlip").value="";$("#topupSlipPreview").classList.remove("show");topupSlipDataUrl="";topupSlipFileName="";showPage("account");showToast("Top up submitted. Please wait for admin confirmation.");}catch(e){showToast(`Top up submit failed: ${e.message||"try again"}`,"warn");}finally{btn.disabled=false;btn.textContent="Submit balance top up";}});
 
+async function setBalanceAccess(balanceStatus){if(!adminUnlocked)return;const accountId=$("#balanceControlAccountId").value.replace(/\D/g,"");if(!/^\d{10}$/.test(accountId))return showToast("Enter the customer's 10-digit BestDia account ID.","warn");const label=balanceStatus==="frozen"?"freeze":"unfreeze";if(!confirm(`Are you sure you want to ${label} this customer's BestDia Balance?`))return;const reason=prompt(`Reason for ${label} (stored in the audit log):`)||"";try{await adminApi("/api/admin-set-balance-status",{accountId,balanceStatus,reason});showToast(balanceStatus==="frozen"?"Balance frozen. The customer cannot spend it.":"Balance unfrozen. The customer can spend it again.");}catch(e){showToast(`Balance update failed: ${e.message||""}`,"warn");}}
+$("#freezeBalanceBtn")?.addEventListener("click",()=>setBalanceAccess("frozen"));$("#unfreezeBalanceBtn")?.addEventListener("click",()=>setBalanceAccess("active"));
 loadAccountState();
 loadOrderDefaults();
 renderAccount();
