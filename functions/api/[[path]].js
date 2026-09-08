@@ -76,6 +76,14 @@ const PAYMENTS = {
   truemoney: { key: "truemoney", name: "TrueMoney" },
   balance: { key: "balance", name: "BestDia Balance" },
 };
+const UNSUPPORTED_MLBB_REGIONS = new Map([
+  ["jp", "Japan"], ["japan", "Japan"],
+  ["ph", "Philippines"], ["philippines", "Philippines"], ["philippine", "Philippines"],
+  ["id", "Indonesia"], ["idn", "Indonesia"], ["indonesia", "Indonesia"],
+  ["my", "Malaysia"], ["mys", "Malaysia"], ["malaysia", "Malaysia"],
+  ["ru", "Russia"], ["rus", "Russia"], ["russia", "Russia"], ["russian federation", "Russia"],
+  ["sg", "Singapore"], ["sgp", "Singapore"], ["singapore", "Singapore"],
+]);
 const priceMarginByThb = (thb) => thb < 500 ? 0.05 : 0.08;
 const roundKsToLast2 = (ks) => Math.round(ks / 100) * 100;
 // Preserve the live bestseller prices captured on 2026-09-08, even after supplier refreshes.
@@ -344,9 +352,16 @@ async function createOrder(request, env) {
   const now = new Date().toISOString();
   const initialStatus = trustedPay.key === "balance" ? "processing" : "pending";
   const submittedIgn = String(order.ign || "").trim().slice(0, 120);
-  const verifiedIgn = trustedProduct.key === "mlbb"
-    ? await resolveMlbbNickname(env, userId, String(order.zoneId || "").trim())
-    : "";
+  const mlbbAccount = trustedProduct.key === "mlbb"
+    ? await resolveMlbbNickname(env, userId, String(order.zoneId || "").trim(), true)
+    : null;
+  if (trustedProduct.key === "mlbb" && (!mlbbAccount?.nickname || !mlbbAccount?.region)) {
+    return jsonResponse(503, { ok: false, error: "MLBB nickname and region could not be verified. Please try again before ordering." });
+  }
+  if (mlbbAccount?.unsupported) {
+    return jsonResponse(422, { ok: false, error: `Invalid order: ${mlbbAccount.region} server accounts are not supported by the Global supplier.`, region: mlbbAccount.region });
+  }
+  const verifiedIgn = mlbbAccount?.nickname || "";
   const cleanOrder = {
     id: orderId,
     gameKey: trustedProduct.key,
@@ -355,6 +370,7 @@ async function createOrder(request, env) {
     zoneId: trustedProduct.requiresZone ? String(order.zoneId || "").trim().slice(0, 80) : "",
     contact,
     ign: verifiedIgn || submittedIgn,
+    region: mlbbAccount?.region || "",
     accountId: String(order.accountId || "").trim().slice(0, 160),
     pkg: trustedPkg,
     payment: trustedPay.name,
@@ -440,7 +456,7 @@ async function createOrder(request, env) {
 
   let notification = { ok: false, skipped: true };
   try {
-    await notifyTelegram(env, `<b>[New Order]</b>\nOrder ID: <code>${escapeHtml(orderId)}</code>\nGame: ${escapeHtml(cleanOrder.gameName)}\nPackage: ${escapeHtml(packageText(trustedPkg))}\nAmount: ${escapeHtml(formatAmount(trustedPkg.price))} Ks\nPlayer: ${escapeHtml(cleanOrder.zoneId ? `${userId} (Zone ${cleanOrder.zoneId})` : userId)}\nIn-game name: ${escapeHtml(cleanOrder.ign || "Not verified")}\nContact: ${escapeHtml(contact)}\nPayment: ${escapeHtml(cleanOrder.payment)}`);
+    await notifyTelegram(env, `<b>[New Order]</b>\nOrder ID: <code>${escapeHtml(orderId)}</code>\nGame: ${escapeHtml(cleanOrder.gameName)}\nPackage: ${escapeHtml(packageText(trustedPkg))}\nAmount: ${escapeHtml(formatAmount(trustedPkg.price))} Ks\nPlayer: ${escapeHtml(cleanOrder.zoneId ? `${userId} (Zone ${cleanOrder.zoneId})` : userId)}\nIn-game name: ${escapeHtml(cleanOrder.ign || "Not verified")}\nRegion: ${escapeHtml(cleanOrder.region || "Not applicable")}\nContact: ${escapeHtml(contact)}\nPayment: ${escapeHtml(cleanOrder.payment)}`);
     notification = { ok: true };
     const slipDataUrl = String(payload.slipDataUrl || "");
     if (slipDataUrl.startsWith("data:image/") && env.TELEGRAM_BOT_TOKEN && env.TELEGRAM_CHAT_ID) {
@@ -977,13 +993,14 @@ async function mlbbLookup(request, env) {
   if (!userId || !zoneId) return jsonResponse(400, { error: "Missing User ID or Zone ID" });
 
   const result = await resolveMlbbNickname(env, userId, zoneId, true);
-  if (result.nickname) return jsonResponse(200, { ok: true, nickname: result.nickname, source: result.source });
+  if (result.nickname && result.region) return jsonResponse(200, { ok: true, nickname: result.nickname, region: result.region, unsupported: result.unsupported, validOrder: !result.unsupported, source: result.source });
   return jsonResponse(502, { ok: false, error: result.error || "Nickname lookup is unavailable. Please verify the ID manually." });
 }
 
 async function resolveMlbbNickname(env, userId, zoneId, includeDetails = false) {
   const mxshopLookupToken = env.MXSHOP_LOOKUP_TOKEN || env.MXSHOP_BEARER_TOKEN || "";
   const candidates = [
+    { source: "gopay", url: "https://gopay.co.id/games/v1/order/user-account", method: "POST_GOPAY" },
     mxshopLookupToken && {
       source: "mxshop",
       url: env.MXSHOP_LOOKUP_URL || "https://api.mxshop.in.th/api/mobilelegendschecker?uid=",
@@ -1004,11 +1021,14 @@ async function resolveMlbbNickname(env, userId, zoneId, includeDetails = false) 
   ].filter(Boolean);
 
   let lookupError = "";
+  let nicknameOnly = null;
   for (const candidate of candidates) {
     const result = await tryLookup(candidate, userId, zoneId);
-    if (result.nickname) return includeDetails ? result : result.nickname;
+    if (result.nickname && result.region) return includeDetails ? result : result.nickname;
+    if (result.nickname && !nicknameOnly) nicknameOnly = result;
     if (result.error && !lookupError) lookupError = result.error;
   }
+  if (nicknameOnly) return includeDetails ? nicknameOnly : nicknameOnly.nickname;
   return includeDetails ? { nickname: "", error: lookupError } : "";
 }
 
@@ -1275,6 +1295,22 @@ async function tryAutoFulfillMxshopOrder(env, order) {
 async function performMxshopTopup(env, order) {
   if (env.MXSHOP_AUTO_TOPUP_ENABLED !== "true") {
     return { skipped: true, reason: "MXSHOP_AUTO_TOPUP_ENABLED is not true" };
+  }
+
+  if (String(order.gameKey || order.pkg?.gameKey || "") === "mlbb") {
+    const account = order.region
+      ? mlbbRegionResult(order.ign || "", order.region, "order")
+      : await resolveMlbbNickname(env, order.userId, order.zoneId, true);
+    if (!account.nickname || !account.region) {
+      const error = new Error("MLBB nickname and region could not be verified; supplier top-up was not submitted.");
+      error.status = 503;
+      throw error;
+    }
+    if (account.unsupported) {
+      const error = new Error(`Invalid order: ${account.region} server accounts are not supported by the Global supplier.`);
+      error.status = 422;
+      throw error;
+    }
   }
 
   const pkgId = String(order.pkg?.id || "");
@@ -3204,20 +3240,23 @@ async function tryLookup(candidate, userId, zoneId) {
   try {
     const config = typeof candidate === "string" ? { source: candidate, url: candidate, method: "POST_FORM" } : candidate;
     const body = new URLSearchParams({ game_code: "MOBILE_LEGENDS", user_id: userId, zone_id: zoneId });
-    const options = getLookupOptions(config, body);
+    const options = getLookupOptions(config, body, userId, zoneId);
     const url = getLookupUrl(config, userId, zoneId);
     const response = await fetch(url, options);
     const raw = await response.text();
     const data = parseLookupBody(raw);
-    return { nickname: findNickname(data), error: getLookupError(data, raw), source: config.source || config.url };
+    return mlbbRegionResult(findNickname(data), findRegion(data), config.source || config.url, getLookupError(data, raw));
   } catch (error) {
     return { error: error.message || "" };
   }
 }
 
-function getLookupOptions(config, formBody) {
+function getLookupOptions(config, formBody, userId, zoneId) {
   const headers = { "User-Agent": "BestDia/1.0", ...(config.headers || {}) };
   if (config.method === "GET" || config.method === "GET_UID") return { method: "GET", headers };
+  if (config.method === "POST_GOPAY") {
+    return { method: "POST", headers: { "Content-Type": "application/json", ...headers }, body: JSON.stringify({ code: "MOBILE_LEGENDS", data: { userId, zoneId } }) };
+  }
   if (config.method === "POST_JSON") {
     return { method: "POST", headers: { "Content-Type": "application/json", ...headers }, body: JSON.stringify(Object.fromEntries(formBody)) };
   }
@@ -3259,6 +3298,31 @@ function findNickname(value) {
     if (found) return found;
   }
   return "";
+}
+
+function findRegion(value) {
+  if (!value || typeof value !== "object") return "";
+  for (const key of ["region", "country", "countryOrigin", "country_origin", "countryCode", "country_code", "serverRegion", "server_region"]) {
+    if ((typeof value[key] === "string" || typeof value[key] === "number") && String(value[key]).trim()) return normalizeMlbbRegion(value[key]);
+  }
+  for (const nested of Object.values(value)) {
+    const found = findRegion(nested);
+    if (found) return found;
+  }
+  return "";
+}
+
+function normalizeMlbbRegion(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  const key = raw.toLowerCase().replace(/[_.-]+/g, " ").replace(/\s+/g, " ");
+  return UNSUPPORTED_MLBB_REGIONS.get(key) || (key === "global" ? "Global" : raw.toUpperCase() === raw && raw.length <= 3 ? raw.toUpperCase() : raw.replace(/\b\w/g, (letter) => letter.toUpperCase()));
+}
+
+function mlbbRegionResult(nickname, region, source, error = "") {
+  const regionKey = String(region || "").trim().toLowerCase().replace(/[_.-]+/g, " ").replace(/\s+/g, " ");
+  const normalizedRegion = normalizeMlbbRegion(region);
+  return { nickname: String(nickname || "").trim(), region: normalizedRegion, unsupported: UNSUPPORTED_MLBB_REGIONS.has(regionKey) || [...UNSUPPORTED_MLBB_REGIONS.values()].includes(normalizedRegion), error, source };
 }
 
 function getLookupError(data, raw) {
@@ -3848,6 +3912,7 @@ function publicOrder(order) {
     userId: order.userId,
     zoneId: order.zoneId,
     ign: order.ign,
+    region: order.region,
     pkg: order.pkg,
     payment: order.payment,
     paymentStatus: order.paymentStatus,
