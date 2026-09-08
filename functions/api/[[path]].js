@@ -76,10 +76,12 @@ const PAYMENTS = {
   truemoney: { key: "truemoney", name: "TrueMoney" },
   balance: { key: "balance", name: "BestDia Balance" },
 };
-const priceMarginByThb = (thb) => thb < 150 ? 0.05 : (thb < 500 ? 0.03 : 0.02);
+const priceMarginByThb = (thb) => thb < 500 ? 0.05 : 0.08;
 const roundKsToLast2 = (ks) => Math.round(ks / 100) * 100;
-const PRICE_OVERRIDES_KS = { 7: 6900, 10: 35500, 21: 125900, 22: 209000, "pubg-325": 20500, "pubg-660": 40500, "pubg-1800": 99000, "pubg-8100": 385000, "pubg-prime-1-month": 4500, "pubg-prime-3-month": 12900, "pubg-mythic-emblem-pack": 20500, "pubg-prime-plus-3-month": 120900 };
-const PRICE_OVERRIDES_THB = { 7: 52 };
+// Preserve the live bestseller prices captured on 2026-09-08, even after supplier refreshes.
+// Keep these overrides in sync with index.html and admin.html.
+const PRICE_OVERRIDES_KS = { 5: 3600, 7: 6900, 10: 35500, 11: 5600, 12: 11000, 13: 16000, "pubg-60": 4500, "pubg-325": 20500, "pubg-660": 40500, "pubg-1800": 99000, "pubg-8100": 385000, "pubg-prime-plus-1-month": 41100, "hok-16": 900, "hok-80": 4100, "hok-240": 11600, "hok-800-30": 37500, "hok-1200-45": 56300, "hok-2400-108": 111200 };
+const PRICE_OVERRIDES_THB = { 5: 27, 7: 52, 10: 272, 11: 42, 12: 83, 13: 120, "pubg-60": 34, "pubg-325": 156, "pubg-660": 304, "pubg-1800": 745, "pubg-8100": 2892, "pubg-prime-plus-1-month": 308, "hok-16": 7, "hok-80": 31, "hok-240": 87, "hok-800-30": 281, "hok-1200-45": 422, "hok-2400-108": 833 };
 const trustedPriceKs = (thb) => roundKsToLast2(Number(thb || 0) * THB_TO_KS * (1 + priceMarginByThb(Number(thb || 0))));
 const trustedPriceThb = (pkg) => PRICE_OVERRIDES_THB[pkg.id] ?? Math.round(Number(pkg.supplierPriceThb || 0) * (1 + priceMarginByThb(Number(pkg.supplierPriceThb || 0))));
 const withPrice = (pkg, product) => ({
