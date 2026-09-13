@@ -47,5 +47,10 @@ test('catalog exposes only mapped HOK packages',async()=>{
  const hok=data.products.find(product=>product.key==='hok');
  assert.deepEqual(hok.packages.map(pkg=>pkg.id),ids);
  assert.ok(hok.packages.every(pkg=>pkg.checkoutAvailable===true && pkg.mxshopStockId==='1712'));
+ assert.deepEqual(Object.fromEntries(hok.packages.map(pkg=>[pkg.id,pkg.priceThb])),{
+  'hok-80':33,'hok-240':96,'hok-400':156,'hok-560':218,'hok-2400-108':941,'hok-4000-180':1576,
+  'hok-honor-point-pack':13,'hok-premium-purchase-rebate-pack':44,'hok-standard-purchase-rebate-pack':13,
+  'hok-weekly-pass':35,'hok-weekly-pass-plus':104,
+ });
 });
 test('both HTML script blocks parse',()=>{for(const file of ['index.html','admin.html'])for(const match of fs.readFileSync(file,'utf8').matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)) if(match[1].trim())assert.equal(require('node:child_process').spawnSync(process.execPath,['--input-type=module','--check'],{input:match[1],encoding:'utf8'}).status,0);});

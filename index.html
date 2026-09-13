@@ -98,6 +98,8 @@ h1 span:first-child{margin-top:0;font-size:1.08em;font-weight:800}
 .badge{position:absolute;top:0;right:0;z-index:2;border-radius:0 12px 0 8px;background:linear-gradient(135deg,var(--gold),#E5A200);color:#07090F;padding:3px 8px;font-family:"Chakra Petch",sans-serif;font-size:.58rem;font-weight:800}
 .pkg-card img,.best-card img{width:128px;height:96px;max-width:100%;object-fit:contain;margin:0 auto 10px;display:block;flex:0 0 96px;image-rendering:auto;filter:saturate(1.08) contrast(1.04) drop-shadow(0 8px 14px rgba(91,227,255,.18))}
 .pkg-card img.pack-art,.best-card img.pack-art{width:100%;height:96px;flex-basis:96px;border-radius:8px;object-fit:contain;background:rgba(7,9,15,.42);padding:2px}
+.pkg-card img.hok-pack-art,.best-card img.hok-pack-art,.hero-product img.hok-pack-art{transform:scale(3);pointer-events:none}
+.pkg-card img.hok-pass-art,.best-card img.hok-pass-art,.hero-product img.hok-pass-art{transform:scale(1.1);pointer-events:none}
 .pkg-title,.best-title{min-height:38px;display:flex;align-items:center;justify-content:center;font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:.9rem;line-height:1.28;text-align:center}
 .pkg-name{min-height:18px;color:var(--muted);font-size:.67rem;line-height:1.35;margin-top:4px}
 .pkg-price,.best-price{margin-top:auto;padding-top:10px;color:var(--gold);font-family:"Chakra Petch",sans-serif;font-weight:800}
@@ -504,14 +506,14 @@ const PUBG_PKGS=[
   {id:"pubg-prime-plus-3-month",title:"Prime Plus 3 Month",name:"Subscription",supplierPriceThb:890.01,img:pubgAsset("official-prime-plus-3-month"),fallbackImg:pubgAsset("prime-plus-3-month"),wideArt:true}
 ]);
 const HOK_PKGS=[
-  ["80",29.36,HOK_TOKEN_ART[1]],["240",83.10,HOK_TOKEN_ART[1]],["400",143.86,HOK_TOKEN_ART[2]],
-  ["560",197.24,HOK_TOKEN_ART[2]],["2400 + 108",816.26,HOK_TOKEN_ART[3]],["4000 + 180",1451.23,HOK_TOKEN_ART[4]]
+  ["80",31,HOK_TOKEN_ART[1]],["240",91,HOK_TOKEN_ART[1]],["400",149,HOK_TOKEN_ART[2]],
+  ["560",208,HOK_TOKEN_ART[2]],["2400 + 108",871,HOK_TOKEN_ART[3]],["4000 + 180",1459,HOK_TOKEN_ART[4]]
 ].map(([tokens,thb,img],i)=>({id:`hok-${tokens.replace(/\s*\+\s*/g,"-")}`,title:`${tokens} Tokens`,name:"",tokens,supplierPriceThb:thb,img,fallbackImg:HOK_IMG,popular:[0,4].includes(i),supplier:"mxshop"})).concat([
-  {id:"hok-honor-point-pack",title:"Honor Point Pack",name:"Pack",supplierPriceThb:12,img:HOK_PACK_ART.honorPoint,fallbackImg:HOK_IMG,supplier:"mxshop"},
-  {id:"hok-premium-purchase-rebate-pack",title:"Premium Purchase Rebate Pack",name:"Pack",supplierPriceThb:42,img:HOK_PACK_ART.premiumRebate,fallbackImg:HOK_IMG,supplier:"mxshop"},
-  {id:"hok-standard-purchase-rebate-pack",title:"Standard Purchase Rebate Pack",name:"Pack",supplierPriceThb:12,img:HOK_PACK_ART.standardRebate,fallbackImg:HOK_IMG,supplier:"mxshop"},
-  {id:"hok-weekly-pass",title:"Weekly Pass",name:"Pass",supplierPriceThb:33,img:HOK_PACK_ART.weeklyPass,fallbackImg:HOK_IMG,popular:true,supplier:"mxshop"},
-  {id:"hok-weekly-pass-plus",title:"Weekly Pass Plus",name:"Pass",supplierPriceThb:99,img:HOK_PACK_ART.weeklyPassPlus,fallbackImg:HOK_IMG,popular:true,supplier:"mxshop"}
+  {id:"hok-honor-point-pack",title:"Honor Point Pack",name:"Pack",supplierPriceThb:12,img:HOK_PACK_ART.honorPoint,fallbackImg:HOK_IMG,enlargeArt:true,supplier:"mxshop"},
+  {id:"hok-premium-purchase-rebate-pack",title:"Premium Purchase Rebate Pack",name:"Pack",supplierPriceThb:42,img:HOK_PACK_ART.premiumRebate,fallbackImg:HOK_IMG,enlargeArt:true,supplier:"mxshop"},
+  {id:"hok-standard-purchase-rebate-pack",title:"Standard Purchase Rebate Pack",name:"Pack",supplierPriceThb:12,img:HOK_PACK_ART.standardRebate,fallbackImg:HOK_IMG,enlargeArt:true,supplier:"mxshop"},
+  {id:"hok-weekly-pass",title:"Weekly Pass",name:"Pass",supplierPriceThb:33,img:HOK_PACK_ART.weeklyPass,fallbackImg:HOK_IMG,passArt:true,popular:true,supplier:"mxshop"},
+  {id:"hok-weekly-pass-plus",title:"Weekly Pass Plus",name:"Pass",supplierPriceThb:99,img:HOK_PACK_ART.weeklyPassPlus,fallbackImg:HOK_IMG,passArt:true,popular:true,supplier:"mxshop"}
 ]);
 const PRODUCTS={
   mlbb:{key:"mlbb",name:"Mobile Legends",shortName:"MLBB",unit:"Diamonds",tagline:"စိန်များ၊ လက်မှတ်များနှင့် ပက်ကေ့ချ်များ",userLabel:"MLBB အသုံးပြုသူ ID",userPlaceholder:"ဥပမာ - 123456789",zoneLabel:"ဇုန် ID",zonePlaceholder:"ဥပမာ - 12345",requiresZone:true,lookup:true,heroIds:[11,7,10,5],bestIds:[11,12,13,7,5,10],img:PKG_IMG.mlbbLogo,packages:MLBB_PKGS},
@@ -524,8 +526,8 @@ const priceMarginByThb=thb=>thb<500?.05:.08;
 const roundKsToLast2=ks=>Math.round(ks/100)*100;
 // Preserve the live bestseller prices captured on 2026-09-08, even after supplier refreshes.
 // Keep these overrides in sync with admin.html and functions/api/[[path]].js.
-const PRICE_OVERRIDES_KS={5:3600,7:6900,10:35500,11:5600,12:11000,13:16000,"pubg-60":4500,"pubg-325":20500,"pubg-660":40500,"pubg-1800":99000,"pubg-8100":385000,"pubg-prime-plus-1-month":41100,"hok-80":4100,"hok-240":11600,"hok-2400-108":111200};
-const PRICE_OVERRIDES_THB={5:27,7:52,10:272,11:42,12:83,13:120,"pubg-60":34,"pubg-325":156,"pubg-660":304,"pubg-1800":745,"pubg-8100":2892,"pubg-prime-plus-1-month":308,"hok-80":31,"hok-240":87,"hok-2400-108":833};
+const PRICE_OVERRIDES_KS={5:3600,7:6900,10:35500,11:5600,12:11000,13:16000,"pubg-60":4500,"pubg-325":20500,"pubg-660":40500,"pubg-1800":99000,"pubg-8100":385000,"pubg-prime-plus-1-month":41100};
+const PRICE_OVERRIDES_THB={5:27,7:52,10:272,11:42,12:83,13:120,"pubg-60":34,"pubg-325":156,"pubg-660":304,"pubg-1800":745,"pubg-8100":2892,"pubg-prime-plus-1-month":308};
 const packagePriceThb=p=>PRICE_OVERRIDES_THB[p.id]??Math.round(Number(p.supplierPriceThb||0)*(1+priceMarginByThb(Number(p.supplierPriceThb||0))));
 const packagePriceKs=p=>PRICE_OVERRIDES_KS[p.id]??roundKsToLast2(Number(p.supplierPriceThb||0)*THB_TO_KS*(1+priceMarginByThb(Number(p.supplierPriceThb||0))));
 Object.values(PRODUCTS).forEach(product=>product.packages.forEach(p=>{p.price=packagePriceKs(p);p.priceThb=packagePriceThb(p);}));
@@ -615,7 +617,7 @@ function packageFallbackImg(p){
   if(/prime/i.test(`${p?.id||""} ${p?.title||""}`))return PKG_IMG.pubgPrime;
   return PKG_IMG.pubgPack;
 }
-function pkgImgTag(p,cls=""){const src=escapeText(p.img||packageFallbackImg(p)),fallback=escapeText(packageFallbackImg(p)),finalFallback=escapeText(activeProduct.key==="pubg"?PKG_IMG.pubgLogo:activeProduct.img),imgCls=[cls,p.wideArt?"pack-art":""].filter(Boolean).join(" ");return `<img ${imgCls?`class="${imgCls}"`:""} src="${src}" alt="${escapeText(pkgTitle(p))}" loading="lazy" decoding="async" fetchpriority="low" onerror="if(this.dataset.fallbackUsed){this.onerror=null;this.src='${finalFallback}'}else{this.dataset.fallbackUsed='1';this.src='${fallback}'}"/>`;}
+function pkgImgTag(p,cls=""){const src=escapeText(p.img||packageFallbackImg(p)),fallback=escapeText(packageFallbackImg(p)),finalFallback=escapeText(activeProduct.key==="pubg"?PKG_IMG.pubgLogo:activeProduct.img),imgCls=[cls,p.wideArt?"pack-art":"",p.enlargeArt?"hok-pack-art":"",p.passArt?"hok-pass-art":""].filter(Boolean).join(" ");return `<img ${imgCls?`class="${imgCls}"`:""} src="${src}" alt="${escapeText(pkgTitle(p))}" loading="lazy" decoding="async" fetchpriority="low" onerror="if(this.dataset.fallbackUsed){this.onerror=null;this.src='${finalFallback}'}else{this.dataset.fallbackUsed='1';this.src='${fallback}'}"/>`;}
 function goToOrderDetails(){requestAnimationFrame(()=>{$("#order-details")?.scrollIntoView({behavior:"smooth",block:"start"});});}
 function choosePkgAndOrder(id){selectPkg(id);goToOrderDetails();}
 function renderHero(){const items=activeProduct.heroIds.map(currentPkgById).filter(p=>p.id).slice(0,4);$("#heroGrid").innerHTML=items.map(p=>`<button class="hero-product" type="button" data-pkg="${escapeText(p.id)}">${pkgImgTag(p)}<b>${escapeText(pkgPurchaseTitle(p))}</b><span>${escapeText(priceDisplay(p))}</span></button>`).join("");$("#heroGrid").querySelectorAll("[data-pkg]").forEach(b=>b.addEventListener("click",()=>choosePkgAndOrder(b.dataset.pkg)));}

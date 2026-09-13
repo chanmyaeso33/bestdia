@@ -103,8 +103,8 @@ const priceMarginByThb = (thb) => thb < 500 ? 0.05 : 0.08;
 const roundKsToLast2 = (ks) => Math.round(ks / 100) * 100;
 // Preserve the live bestseller prices captured on 2026-09-08, even after supplier refreshes.
 // Keep these overrides in sync with index.html and admin.html.
-const PRICE_OVERRIDES_KS = { 5: 3600, 7: 6900, 10: 35500, 11: 5600, 12: 11000, 13: 16000, "pubg-60": 4500, "pubg-325": 20500, "pubg-660": 40500, "pubg-1800": 99000, "pubg-8100": 385000, "pubg-prime-plus-1-month": 41100, "hok-80": 4100, "hok-240": 11600, "hok-2400-108": 111200 };
-const PRICE_OVERRIDES_THB = { 5: 27, 7: 52, 10: 272, 11: 42, 12: 83, 13: 120, "pubg-60": 34, "pubg-325": 156, "pubg-660": 304, "pubg-1800": 745, "pubg-8100": 2892, "pubg-prime-plus-1-month": 308, "hok-80": 31, "hok-240": 87, "hok-2400-108": 833 };
+const PRICE_OVERRIDES_KS = { 5: 3600, 7: 6900, 10: 35500, 11: 5600, 12: 11000, 13: 16000, "pubg-60": 4500, "pubg-325": 20500, "pubg-660": 40500, "pubg-1800": 99000, "pubg-8100": 385000, "pubg-prime-plus-1-month": 41100 };
+const PRICE_OVERRIDES_THB = { 5: 27, 7: 52, 10: 272, 11: 42, 12: 83, 13: 120, "pubg-60": 34, "pubg-325": 156, "pubg-660": 304, "pubg-1800": 745, "pubg-8100": 2892, "pubg-prime-plus-1-month": 308 };
 const trustedPriceKs = (thb) => roundKsToLast2(Number(thb || 0) * THB_TO_KS * (1 + priceMarginByThb(Number(thb || 0))));
 const trustedPriceThb = (pkg) => PRICE_OVERRIDES_THB[pkg.id] ?? Math.round(Number(pkg.supplierPriceThb || 0) * (1 + priceMarginByThb(Number(pkg.supplierPriceThb || 0))));
 const withPrice = (pkg, product) => ({
@@ -159,8 +159,8 @@ const PRODUCTS = (() => {
     { id: "pubg-prime-plus-3-month", title: "Prime Plus 3 Month", name: "Subscription", supplierPriceThb: 890.01 },
   ].map((pkg) => withPrice(pkg, pubg)));
   hok.packages = [
-    ["80", 29.36], ["240", 83.10], ["400", 143.86], ["560", 197.24],
-    ["2400 + 108", 816.26], ["4000 + 180", 1451.23],
+    ["80", 31], ["240", 91], ["400", 149], ["560", 208],
+    ["2400 + 108", 871], ["4000 + 180", 1459],
   ].map(([tokens, thb]) => withPrice({
     id: `hok-${tokens.replace(/\s*\+\s*/g, "-")}`,
     title: `${tokens} Tokens`,

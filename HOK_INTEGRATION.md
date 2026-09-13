@@ -20,6 +20,8 @@ The catalog was read on 2026-09-13. These current BestDia packages have an exact
 | `hok-weekly-pass` | `16802465` | Weekly Card |
 | `hok-weekly-pass-plus` | `16802466` | Weekly Card Plus |
 
+Fallback supplier costs mirror the live catalog: 31, 91, 149, 208, 871, and 1,459 THB for token packages; 12, 42, 12, 33, and 99 THB for the five packs. HOK has no fixed storefront price overrides, so the shared margin calculation produces 33, 96, 156, 218, 941, 1,576, 13, 44, 13, 35, and 104 THB respectively. Live catalog prices replace these fallback costs when supplier credentials are available.
+
 The unsupported 16, 800+30, 1200+45, and 8000+360 token packages were removed from the storefront and trusted server catalog. MXShop's Double Token Bag remains omitted because it was not requested.
 
 ## Diagnostic and activation
