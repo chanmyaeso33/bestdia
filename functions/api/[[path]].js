@@ -40,6 +40,7 @@ export async function onRequest(context) {
     if (route === "mlbb-lookup") return mlbbLookup(request, env);
     if (route === "moogold-topup") return moogoldTopup(request, env);
     if (route === "mxshop-diagnostic") return mxshopDiagnostic(request, env);
+    if (route === "hok-mapping-diagnostic") return hokMappingDiagnostic(request, env);
     if (route === "mxshop-packages") return mxshopPackages(request, env);
     if (route === "mxshop-topup") return mxshopTopup(request, env);
     if (route === "order-status") return orderStatus(request, env);
@@ -70,6 +71,20 @@ async function adminAuth(request, env) {
 const THB_TO_KS = 133.5;
 const BALANCE_THB_TO_KS = 133.5;
 const HOK_ENABLED = true;
+const HOK_MXSHOP_STOCK_IDX = "1712";
+const HOK_MXSHOP_PACKAGES = Object.freeze({
+  "hok-80": { variationId: "16802454", supplierName: "80 Tokens" },
+  "hok-240": { variationId: "16802455", supplierName: "240 Tokens" },
+  "hok-400": { variationId: "16802456", supplierName: "400 Tokens" },
+  "hok-560": { variationId: "16802457", supplierName: "560 Tokens" },
+  "hok-2400-108": { variationId: "16802458", supplierName: "2400+108 Tokens" },
+  "hok-4000-180": { variationId: "16802459", supplierName: "4000+180 Tokens" },
+  "hok-honor-point-pack": { variationId: "16802462", supplierName: "Honor Point Pack" },
+  "hok-premium-purchase-rebate-pack": { variationId: "16802463", supplierName: "Premium Purchase Rebate Pack" },
+  "hok-standard-purchase-rebate-pack": { variationId: "16802464", supplierName: "Standard Purchase Rebate Pack" },
+  "hok-weekly-pass": { variationId: "16802465", supplierName: "Weekly Card" },
+  "hok-weekly-pass-plus": { variationId: "16802466", supplierName: "Weekly Card Plus" },
+});
 const PAYMENTS = {
   kbz: { key: "kbz", name: "KBZPay" },
   wave: { key: "wave", name: "Wave Money" },
@@ -88,8 +103,8 @@ const priceMarginByThb = (thb) => thb < 500 ? 0.05 : 0.08;
 const roundKsToLast2 = (ks) => Math.round(ks / 100) * 100;
 // Preserve the live bestseller prices captured on 2026-09-08, even after supplier refreshes.
 // Keep these overrides in sync with index.html and admin.html.
-const PRICE_OVERRIDES_KS = { 5: 3600, 7: 6900, 10: 35500, 11: 5600, 12: 11000, 13: 16000, "pubg-60": 4500, "pubg-325": 20500, "pubg-660": 40500, "pubg-1800": 99000, "pubg-8100": 385000, "pubg-prime-plus-1-month": 41100, "hok-16": 900, "hok-80": 4100, "hok-240": 11600, "hok-800-30": 37500, "hok-1200-45": 56300, "hok-2400-108": 111200 };
-const PRICE_OVERRIDES_THB = { 5: 27, 7: 52, 10: 272, 11: 42, 12: 83, 13: 120, "pubg-60": 34, "pubg-325": 156, "pubg-660": 304, "pubg-1800": 745, "pubg-8100": 2892, "pubg-prime-plus-1-month": 308, "hok-16": 7, "hok-80": 31, "hok-240": 87, "hok-800-30": 281, "hok-1200-45": 422, "hok-2400-108": 833 };
+const PRICE_OVERRIDES_KS = { 5: 3600, 7: 6900, 10: 35500, 11: 5600, 12: 11000, 13: 16000, "pubg-60": 4500, "pubg-325": 20500, "pubg-660": 40500, "pubg-1800": 99000, "pubg-8100": 385000, "pubg-prime-plus-1-month": 41100, "hok-80": 4100, "hok-240": 11600, "hok-2400-108": 111200 };
+const PRICE_OVERRIDES_THB = { 5: 27, 7: 52, 10: 272, 11: 42, 12: 83, 13: 120, "pubg-60": 34, "pubg-325": 156, "pubg-660": 304, "pubg-1800": 745, "pubg-8100": 2892, "pubg-prime-plus-1-month": 308, "hok-80": 31, "hok-240": 87, "hok-2400-108": 833 };
 const trustedPriceKs = (thb) => roundKsToLast2(Number(thb || 0) * THB_TO_KS * (1 + priceMarginByThb(Number(thb || 0))));
 const trustedPriceThb = (pkg) => PRICE_OVERRIDES_THB[pkg.id] ?? Math.round(Number(pkg.supplierPriceThb || 0) * (1 + priceMarginByThb(Number(pkg.supplierPriceThb || 0))));
 const withPrice = (pkg, product) => ({
@@ -144,18 +159,22 @@ const PRODUCTS = (() => {
     { id: "pubg-prime-plus-3-month", title: "Prime Plus 3 Month", name: "Subscription", supplierPriceThb: 890.01 },
   ].map((pkg) => withPrice(pkg, pubg)));
   hok.packages = [
-    ["16", 6.42, "5177683"], ["80", 29.36, "5177684"], ["240", 83.10, "5177685"],
-    ["400", 143.86, "5177686"], ["560", 197.24, "5177688"], ["800 + 30", 272.80, "5177689"],
-    ["1200 + 45", 409.65, "5177690"], ["2400 + 108", 816.26, "5177691"],
-    ["4000 + 180", 1451.23, "5177694"], ["8000 + 360", 2700.61, "5177696"],
+    ["80", 29.36], ["240", 83.10], ["400", 143.86], ["560", 197.24],
+    ["2400 + 108", 816.26], ["4000 + 180", 1451.23],
   ].map(([tokens, thb]) => withPrice({
     id: `hok-${tokens.replace(/\s*\+\s*/g, "-")}`,
     title: `${tokens} Tokens`,
     name: "",
     tokens,
     supplierPriceThb: thb,
-    supplier: "manual",
-  }, hok));
+    supplier: "mxshop",
+  }, hok)).concat([
+    ["hok-honor-point-pack", "Honor Point Pack", 12],
+    ["hok-premium-purchase-rebate-pack", "Premium Purchase Rebate Pack", 42],
+    ["hok-standard-purchase-rebate-pack", "Standard Purchase Rebate Pack", 12],
+    ["hok-weekly-pass", "Weekly Pass", 33],
+    ["hok-weekly-pass-plus", "Weekly Pass Plus", 99],
+  ].map(([id, title, thb]) => withPrice({ id, title, name: "Pack", supplierPriceThb: thb, supplier: "mxshop" }, hok)));
   return { mlbb, pubg, ...(HOK_ENABLED ? { hok } : {}) };
 })();
 
@@ -171,7 +190,11 @@ async function productsWithSupplierPrices(env) {
     ...product,
     packages: product.packages.map((pkg) => {
       const supplierPriceThb = supplierPrices.prices[String(pkg.mxshopStockReleaseId)] ?? pkg.supplierPriceThb;
-      return withPrice({ ...pkg, supplierPriceThb }, product);
+      const mapping = key === "hok" ? hokMapping(pkg.id, env) : null;
+      return withPrice({ ...pkg, supplierPriceThb, ...(mapping ? {
+        supplier: "mxshop", mxshopStockReleaseId: mapping.variationId,
+        mxshopStockId: mapping.productId, checkoutAvailable: mapping.valid,
+      } : {}) }, product);
     }),
   }]));
   return { products, supplierUpdated: supplierPrices.updated };
@@ -344,6 +367,7 @@ async function createOrder(request, env) {
   const trustedPkg = trustedProduct && pkg ? trustedProduct.packages.find((item) => String(item.id) === String(pkg.id)) : null;
   if (!orderId || !userId || !contact || !pkg) return jsonResponse(400, { ok: false, error: "Missing order information" });
   if (!trustedProduct || !trustedPkg) return jsonResponse(400, { ok: false, error: "Invalid package selection" });
+  if (trustedProduct.key === "hok" && !trustedPkg.checkoutAvailable) return jsonResponse(409, { ok: false, error: "This Honor of Kings package is temporarily unavailable: supplier mapping is missing." });
   if (trustedProduct.requiresZone && !String(order.zoneId || "").trim()) return jsonResponse(400, { ok: false, error: "Missing Zone ID" });
   const trustedPay = PAYMENTS[String(order.payKey || "").trim()];
   if (!trustedPay || String(order.payment || "").trim() !== trustedPay.name) return jsonResponse(400, { ok: false, error: "Invalid payment method" });
@@ -1120,6 +1144,48 @@ async function telegramDiagnostic(request, env) {
   result.sendMessage = summarizeTelegram(sent);
 
   return jsonResponse(200, { ...result, ok: sent.ok, error: sent.ok ? null : sent.description || "Telegram test message failed." });
+}
+
+// HOK mappings are server-owned; never accept supplier IDs from an order.
+function hokMapping(pkgId, env) {
+  let map;
+  try { map = JSON.parse(env.MXSHOP_HOK_PACKAGE_MAP || "{}"); } catch { map = {}; }
+  const productId = String(env.MXSHOP_HOK_STOCK_IDX || HOK_MXSHOP_STOCK_IDX).trim();
+  const fallback = HOK_MXSHOP_PACKAGES[pkgId] || null;
+  const value = map && typeof map === "object" && Object.hasOwn(map, pkgId) ? map[pkgId] : fallback;
+  const variationId = typeof value === "string" || typeof value === "number" ? String(value).trim() : String(value?.variationId || "").trim();
+  const supplierName = String(value?.supplierName || fallback?.supplierName || "").trim();
+  const known = PRODUCTS.hok?.packages.some(pkg => pkg.id === pkgId);
+  const valid = Boolean(known && /^[1-9]\d*$/.test(productId) && /^[1-9]\d*$/.test(variationId));
+  return { productId, variationId, supplierName, valid };
+}
+
+async function hokMappingDiagnostic(request, env) {
+  if (request.method !== "POST") return jsonResponse(405, { ok: false, error: "Method not allowed" });
+  const auth = requireAdmin(await readJson(request), env);
+  if (auth) return auth;
+  const rows = (PRODUCTS.hok?.packages || []).map(pkg => ({ packageId: pkg.id, title: pkg.title, ...hokMapping(pkg.id, env) }));
+  const configured = Object.keys(HOK_MXSHOP_PACKAGES).every(packageId => rows.find(row => row.packageId === packageId)?.valid);
+  const credentialsConfigured = Boolean(env.MXSHOP_MX_KEY && env.MXSHOP_PASSKEY);
+  let releases = null;
+  if (credentialsConfigured && rows.some(row => row.valid)) releases = await mxPost(env, "/api/v1/get_stockreleaselist", { StockIDX: env.MXSHOP_HOK_STOCK_IDX || HOK_MXSHOP_STOCK_IDX, type: 4 });
+  const catalogVerified = Boolean(releases && releases.httpStatus >= 200 && releases.httpStatus < 300 && releases.success !== false && releases.ok !== false && !releases.error && Array.isArray(releases.result));
+  for (const row of rows) {
+    const matches = catalogVerified ? releases.result.filter(item => String(item.stockreleaselist_id) === row.variationId) : [];
+    const item = matches.length === 1 ? matches[0] : null;
+    row.expectedSupplierName = row.supplierName;
+    row.supplierName = item?.product_stockname || "";
+    row.duplicate = rows.some(other => other !== row && other.variationId && other.variationId === row.variationId);
+    const nameMatches = normalizeMxPackageName(row.supplierName) === normalizeMxPackageName(row.expectedSupplierName);
+    row.status = !row.valid ? "checkout-blocked" : row.duplicate ? "duplicate" : !catalogVerified ? "unverified" : !item ? "missing" : !nameMatches ? "name-mismatch" : ![false, 0, "0"].includes(item.not_available) ? "unavailable" : "matched";
+  }
+  return jsonResponse(200, { ok: true, configured, credentialsConfigured, catalogVerified,
+    ready: configured && rows.filter(row => row.valid).every(row => row.status === "matched"),
+    autoTopupEnabled: env.MXSHOP_AUTO_TOPUP_ENABLED === "true", rows });
+}
+
+function normalizeMxPackageName(value) {
+  return String(value || "").toLowerCase().replace(/\s+/g, "").replace(/\+/g, "+");
 }
 
 async function mxshopDiagnostic(request, env) {
@@ -3445,7 +3511,7 @@ function parseMxStockIds(payload, env) {
   const raw = payload.stockIds ?? payload.StockIDXs ?? payload.StockIDX ?? env.MXSHOP_STOCK_IDXS ?? env.MXSHOP_STOCK_IDX ?? "17";
   const values = Array.isArray(raw) ? raw : String(raw).split(",");
   const stockIds = values.map((value) => String(value || "").trim()).filter(Boolean);
-  return stockIds.length ? [...new Set(stockIds)] : ["17"];
+  return [...new Set([...(stockIds.length ? stockIds : ["17"]), String(env.MXSHOP_HOK_STOCK_IDX || HOK_MXSHOP_STOCK_IDX)])];
 }
 
 function buildMxUid(order, env) {
@@ -3463,6 +3529,10 @@ function buildMxUid(order, env) {
 }
 
 function getMappedStockReleaseId(pkgId, env, order = {}) {
+  if (String(pkgId).startsWith("hok-") || order.gameKey === "hok") {
+    const mapping = hokMapping(String(pkgId), env);
+    return mapping.valid ? mapping.variationId : "";
+  }
   const defaultMap = {
     1: "169991",
     2: "169992",
