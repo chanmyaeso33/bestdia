@@ -53,4 +53,20 @@ test('catalog exposes only mapped HOK packages',async()=>{
   'hok-weekly-pass':35,'hok-weekly-pass-plus':104,
  });
 });
+test('catalog exposes the complete mapped Free Fire catalog with margin prices',async()=>{
+ const {data}=await call('catalog',{});
+ const freeFire=data.products.find(product=>product.key==='free-fire');
+ assert.equal(freeFire.packages.length,22);
+ assert.equal(new Set(freeFire.packages.map(pkg=>pkg.id)).size,22);
+ assert.ok(freeFire.packages.every(pkg=>/^\d+$/.test(pkg.mxshopStockReleaseId) && pkg.mxshopStockId==='15'));
+ const byId=Object.fromEntries(freeFire.packages.map(pkg=>[pkg.id,pkg]));
+ assert.equal(byId['free-fire-33'].priceThb,10);
+ assert.equal(byId['free-fire-weekly-lite'].priceThb,34);
+ assert.equal(byId['free-fire-3698'].priceThb,1031);
+ assert.equal(byId['free-fire-growth-all'].priceThb,104);
+});
+test('unknown Free Fire packages are rejected before persistence',async()=>{
+ const result=await call('create-order',{order:{gameKey:'free-fire',pkg:{id:'free-fire-unmapped',mxshopStockReleaseId:'999'},userId:'123',contact:'test',payKey:'kbz',payment:'KBZPay'}});
+ assert.equal(result.status,400);
+});
 test('both HTML script blocks parse',()=>{for(const file of ['index.html','admin.html'])for(const match of fs.readFileSync(file,'utf8').matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)) if(match[1].trim())assert.equal(require('node:child_process').spawnSync(process.execPath,['--input-type=module','--check'],{input:match[1],encoding:'utf8'}).status,0);});

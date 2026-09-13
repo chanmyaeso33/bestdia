@@ -72,6 +72,7 @@ const THB_TO_KS = 133.5;
 const BALANCE_THB_TO_KS = 133.5;
 const HOK_ENABLED = true;
 const HOK_MXSHOP_STOCK_IDX = "1712";
+const FREE_FIRE_MXSHOP_STOCK_IDX = "15";
 const HOK_MXSHOP_PACKAGES = Object.freeze({
   "hok-80": { variationId: "16802454", supplierName: "80 Tokens" },
   "hok-240": { variationId: "16802455", supplierName: "240 Tokens" },
@@ -120,6 +121,7 @@ const PRODUCTS = (() => {
   const mlbb = { key: "mlbb", name: "Mobile Legends", unit: "Diamonds", requiresZone: true };
   const pubg = { key: "pubg", name: "PUBG Mobile", unit: "UC", requiresZone: false };
   const hok = { key: "hok", name: "Honor of Kings", unit: "Tokens", requiresZone: false };
+  const freeFire = { key: "free-fire", name: "Free Fire", unit: "Diamonds", requiresZone: false };
   mlbb.packages = [
     { id: 1, title: "50+5 Diamonds", name: "Special Bonus", diamonds: 55, baseDiamonds: 50, regularBonus: 5, firstBonus: 50, supplierPriceThb: 26.13, mxshopStockReleaseId: "169991" },
     { id: 2, title: "150+15 Diamonds", name: "Special Bonus", diamonds: 165, baseDiamonds: 150, regularBonus: 15, firstBonus: 150, supplierPriceThb: 78.32, mxshopStockReleaseId: "169992" },
@@ -175,7 +177,22 @@ const PRODUCTS = (() => {
     ["hok-weekly-pass", "Weekly Pass", 33],
     ["hok-weekly-pass-plus", "Weekly Pass Plus", 99],
   ].map(([id, title, thb]) => withPrice({ id, title, name: "Pack", supplierPriceThb: thb, supplier: "mxshop" }, hok)));
-  return { mlbb, pubg, ...(HOK_ENABLED ? { hok } : {}) };
+  freeFire.packages = [
+    ["free-fire-weekly-lite", "Weekly Membership Lite", "Membership", 32.5, "150001"],
+    ["free-fire-weekly", "Weekly Membership", "Membership", 64.5, "150002"],
+    ["free-fire-monthly", "Monthly Membership", "Membership", 287.5, "150003"],
+    ["free-fire-booyah-pass", "Booyah Pass", "Pass", 86.5, "150004"],
+    ...[[33,9.9,"150101"],[68,19.8,"150102"],[172,47.9,"150103"],[310,86.5,"150104"],[517,144.3,"150105"],[690,192.5,"150106"],[1052,288.8,"150107"],[1801,478.9,"150108"],[3698,954.9,"150109"],[7396,1909.9,"150110"],[11094,2860.5,"150111"]]
+      .map(([diamonds, thb, mxId]) => [`free-fire-${diamonds}`, `${diamonds} Diamonds`, "Diamonds", thb, mxId, diamonds]),
+    ["free-fire-growth-lv6", "Growth Pack Lv6", "Growth Pack", 6.5, "150250"],
+    ["free-fire-growth-lv10", "Growth Pack Lv10", "Growth Pack", 16.5, "150251"],
+    ["free-fire-growth-lv15", "Growth Pack Lv15", "Growth Pack", 16.5, "150252"],
+    ["free-fire-growth-lv20", "Growth Pack Lv20", "Growth Pack", 16.5, "150253"],
+    ["free-fire-growth-lv25", "Growth Pack Lv25", "Growth Pack", 16.5, "150254"],
+    ["free-fire-growth-lv30", "Growth Pack Lv30", "Growth Pack", 26.5, "150255"],
+    ["free-fire-growth-all", "All Growth Packs Lv6–30", "Growth Pack", 99, "16801823"],
+  ].map(([id, title, name, thb, mxshopStockReleaseId, diamonds]) => withPrice({ id, title, name, diamonds: diamonds || 0, supplierPriceThb: thb, mxshopStockReleaseId, mxshopStockId: FREE_FIRE_MXSHOP_STOCK_IDX, supplier: "mxshop" }, freeFire));
+  return { mlbb, pubg, "free-fire": freeFire, ...(HOK_ENABLED ? { hok } : {}) };
 })();
 
 async function catalog(request, env) {
@@ -3511,7 +3528,7 @@ function parseMxStockIds(payload, env) {
   const raw = payload.stockIds ?? payload.StockIDXs ?? payload.StockIDX ?? env.MXSHOP_STOCK_IDXS ?? env.MXSHOP_STOCK_IDX ?? "17";
   const values = Array.isArray(raw) ? raw : String(raw).split(",");
   const stockIds = values.map((value) => String(value || "").trim()).filter(Boolean);
-  return [...new Set([...(stockIds.length ? stockIds : ["17"]), String(env.MXSHOP_HOK_STOCK_IDX || HOK_MXSHOP_STOCK_IDX)])];
+  return [...new Set([...(stockIds.length ? stockIds : ["17"]), String(env.MXSHOP_HOK_STOCK_IDX || HOK_MXSHOP_STOCK_IDX), String(env.MXSHOP_FREE_FIRE_STOCK_IDX || FREE_FIRE_MXSHOP_STOCK_IDX)])];
 }
 
 function buildMxUid(order, env) {
