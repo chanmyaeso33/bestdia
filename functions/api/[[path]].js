@@ -192,7 +192,39 @@ const PRODUCTS = (() => {
     ["free-fire-growth-lv30", "Growth Pack Lv30", "Growth Pack", 26.5, "150255"],
     ["free-fire-growth-all", "All Growth Packs Lv6–30", "Growth Pack", 99, "16801823"],
   ].map(([id, title, name, thb, mxshopStockReleaseId, diamonds]) => withPrice({ id, title, name, diamonds: diamonds || 0, supplierPriceThb: thb, mxshopStockReleaseId, mxshopStockId: FREE_FIRE_MXSHOP_STOCK_IDX, supplier: "mxshop" }, freeFire));
-  return { mlbb, pubg, "free-fire": freeFire, ...(HOK_ENABLED ? { hok } : {}) };
+  const additionalProducts = {
+  "magic-chess-go-go":{...{"key":"magic-chess-go-go","name":"Magic Chess Go Go","unit":"Diamonds","requiresZone":true},packages:[
+    {"id":"magic-chess-go-go-16800919","title":"86 Diamonds","name":"Diamonds","supplierPriceThb":48.03,"mxshopStockReleaseId":"16800919","mxshopStockId":"91","supplier":"mxshop"},
+    {"id":"magic-chess-go-go-16800920","title":"172 Diamonds","name":"Diamonds","supplierPriceThb":88.67,"mxshopStockReleaseId":"16800920","mxshopStockId":"91","supplier":"mxshop"},
+    {"id":"magic-chess-go-go-16800921","title":"257 Diamonds","name":"Diamonds","supplierPriceThb":127.39,"mxshopStockReleaseId":"16800921","mxshopStockId":"91","supplier":"mxshop"},
+    {"id":"magic-chess-go-go-16800923","title":"344 Diamonds","name":"Diamonds","supplierPriceThb":169.28,"mxshopStockReleaseId":"16800923","mxshopStockId":"91","supplier":"mxshop"},
+    {"id":"magic-chess-go-go-16800924","title":"514 Diamonds","name":"Diamonds","supplierPriceThb":250.17,"mxshopStockReleaseId":"16800924","mxshopStockId":"91","supplier":"mxshop"},
+    {"id":"magic-chess-go-go-16800926","title":"706 Diamonds","name":"Diamonds","supplierPriceThb":330.45,"mxshopStockReleaseId":"16800926","mxshopStockId":"91","supplier":"mxshop"},
+    {"id":"magic-chess-go-go-16800928","title":"2195 Diamonds","name":"Diamonds","supplierPriceThb":975.18,"mxshopStockReleaseId":"16800928","mxshopStockId":"91","supplier":"mxshop"},
+    {"id":"magic-chess-go-go-16800929","title":"3688 Diamonds","name":"Diamonds","supplierPriceThb":1618.49,"mxshopStockReleaseId":"16800929","mxshopStockId":"91","supplier":"mxshop"},
+    {"id":"magic-chess-go-go-16800930","title":"5532 Diamonds","name":"Diamonds","supplierPriceThb":2422.12,"mxshopStockReleaseId":"16800930","mxshopStockId":"91","supplier":"mxshop"},
+    {"id":"magic-chess-go-go-16800931","title":"9288 Diamonds","name":"Diamonds","supplierPriceThb":4031.77,"mxshopStockReleaseId":"16800931","mxshopStockId":"91","supplier":"mxshop"},
+    {"id":"magic-chess-go-go-16802105","title":"Weekly Pass","name":"Pass","supplierPriceThb":67,"mxshopStockReleaseId":"16802105","mxshopStockId":"91","supplier":"mxshop"}
+  ]},
+  "genshin-impact":{...{"key":"genshin-impact","name":"Genshin Impact","unit":"Genesis Crystals","requiresZone":true,"zoneOptions":["Asia"]},packages:[
+    {"id":"genshin-impact-51101","title":"Blessing of the Welkin Moon","name":"Pass","supplierPriceThb":178.08,"mxshopStockReleaseId":"51101","mxshopStockId":"89","supplier":"mxshop"},
+    {"id":"genshin-impact-51102","title":"All Genesis Crystal Packs (15,680 GC)","name":"Genesis Crystals","supplierPriceThb":6956.15,"mxshopStockReleaseId":"51102","mxshopStockId":"89","supplier":"mxshop"},
+    {"id":"genshin-impact-51103","title":"60 Genesis Crystals","name":"Genesis Crystals","supplierPriceThb":35.93,"mxshopStockReleaseId":"51103","mxshopStockId":"89","supplier":"mxshop"},
+    {"id":"genshin-impact-51104","title":"300+30 Genesis Crystals","name":"Genesis Crystals","supplierPriceThb":178.08,"mxshopStockReleaseId":"51104","mxshopStockId":"89","supplier":"mxshop"},
+    {"id":"genshin-impact-51105","title":"980+110 Genesis Crystals","name":"Genesis Crystals","supplierPriceThb":526.35,"mxshopStockReleaseId":"51105","mxshopStockId":"89","supplier":"mxshop"},
+    {"id":"genshin-impact-51106","title":"1980+260 Genesis Crystals","name":"Genesis Crystals","supplierPriceThb":1044.76,"mxshopStockReleaseId":"51106","mxshopStockId":"89","supplier":"mxshop"},
+    {"id":"genshin-impact-51107","title":"3280+600 Genesis Crystals","name":"Genesis Crystals","supplierPriceThb":1736.34,"mxshopStockReleaseId":"51107","mxshopStockId":"89","supplier":"mxshop"},
+    {"id":"genshin-impact-51108","title":"6480+1600 Genesis Crystals","name":"Genesis Crystals","supplierPriceThb":3462.15,"mxshopStockReleaseId":"51108","mxshopStockId":"89","supplier":"mxshop"},
+    {"id":"genshin-impact-51121","title":"60 Chronal Nexus","name":"Chronal Nexus","supplierPriceThb":29.1,"mxshopStockReleaseId":"51121","mxshopStockId":"89","supplier":"mxshop"},
+    {"id":"genshin-impact-51122","title":"300+30 Chronal Nexus","name":"Chronal Nexus","supplierPriceThb":145.1,"mxshopStockReleaseId":"51122","mxshopStockId":"89","supplier":"mxshop"},
+    {"id":"genshin-impact-51123","title":"980+110 Chronal Nexus","name":"Chronal Nexus","supplierPriceThb":435.1,"mxshopStockReleaseId":"51123","mxshopStockId":"89","supplier":"mxshop"},
+    {"id":"genshin-impact-51124","title":"1980+260 Chronal Nexus","name":"Chronal Nexus","supplierPriceThb":865.1,"mxshopStockReleaseId":"51124","mxshopStockId":"89","supplier":"mxshop"},
+    {"id":"genshin-impact-51125","title":"3280+600 Chronal Nexus","name":"Chronal Nexus","supplierPriceThb":1449.1,"mxshopStockReleaseId":"51125","mxshopStockId":"89","supplier":"mxshop"},
+    {"id":"genshin-impact-51126","title":"6480+1600 Chronal Nexus","name":"Chronal Nexus","supplierPriceThb":2899.1,"mxshopStockReleaseId":"51126","mxshopStockId":"89","supplier":"mxshop"}
+  ]}
+};
+  Object.values(additionalProducts).forEach(product=>{product.packages=product.packages.map(pkg=>withPrice(pkg,product));});
+  return { mlbb, pubg, "free-fire": freeFire, ...additionalProducts, ...(HOK_ENABLED ? { hok } : {}) };
 })();
 
 async function catalog(request, env) {
@@ -386,6 +418,8 @@ async function createOrder(request, env) {
   if (!trustedProduct || !trustedPkg) return jsonResponse(400, { ok: false, error: "Invalid package selection" });
   if (trustedProduct.key === "hok" && !trustedPkg.checkoutAvailable) return jsonResponse(409, { ok: false, error: "This Honor of Kings package is temporarily unavailable: supplier mapping is missing." });
   if (trustedProduct.requiresZone && !String(order.zoneId || "").trim()) return jsonResponse(400, { ok: false, error: "Missing Zone ID" });
+  if (trustedProduct.zoneOptions && !trustedProduct.zoneOptions.includes(String(order.zoneId || "").trim())) return jsonResponse(400, { ok: false, error: "Unsupported server. Genshin Impact supports Asia only." });
+  if (["genshin-impact", "magic-chess-go-go"].includes(trustedProduct.key) && (!/^\d+$/.test(userId) || (!trustedProduct.zoneOptions && !/^\d+$/.test(String(order.zoneId || "").trim())))) return jsonResponse(400, { ok: false, error: "Player and server IDs must be numeric" });
   const trustedPay = PAYMENTS[String(order.payKey || "").trim()];
   if (!trustedPay || String(order.payment || "").trim() !== trustedPay.name) return jsonResponse(400, { ok: false, error: "Invalid payment method" });
   if (trustedProduct.key === "hok" && trustedPay.key === "balance") return jsonResponse(400, { ok: false, error: "BestDia Balance is unavailable for manually fulfilled Honor of Kings orders" });
@@ -3528,7 +3562,7 @@ function parseMxStockIds(payload, env) {
   const raw = payload.stockIds ?? payload.StockIDXs ?? payload.StockIDX ?? env.MXSHOP_STOCK_IDXS ?? env.MXSHOP_STOCK_IDX ?? "17";
   const values = Array.isArray(raw) ? raw : String(raw).split(",");
   const stockIds = values.map((value) => String(value || "").trim()).filter(Boolean);
-  return [...new Set([...(stockIds.length ? stockIds : ["17"]), String(env.MXSHOP_HOK_STOCK_IDX || HOK_MXSHOP_STOCK_IDX), String(env.MXSHOP_FREE_FIRE_STOCK_IDX || FREE_FIRE_MXSHOP_STOCK_IDX)])];
+  return [...new Set([...(stockIds.length ? stockIds : ["17"]), String(env.MXSHOP_HOK_STOCK_IDX || HOK_MXSHOP_STOCK_IDX), String(env.MXSHOP_FREE_FIRE_STOCK_IDX || FREE_FIRE_MXSHOP_STOCK_IDX), "91", "89"])];
 }
 
 function buildMxUid(order, env) {
@@ -3537,6 +3571,8 @@ function buildMxUid(order, env) {
   const gameKey = String(order.gameKey || order.pkg?.gameKey || "").trim();
   const product = PRODUCTS[gameKey];
   if (!userId) return "";
+  if (gameKey === "genshin-impact") return /^\d+$/.test(userId) && product.zoneOptions.includes(zoneId) ? `${userId}/${zoneId}` : "";
+  if (gameKey === "magic-chess-go-go") return /^\d+$/.test(userId) && /^\d+$/.test(zoneId) ? `${userId}(${zoneId})` : "";
   if (!product?.requiresZone && !zoneId) return userId;
   if (!zoneId) return "";
   const format = env[`MXSHOP_UID_FORMAT_${gameKey.toUpperCase()}`] || env.MXSHOP_UID_FORMAT;
@@ -3546,6 +3582,9 @@ function buildMxUid(order, env) {
 }
 
 function getMappedStockReleaseId(pkgId, env, order = {}) {
+  for (const key of ["genshin-impact", "magic-chess-go-go"]) {
+    if (String(pkgId).startsWith(key + "-") || order.gameKey === key) return PRODUCTS[key].packages.find(pkg=>pkg.id === String(pkgId))?.mxshopStockReleaseId || "";
+  }
   if (String(pkgId).startsWith("hok-") || order.gameKey === "hok") {
     const mapping = hokMapping(String(pkgId), env);
     return mapping.valid ? mapping.variationId : "";
