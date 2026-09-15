@@ -90,6 +90,7 @@ const PAYMENTS = {
   kbz: { key: "kbz", name: "KBZPay" },
   wave: { key: "wave", name: "Wave Money" },
   truemoney: { key: "truemoney", name: "TrueMoney" },
+  promptpay: { key: "promptpay", name: "PromptPay" },
   balance: { key: "balance", name: "BestDia Balance" },
 };
 const UNSUPPORTED_MLBB_REGIONS = new Map([
@@ -281,8 +282,8 @@ async function createBalanceTopup(request, env) {
 
   const now = new Date().toISOString();
   const topupId = `BT${Date.now().toString().slice(-7)}${randomToken(3).toUpperCase()}`;
-  const requiredAmount = trustedPay.key === "truemoney" ? amount : Math.round(amount * BALANCE_THB_TO_KS);
-  const requiredCurrency = trustedPay.key === "truemoney" ? "THB" : "Ks";
+  const requiredAmount = ["truemoney", "promptpay"].includes(trustedPay.key) ? amount : Math.round(amount * BALANCE_THB_TO_KS);
+  const requiredCurrency = ["truemoney", "promptpay"].includes(trustedPay.key) ? "THB" : "Ks";
   const slipFingerprint = await sha256Hex(slipDataUrl);
   const transactionReference = String(payload.transactionReference || "").trim().slice(0, 160);
   const firestore = await firestoreClient(env);
