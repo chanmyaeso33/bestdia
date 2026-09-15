@@ -39,7 +39,7 @@ async function runDailyPipeline(env, metadata) {
   const pipelineUrl = env.BESTDIA_PIPELINE_URL || DEFAULT_PIPELINE_URL;
   const body = {
     adminPassword,
-    limitPerSource: Number(env.PIPELINE_LIMIT_PER_SOURCE || 5),
+    limitPerSource: Number(env.PIPELINE_LIMIT_PER_SOURCE || 12),
     agentLimit: Number(env.PIPELINE_AGENT_LIMIT || 10),
     metadata,
   };

@@ -97,9 +97,7 @@ const UNSUPPORTED_MLBB_REGIONS = new Map([
   ["jp", "Japan"], ["japan", "Japan"],
   ["ph", "Philippines"], ["philippines", "Philippines"], ["philippine", "Philippines"],
   ["id", "Indonesia"], ["idn", "Indonesia"], ["indonesia", "Indonesia"],
-  ["my", "Malaysia"], ["mys", "Malaysia"], ["malaysia", "Malaysia"],
   ["ru", "Russia"], ["rus", "Russia"], ["russia", "Russia"], ["russian federation", "Russia"],
-  ["sg", "Singapore"], ["sgp", "Singapore"], ["singapore", "Singapore"],
 ]);
 const priceMarginByThb = (thb) => thb < 500 ? 0.05 : 0.08;
 const roundKsToLast2 = (ks) => Math.round(ks / 100) * 100;
@@ -231,7 +229,9 @@ const PRODUCTS = (() => {
 async function catalog(request, env) {
   if (request.method !== "POST") return jsonResponse(405, { ok: false, error: "Method not allowed" });
   const { products, supplierUpdated } = await productsWithSupplierPrices(env);
-  return jsonResponse(200, { ok: true, products: Object.values(products).map(({ packages, key }) => ({ key, packages })), supplierUpdated });
+  const regionalResults = await Promise.allSettled([regionalMlbbProduct("mlbb-my"), regionalMlbbProduct("mlbb-sg")]);
+  const regionalProducts = regionalResults.filter(result => result.status === "fulfilled").map(result => result.value);
+  return jsonResponse(200, { ok: true, products: [...Object.values(products), ...regionalProducts].filter(Boolean).map(({ packages, key }) => ({ key, packages })), supplierUpdated });
 }
 
 async function productsWithSupplierPrices(env) {
@@ -262,6 +262,20 @@ async function getSupplierPrices(env) {
     }
   }
   return { prices, updated: Object.keys(prices).length > 0 };
+}
+
+async function regionalMlbbProduct(key) {
+  const config = { "mlbb-my": [1704, "Malaysia"], "mlbb-sg": [1706, "Singapore"] }[key];
+  if (!config) return null;
+  const [stockId, region] = config;
+  const response = await fetch(`https://api.mxshop.in.th/api/buyer?id=${stockId}`);
+  const data = await response.json();
+  const base = { key, name: `Mobile Legends (${region})`, unit: "Diamonds", requiresZone: true, region };
+  base.packages = (Array.isArray(data.data) ? data.data : []).filter(item => !item.not_available).map(item => withPrice({
+    id: `${key}-${item.id}`, title: String(item.NameCardRelease || ""), name: /Pass/.test(String(item.NameCardRelease || "")) ? "Pass" : "Diamonds",
+    diamonds: Number(String(item.NameCardRelease || "").match(/^\\d+/)?.[0] || 0), supplierPriceThb: Number(item.price), mxshopStockReleaseId: String(item.id), supplier: "mxshop"
+  }, base));
+  return base;
 }
 
 async function createBalanceTopup(request, env) {
@@ -413,7 +427,8 @@ async function createOrder(request, env) {
   const contact = String(order.contact || "").trim().slice(0, 160);
   const pkg = order.pkg && typeof order.pkg === "object" ? order.pkg : null;
   const { products: currentProducts } = await productsWithSupplierPrices(env);
-  const trustedProduct = currentProducts[String(order.gameKey || "").trim()];
+  const requestedGameKey = String(order.gameKey || "").trim();
+  const trustedProduct = currentProducts[requestedGameKey] || await regionalMlbbProduct(requestedGameKey);
   const trustedPkg = trustedProduct && pkg ? trustedProduct.packages.find((item) => String(item.id) === String(pkg.id)) : null;
   if (!orderId || !userId || !contact || !pkg) return jsonResponse(400, { ok: false, error: "Missing order information" });
   if (!trustedProduct || !trustedPkg) return jsonResponse(400, { ok: false, error: "Invalid package selection" });
@@ -428,14 +443,14 @@ async function createOrder(request, env) {
   const now = new Date().toISOString();
   const initialStatus = trustedPay.key === "balance" ? "processing" : "pending";
   const submittedIgn = String(order.ign || "").trim().slice(0, 120);
-  const mlbbAccount = trustedProduct.key === "mlbb"
+  const mlbbAccount = trustedProduct.key.startsWith("mlbb")
     ? await resolveMlbbNickname(env, userId, String(order.zoneId || "").trim(), true)
     : null;
-  if (trustedProduct.key === "mlbb" && (!mlbbAccount?.nickname || !mlbbAccount?.region)) {
+  if (trustedProduct.key.startsWith("mlbb") && (!mlbbAccount?.nickname || !mlbbAccount?.region)) {
     return jsonResponse(503, { ok: false, error: "MLBB nickname and region could not be verified. Please try again before ordering." });
   }
-  if (mlbbAccount?.unsupported) {
-    return jsonResponse(422, { ok: false, error: `Invalid order: ${mlbbAccount.region} server accounts are not supported by the Global supplier.`, region: mlbbAccount.region });
+  if (mlbbAccount?.unsupported || (trustedProduct.region && normalizeMlbbRegion(mlbbAccount?.region) !== trustedProduct.region)) {
+    return jsonResponse(422, { ok: false, error: `Invalid order: ${mlbbAccount.region} server accounts are not supported.`, region: mlbbAccount.region });
   }
   const verifiedIgn = mlbbAccount?.nickname || "";
   const cleanOrder = {
@@ -1415,7 +1430,7 @@ async function performMxshopTopup(env, order) {
     return { skipped: true, reason: "MXSHOP_AUTO_TOPUP_ENABLED is not true" };
   }
 
-  if (String(order.gameKey || order.pkg?.gameKey || "") === "mlbb") {
+  if (String(order.gameKey || order.pkg?.gameKey || "").startsWith("mlbb")) {
     const account = order.region
       ? mlbbRegionResult(order.ign || "", order.region, "order")
       : await resolveMlbbNickname(env, order.userId, order.zoneId, true);
@@ -1425,7 +1440,7 @@ async function performMxshopTopup(env, order) {
       throw error;
     }
     if (account.unsupported) {
-      const error = new Error(`Invalid order: ${account.region} server accounts are not supported by the Global supplier.`);
+      const error = new Error(`Invalid order: ${account.region} server accounts are not supported.`);
       error.status = 422;
       throw error;
     }
@@ -3434,7 +3449,7 @@ function normalizeMlbbRegion(value) {
   const raw = String(value || "").trim();
   if (!raw) return "";
   const key = raw.toLowerCase().replace(/[_.-]+/g, " ").replace(/\s+/g, " ");
-  return UNSUPPORTED_MLBB_REGIONS.get(key) || (key === "global" ? "Global" : raw.toUpperCase() === raw && raw.length <= 3 ? raw.toUpperCase() : raw.replace(/\b\w/g, (letter) => letter.toUpperCase()));
+  return ({ my: "Malaysia", mys: "Malaysia", malaysia: "Malaysia", sg: "Singapore", sgp: "Singapore", singapore: "Singapore" }[key]) || UNSUPPORTED_MLBB_REGIONS.get(key) || (key === "global" ? "Global" : raw.toUpperCase() === raw && raw.length <= 3 ? raw.toUpperCase() : raw.replace(/\b\w/g, (letter) => letter.toUpperCase()));
 }
 
 function mlbbRegionResult(nickname, region, source, error = "") {
