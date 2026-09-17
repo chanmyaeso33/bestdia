@@ -25,6 +25,7 @@ export async function onRequest(context) {
     if (route === "admin-agent-runs") return adminAgentRuns(request, env);
     if (route === "admin-content-performance") return adminContentPerformance(request, env);
     if (route === "admin-marketing-insights") return adminMarketingInsights(request, env);
+    if (route === "admin-margin-report") return adminMarginReport(request, env);
     if (route === "admin-update-content-draft") return adminUpdateContentDraft(request, env);
     if (route === "admin-update-content-calendar") return adminUpdateContentCalendar(request, env);
     if (route === "admin-update-content-performance") return adminUpdateContentPerformance(request, env);
@@ -231,7 +232,10 @@ async function catalog(request, env) {
   const { products, supplierUpdated } = await productsWithSupplierPrices(env);
   const regionalResults = await Promise.allSettled([regionalMlbbProduct("mlbb-my"), regionalMlbbProduct("mlbb-sg")]);
   const regionalProducts = regionalResults.filter(result => result.status === "fulfilled").map(result => result.value);
-  return jsonResponse(200, { ok: true, products: [...Object.values(products), ...regionalProducts].filter(Boolean).map(({ packages, key }) => ({ key, packages })), supplierUpdated });
+  // Supplier costs are internal-only.  The storefront only needs the price it can
+  // charge, never the supplier price used to derive it.
+  const publicPackage = ({ supplierPriceThb, supplierPriceSource, ...pkg }) => pkg;
+  return jsonResponse(200, { ok: true, products: [...Object.values(products), ...regionalProducts].filter(Boolean).map(({ packages, key }) => ({ key, packages: packages.map(publicPackage) })), supplierUpdated });
 }
 
 async function productsWithSupplierPrices(env) {
@@ -239,15 +243,58 @@ async function productsWithSupplierPrices(env) {
   const products = Object.fromEntries(Object.entries(PRODUCTS).map(([key, product]) => [key, {
     ...product,
     packages: product.packages.map((pkg) => {
+      const supplierPriceSource = Object.prototype.hasOwnProperty.call(supplierPrices.prices, String(pkg.mxshopStockReleaseId)) ? "live" : "fallback";
       const supplierPriceThb = supplierPrices.prices[String(pkg.mxshopStockReleaseId)] ?? pkg.supplierPriceThb;
       const mapping = key === "hok" ? hokMapping(pkg.id, env) : null;
-      return withPrice({ ...pkg, supplierPriceThb, ...(mapping ? {
+      return withPrice({ ...pkg, supplierPriceThb, supplierPriceSource, ...(mapping ? {
         supplier: "mxshop", mxshopStockReleaseId: mapping.variationId,
         mxshopStockId: mapping.productId, checkoutAvailable: mapping.valid,
       } : {}) }, product);
     }),
   }]));
   return { products, supplierUpdated: supplierPrices.updated };
+}
+
+function marginReport(products) {
+  const games = Object.values(products).map((product) => {
+    const packages = product.packages
+      .filter((pkg) => pkg.checkoutAvailable !== false && Number(pkg.supplierPriceThb) > 0)
+      .map((pkg) => {
+        const supplierCostThb = Number(pkg.supplierPriceThb);
+        const customerPriceThb = Number(pkg.priceThb);
+        const grossProfitThb = customerPriceThb - supplierCostThb;
+        return {
+          id: pkg.id,
+          title: pkg.title,
+          supplierCostThb,
+          supplierPriceSource: pkg.supplierPriceSource === "live" ? "live" : "fallback",
+          customerPriceKs: Number(pkg.price),
+          customerPriceThb,
+          grossProfitThb,
+          grossMarginPercent: customerPriceThb ? (grossProfitThb / customerPriceThb) * 100 : 0,
+        };
+      });
+    const totals = packages.reduce((sum, pkg) => ({
+      supplierCostThb: sum.supplierCostThb + pkg.supplierCostThb,
+      customerPriceThb: sum.customerPriceThb + pkg.customerPriceThb,
+      grossProfitThb: sum.grossProfitThb + pkg.grossProfitThb,
+    }), { supplierCostThb: 0, customerPriceThb: 0, grossProfitThb: 0 });
+    totals.grossMarginPercent = totals.customerPriceThb ? (totals.grossProfitThb / totals.customerPriceThb) * 100 : 0;
+    return { key: product.key, name: product.name, packages, totals };
+  });
+  return { games };
+}
+
+async function adminMarginReport(request, env) {
+  if (request.method !== "POST") return jsonResponse(405, { ok: false, error: "Method not allowed" });
+  const auth = requireAdmin(await readJson(request), env);
+  if (auth) return auth;
+  const { products, supplierUpdated } = await productsWithSupplierPrices(env);
+  const regionalResults = await Promise.allSettled([regionalMlbbProduct("mlbb-my"), regionalMlbbProduct("mlbb-sg")]);
+  for (const result of regionalResults) {
+    if (result.status === "fulfilled" && result.value) products[result.value.key] = result.value;
+  }
+  return jsonResponse(200, { ok: true, supplierUpdated, ...marginReport(products) });
 }
 
 async function getSupplierPrices(env) {
