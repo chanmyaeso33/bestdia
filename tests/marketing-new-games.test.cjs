@@ -8,7 +8,8 @@ const apiPromise = import('data:text/javascript;base64,' + Buffer.from(source + 
 test('daily marketing pipeline recognizes every sellable new game and has a collector source', async () => {
   const { NEWS_COLLECTOR_SOURCES, normalizeOpportunityGame, MARKETING_PRODUCT_SEEDS } = await apiPromise;
   const games = ['hok', 'free-fire', 'genshin-impact', 'magic-chess-go-go'];
-  assert.deepEqual(MARKETING_PRODUCT_SEEDS.map((product) => product.game), games);
+  assert.deepEqual(MARKETING_PRODUCT_SEEDS.map((product) => product.targetGame), games);
+  assert.ok(MARKETING_PRODUCT_SEEDS.every((product) => product.game === 'other'));
   for (const game of games) assert.ok(NEWS_COLLECTOR_SOURCES.some((source) => source.game === game), `missing ${game} source`);
   assert.equal(normalizeOpportunityGame('Honor of Kings'), 'hok');
   assert.equal(normalizeOpportunityGame('FreeFire'), 'free-fire');

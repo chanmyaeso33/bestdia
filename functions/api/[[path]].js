@@ -2102,18 +2102,21 @@ async function runOpportunityAgent(env, options = {}) {
 
 
 const MARKETING_PRODUCT_SEEDS = [
-  { name: "Honor of Kings Tokens", game: "hok", product_type: "tokens", priority: 100 },
-  { name: "Free Fire Diamonds", game: "free-fire", product_type: "diamonds", priority: 100 },
-  { name: "Genshin Impact Genesis Crystals", game: "genshin-impact", product_type: "genesis_crystals", priority: 100 },
-  { name: "Magic Chess: Go Go Diamonds", game: "magic-chess-go-go", product_type: "diamonds", priority: 100 },
+  // The existing production constraint permits "other" but not the newer game
+  // identifiers yet. targetGame retains correct matching without breaking the
+  // daily pipeline before the accompanying schema migration is applied.
+  { name: "Honor of Kings Tokens", game: "other", targetGame: "hok", product_type: "tokens", priority: 100 },
+  { name: "Free Fire Diamonds", game: "other", targetGame: "free-fire", product_type: "diamonds", priority: 100 },
+  { name: "Genshin Impact Genesis Crystals", game: "other", targetGame: "genshin-impact", product_type: "genesis_crystals", priority: 100 },
+  { name: "Magic Chess: Go Go Diamonds", game: "other", targetGame: "magic-chess-go-go", product_type: "diamonds", priority: 100 },
 ];
 
 async function ensureMarketingProducts(env, activeProducts) {
   const existing = Array.isArray(activeProducts) ? activeProducts : [];
-  const keys = new Set(existing.map((product) => `${product.game}:${normalizeProductText(product.name)}`));
-  const missing = MARKETING_PRODUCT_SEEDS.filter((product) => !keys.has(`${product.game}:${normalizeProductText(product.name)}`));
+  const names = new Set(existing.map((product) => normalizeProductText(product.name)));
+  const missing = MARKETING_PRODUCT_SEEDS.filter((product) => !names.has(normalizeProductText(product.name)));
   if (!missing.length) return existing;
-  const created = await supabaseRequest(env, "POST", "products", missing.map((product) => ({ ...product, is_active: true })), "return=representation");
+  const created = await supabaseRequest(env, "POST", "products", missing.map(({ targetGame, ...product }) => ({ ...product, is_active: true })), "return=representation");
   return [...existing, ...created];
 }
 
@@ -2612,7 +2615,7 @@ function normalizeOpportunityType(value, result = {}) {
 }
 
 function matchOpportunityProducts(productMatches, products, game, article, opportunity) {
-  const allowedProducts = products.filter((product) => game === "other" || product.game === game);
+  const allowedProducts = products.filter((product) => game === "other" || marketingProductGame(product) === game);
   const matches = productMatches.map((match) => {
     const product = findMatchingProduct(String(match.product_name || ""), allowedProducts);
     if (!product) return null;
@@ -2620,6 +2623,12 @@ function matchOpportunityProducts(productMatches, products, game, article, oppor
   }).filter(Boolean);
   const inferred = inferOpportunityProducts(allowedProducts, game, article, opportunity);
   return dedupeProductMatches([...matches, ...inferred]).slice(0, 3);
+}
+
+function marketingProductGame(product) {
+  const name = normalizeProductText(product?.name);
+  const seed = MARKETING_PRODUCT_SEEDS.find((item) => normalizeProductText(item.name) === name);
+  return seed?.targetGame || product?.game || "other";
 }
 
 function findMatchingProduct(name, products) {
