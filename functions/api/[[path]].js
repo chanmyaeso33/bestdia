@@ -1618,7 +1618,7 @@ async function paymentWebhook(request, env) {
 
 const OPPORTUNITY_AGENT_PROMPT = `You are the BestDia Opportunity Agent.
 
-BestDia sells MLBB diamonds, Weekly Diamond Passes, PUBG UC, and gaming top-ups in Myanmar.
+BestDia sells MLBB diamonds, PUBG UC, Honor of Kings Tokens, Free Fire Diamonds, Genshin Impact Genesis Crystals, Magic Chess: Go Go Diamonds, and other gaming top-ups in Myanmar.
 
 Your job is to analyze one gaming news article and decide whether BestDia should create a marketing post from it today.
 
@@ -1660,7 +1660,7 @@ Safety rules:
 - Always include at least one recommended channel. Prefer facebook and tiktok for high-scoring sales or trend opportunities.`;
 
 const OPPORTUNITY_PROMPT_VERSION = "opportunity-agent-v1";
-const OPPORTUNITY_GAMES = new Set(["mlbb", "pubg", "other"]);
+const OPPORTUNITY_GAMES = new Set(["mlbb", "pubg", "hok", "free-fire", "genshin-impact", "magic-chess-go-go", "other"]);
 const OPPORTUNITY_TYPES = new Set(["trend_post", "sales_post", "educational_post", "event_reminder", "promotion_angle", "community_reaction", "urgent_update"]);
 const WRITER_PROMPT_VERSION = "writer-agent-v1";
 const WRITER_ALLOWED_CHANNELS = new Set(["facebook", "tiktok", "telegram", "website"]);
@@ -1769,6 +1769,22 @@ const NEWS_COLLECTOR_SOURCES = [
     game: "pubg",
     url: "https://www.reddit.com/r/PUBGMobile/new.json?limit=10&raw_json=1",
     parser: "reddit",
+  },
+  {
+    name: "Reddit HonorOfKings", source_type: "reddit", platform: "reddit", game: "hok",
+    url: "https://www.reddit.com/r/honorofkings/new.json?limit=10&raw_json=1", parser: "reddit",
+  },
+  {
+    name: "Reddit FreeFire", source_type: "reddit", platform: "reddit", game: "free-fire",
+    url: "https://www.reddit.com/r/freefire/new.json?limit=10&raw_json=1", parser: "reddit",
+  },
+  {
+    name: "Reddit Genshin Impact", source_type: "reddit", platform: "reddit", game: "genshin-impact",
+    url: "https://www.reddit.com/r/Genshin_Impact/new.json?limit=10&raw_json=1", parser: "reddit",
+  },
+  {
+    name: "Reddit Magic Chess Go Go", source_type: "reddit", platform: "reddit", game: "magic-chess-go-go",
+    url: "https://www.reddit.com/r/MagicChessGOGOGame/new.json?limit=10&raw_json=1", parser: "reddit",
   },
 ];
 
@@ -2071,13 +2087,29 @@ async function runAnalystAgentApi(request, env) {
 async function runOpportunityAgent(env, options = {}) {
   const limit = Math.max(1, Math.min(10, Number(options.limit || 5)));
   const articles = await supabaseSelectCollectedArticles(env, limit);
-  const products = await supabaseSelectActiveProducts(env);
+  const products = await ensureMarketingProducts(env, await supabaseSelectActiveProducts(env));
   const memoryInsights = await supabaseSelectMarketingInsights(env, 3).catch(() => []);
   const results = [];
   for (const article of articles) {
     results.push(await processOpportunityArticle(env, article, products, memoryInsights));
   }
   return { processed: results.length, memoryInsightsUsed: memoryInsights.map((item) => item.id), results };
+}
+
+const MARKETING_PRODUCT_SEEDS = [
+  { name: "Honor of Kings Tokens", game: "hok", product_type: "tokens", priority: 100 },
+  { name: "Free Fire Diamonds", game: "free-fire", product_type: "diamonds", priority: 100 },
+  { name: "Genshin Impact Genesis Crystals", game: "genshin-impact", product_type: "genesis_crystals", priority: 100 },
+  { name: "Magic Chess: Go Go Diamonds", game: "magic-chess-go-go", product_type: "diamonds", priority: 100 },
+];
+
+async function ensureMarketingProducts(env, activeProducts) {
+  const existing = Array.isArray(activeProducts) ? activeProducts : [];
+  const keys = new Set(existing.map((product) => `${product.game}:${normalizeProductText(product.name)}`));
+  const missing = MARKETING_PRODUCT_SEEDS.filter((product) => !keys.has(`${product.game}:${normalizeProductText(product.name)}`));
+  if (!missing.length) return existing;
+  const created = await supabaseRequest(env, "POST", "products", missing.map((product) => ({ ...product, is_active: true })), "return=representation");
+  return [...existing, ...created];
 }
 
 async function processOpportunityArticle(env, article, products, memoryInsights = []) {
@@ -2539,6 +2571,10 @@ function normalizeOpportunityGame(value) {
   const text = String(value || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
   if (["mlbb", "mobile_legends", "mobile_legends_bang_bang", "mobile_legend"].includes(text)) return "mlbb";
   if (["pubg", "pubg_mobile", "playerunknowns_battlegrounds", "pubg_m"].includes(text)) return "pubg";
+  if (["hok", "honor_of_kings", "honour_of_kings"].includes(text)) return "hok";
+  if (["free_fire", "freefire", "garena_free_fire"].includes(text)) return "free-fire";
+  if (["genshin", "genshin_impact", "genshinimpact"].includes(text)) return "genshin-impact";
+  if (["magic_chess", "magic_chess_go_go", "magicchessgogo", "mcgg"].includes(text)) return "magic-chess-go-go";
   if (!text || ["unknown", "general", "gaming", "other"].includes(text)) return "other";
   return text;
 }

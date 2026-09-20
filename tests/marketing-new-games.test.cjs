@@ -1,0 +1,28 @@
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+
+const source = fs.readFileSync('functions/api/[[path]].js', 'utf8');
+const apiPromise = import('data:text/javascript;base64,' + Buffer.from(source + '\nexport { NEWS_COLLECTOR_SOURCES, normalizeOpportunityGame, validateOpportunityResult, MARKETING_PRODUCT_SEEDS };').toString('base64'));
+
+test('daily marketing pipeline recognizes every sellable new game and has a collector source', async () => {
+  const { NEWS_COLLECTOR_SOURCES, normalizeOpportunityGame, MARKETING_PRODUCT_SEEDS } = await apiPromise;
+  const games = ['hok', 'free-fire', 'genshin-impact', 'magic-chess-go-go'];
+  assert.deepEqual(MARKETING_PRODUCT_SEEDS.map((product) => product.game), games);
+  for (const game of games) assert.ok(NEWS_COLLECTOR_SOURCES.some((source) => source.game === game), `missing ${game} source`);
+  assert.equal(normalizeOpportunityGame('Honor of Kings'), 'hok');
+  assert.equal(normalizeOpportunityGame('FreeFire'), 'free-fire');
+  assert.equal(normalizeOpportunityGame('Genshin Impact'), 'genshin-impact');
+  assert.equal(normalizeOpportunityGame('MCGG'), 'magic-chess-go-go');
+});
+
+test('new-game events are accepted as marketing opportunities', async () => {
+  const { validateOpportunityResult } = await apiPromise;
+  const result = validateOpportunityResult({
+    should_create_opportunity: true, game: 'Genshin Impact', opportunity_type: 'event', title: 'Event', description: 'Event update',
+    trend_score: 80, sales_score: 80, urgency_score: 85, myanmar_interest_score: 70, overall_score: 80,
+    reasoning: 'Limited event', recommended_channels: ['facebook'], product_matches: [],
+  }, { game: 'genshin-impact', title: 'New event' });
+  assert.equal(result.game, 'genshin-impact');
+  assert.equal(result.opportunity_type, 'event_reminder');
+});
