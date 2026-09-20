@@ -2091,7 +2091,10 @@ async function runAnalystAgentApi(request, env) {
 async function runOpportunityAgent(env, options = {}) {
   const limit = Math.max(1, Math.min(10, Number(options.limit || 5)));
   const articles = await supabaseSelectCollectedArticles(env, limit);
-  const products = await ensureMarketingProducts(env, await supabaseSelectActiveProducts(env));
+  // Product matching is optional for an opportunity. Do not seed catalog rows
+  // here: production installations can have a stricter products.game check
+  // constraint than the Marketing OS game taxonomy.
+  const products = await supabaseSelectActiveProducts(env);
   const memoryInsights = await supabaseSelectMarketingInsights(env, 3).catch(() => []);
   const results = [];
   for (const article of articles) {
@@ -2110,15 +2113,6 @@ const MARKETING_PRODUCT_SEEDS = [
   { name: "Genshin Impact Genesis Crystals", game: "other", targetGame: "genshin-impact", product_type: "genesis_crystals", priority: 100 },
   { name: "Magic Chess: Go Go Diamonds", game: "other", targetGame: "magic-chess-go-go", product_type: "diamonds", priority: 100 },
 ];
-
-async function ensureMarketingProducts(env, activeProducts) {
-  const existing = Array.isArray(activeProducts) ? activeProducts : [];
-  const names = new Set(existing.map((product) => normalizeProductText(product.name)));
-  const missing = MARKETING_PRODUCT_SEEDS.filter((product) => !names.has(normalizeProductText(product.name)));
-  if (!missing.length) return existing;
-  const created = await supabaseRequest(env, "POST", "products", missing.map(({ targetGame, ...product }) => ({ ...product, is_active: true })), "return=representation");
-  return [...existing, ...created];
-}
 
 async function processOpportunityArticle(env, article, products, memoryInsights = []) {
   const startedAt = Date.now();
@@ -2150,7 +2144,6 @@ async function processOpportunityArticle(env, article, products, memoryInsights 
     }
 
     const productMatches = matchOpportunityProducts(opportunity.product_matches, products, opportunity.game, article, opportunity);
-    if (!productMatches.length) throw new Error("Opportunity Agent did not return any valid product matches");
 
     const createdOpportunity = await supabaseCreateOpportunity(env, {
       article_id: article.id,
@@ -2168,12 +2161,14 @@ async function processOpportunityArticle(env, article, products, memoryInsights 
       status: "new",
     });
 
-    await supabaseCreateProductMatches(env, productMatches.map((match) => ({
-      opportunity_id: createdOpportunity.id,
-      product_id: match.product.id,
-      relevance_score: match.relevance_score,
-      reason: match.reason,
-    })));
+    if (productMatches.length) {
+      await supabaseCreateProductMatches(env, productMatches.map((match) => ({
+        opportunity_id: createdOpportunity.id,
+        product_id: match.product.id,
+        relevance_score: match.relevance_score,
+        reason: match.reason,
+      })));
+    }
     await supabaseUpdateArticle(env, article.id, { processing_status: "opportunity_created", processed_at: new Date().toISOString(), last_error: null });
     await supabaseUpdateAgentRun(env, agentRun.id, {
       status: "success",

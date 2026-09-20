@@ -28,6 +28,11 @@ test('new-game events are accepted as marketing opportunities', async () => {
   assert.equal(result.opportunity_type, 'event_reminder');
 });
 
+test('daily pipeline does not create constrained product catalog rows', () => {
+  assert.doesNotMatch(source, /supabaseRequest\(env, "POST", "products"/);
+  assert.match(source, /if \(productMatches\.length\) \{/);
+});
+
 test('marketing dashboard returns a JSON error when its data source fails', async () => {
   const api = await apiPromise;
   const originalFetch = global.fetch;
