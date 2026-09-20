@@ -26,3 +26,21 @@ test('new-game events are accepted as marketing opportunities', async () => {
   assert.equal(result.game, 'genshin-impact');
   assert.equal(result.opportunity_type, 'event_reminder');
 });
+
+test('marketing dashboard returns a JSON error when its data source fails', async () => {
+  const api = await apiPromise;
+  const originalFetch = global.fetch;
+  global.fetch = async () => new Response('<html>upstream failure</html>', { status: 500, headers: { 'Content-Type': 'text/html' } });
+  try {
+    const response = await api.onRequest({
+      request: new Request('https://test/api/admin-opportunities', { method: 'POST', body: JSON.stringify({ adminPassword: 'test', game: 'free-fire' }) }),
+      env: { ADMIN_PASSWORD: 'test', SUPABASE_URL: 'https://supabase.test', SUPABASE_SERVICE_ROLE_KEY: 'test' },
+      params: { path: ['admin-opportunities'] },
+    });
+    const body = await response.json();
+    assert.equal(response.status, 502);
+    assert.match(body.error, /Marketing opportunities query failed: Supabase returned HTTP 500 with a non-JSON response/);
+  } finally {
+    global.fetch = originalFetch;
+  }
+});

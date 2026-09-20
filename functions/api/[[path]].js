@@ -663,9 +663,13 @@ async function adminOpportunities(request, env) {
   };
   if (status !== "all") params.status = `eq.${status}`;
   if (game) params.game = `eq.${game}`;
-  const opportunities = await supabaseRequest(env, "GET", `today_opportunities?${supabaseQuery(params)}`);
-  const enriched = await enrichOpportunitiesWithQa(env, opportunities);
-  return jsonResponse(200, { ok: true, opportunities: enriched });
+  try {
+    const opportunities = await supabaseRequest(env, "GET", `today_opportunities?${supabaseQuery(params)}`);
+    const enriched = await enrichOpportunitiesWithQa(env, opportunities);
+    return jsonResponse(200, { ok: true, opportunities: enriched });
+  } catch (error) {
+    return jsonResponse(502, { ok: false, error: `Marketing opportunities query failed: ${String(error.message || error).slice(0, 500)}` });
+  }
 }
 
 async function adminAgentRuns(request, env) {
@@ -3375,7 +3379,14 @@ async function supabaseRequest(env, method, path, body, prefer) {
   if (prefer) headers.Prefer = prefer;
   const response = await fetch(`${url}/rest/v1/${path}`, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
   const text = await response.text();
-  const data = text ? JSON.parse(text) : null;
+  let data = null;
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      throw new Error(`Supabase returned HTTP ${response.status} with a non-JSON response`);
+    }
+  }
   if (!response.ok) throw new Error(data?.message || data?.error || `Supabase ${method} ${path} failed`);
   return data;
 }
