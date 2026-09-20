@@ -2100,6 +2100,7 @@ async function runOpportunityAgent(env, options = {}) {
   return { processed: results.length, memoryInsightsUsed: memoryInsights.map((item) => item.id), results };
 }
 
+
 const MARKETING_PRODUCT_SEEDS = [
   { name: "Honor of Kings Tokens", game: "hok", product_type: "tokens", priority: 100 },
   { name: "Free Fire Diamonds", game: "free-fire", product_type: "diamonds", priority: 100 },
@@ -3377,7 +3378,17 @@ async function supabaseRequest(env, method, path, body, prefer) {
   if (!key) throw new Error("SUPABASE_SERVICE_ROLE_KEY is not configured");
   const headers = { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json" };
   if (prefer) headers.Prefer = prefer;
-  const response = await fetch(`${url}/rest/v1/${path}`, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
+  let response;
+  try {
+    response = await fetch(`${url}/rest/v1/${path}`, { method, headers, body: body === undefined ? undefined : JSON.stringify(body), signal: controller.signal });
+  } catch (error) {
+    if (controller.signal.aborted) throw new Error("Supabase request timed out after 8 seconds");
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
   const text = await response.text();
   let data = null;
   if (text) {
