@@ -44,3 +44,28 @@ test('marketing dashboard returns a JSON error when its data source fails', asyn
     global.fetch = originalFetch;
   }
 });
+
+test('marketing dashboard loads optional QA data concurrently', async () => {
+  const api = await apiPromise;
+  const originalFetch = global.fetch;
+  global.fetch = async (url) => {
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    const path = String(url);
+    if (path.includes('today_opportunities')) {
+      return new Response(JSON.stringify([{ id: 'opportunity-1', products: [], recommended_channels: [] }]), { headers: { 'Content-Type': 'application/json' } });
+    }
+    return new Response('[]', { headers: { 'Content-Type': 'application/json' } });
+  };
+  try {
+    const startedAt = Date.now();
+    const response = await api.onRequest({
+      request: new Request('https://test/api/admin-opportunities', { method: 'POST', body: JSON.stringify({ adminPassword: 'test' }) }),
+      env: { ADMIN_PASSWORD: 'test', SUPABASE_URL: 'https://supabase.test', SUPABASE_SERVICE_ROLE_KEY: 'test' },
+      params: { path: ['admin-opportunities'] },
+    });
+    assert.equal(response.status, 200);
+    assert.ok(Date.now() - startedAt < 105, 'QA lookups should not be performed serially');
+  } finally {
+    global.fetch = originalFetch;
+  }
+});

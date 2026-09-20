@@ -12,47 +12,47 @@ export async function onRequest(context) {
   const route = routePath.replace(/^\/+|\/+$/g, "");
 
   try {
-    if (route === "admin-auth") return adminAuth(request, env);
-    if (route === "admin-archive-orders") return adminArchiveOrders(request, env);
-    if (route === "admin-balance-topups") return adminBalanceTopups(request, env);
-    if (route === "admin-confirm-balance-topup") return adminConfirmBalanceTopup(request, env);
-    if (route === "admin-reverse-balance-topup") return adminReverseBalanceTopup(request, env);
-    if (route === "admin-set-balance-status") return adminSetBalanceStatus(request, env);
-    if (route === "admin-content-drafts") return adminContentDrafts(request, env);
-    if (route === "admin-content-calendar") return adminContentCalendar(request, env);
-    if (route === "admin-orders") return adminOrders(request, env);
-    if (route === "admin-opportunities") return adminOpportunities(request, env);
-    if (route === "admin-agent-runs") return adminAgentRuns(request, env);
-    if (route === "admin-content-performance") return adminContentPerformance(request, env);
-    if (route === "admin-marketing-insights") return adminMarketingInsights(request, env);
-    if (route === "admin-update-content-draft") return adminUpdateContentDraft(request, env);
-    if (route === "admin-update-content-calendar") return adminUpdateContentCalendar(request, env);
-    if (route === "admin-update-content-performance") return adminUpdateContentPerformance(request, env);
-    if (route === "admin-update-opportunity") return adminUpdateOpportunity(request, env);
-    if (route === "admin-update-balance-topup") return adminUpdateBalanceTopup(request, env);
-    if (route === "admin-update-order") return adminUpdateOrder(request, env);
-    if (route === "account-balance") return accountBalance(request, env);
-    if (route === "account-login") return accountLogin(request, env);
-    if (route === "account-signup") return accountSignup(request, env);
-    if (route === "catalog") return catalog(request, env);
-    if (route === "create-balance-topup") return createBalanceTopup(request, env);
-    if (route === "create-order") return createOrder(request, env);
-    if (route === "mlbb-lookup") return mlbbLookup(request, env);
-    if (route === "moogold-topup") return moogoldTopup(request, env);
-    if (route === "mxshop-diagnostic") return mxshopDiagnostic(request, env);
-    if (route === "hok-mapping-diagnostic") return hokMappingDiagnostic(request, env);
-    if (route === "mxshop-packages") return mxshopPackages(request, env);
-    if (route === "mxshop-topup") return mxshopTopup(request, env);
-    if (route === "order-status") return orderStatus(request, env);
-    if (route === "payment-webhook") return paymentWebhook(request, env);
-    if (route === "public-ticker") return publicTicker(request, env);
-    if (route === "collect-news") return collectNewsApi(request, env);
-    if (route === "run-opportunity-agent") return runOpportunityAgentApi(request, env);
-    if (route === "run-writer-agent") return runWriterAgentApi(request, env);
-    if (route === "run-analyst-agent") return runAnalystAgentApi(request, env);
-    if (route === "run-daily-opportunity-pipeline") return runDailyOpportunityPipelineApi(request, env);
-    if (route === "telegram-diagnostic") return telegramDiagnostic(request, env);
-    if (route === "telegram-notify") return telegramNotify(request, env);
+    if (route === "admin-auth") return await adminAuth(request, env);
+    if (route === "admin-archive-orders") return await adminArchiveOrders(request, env);
+    if (route === "admin-balance-topups") return await adminBalanceTopups(request, env);
+    if (route === "admin-confirm-balance-topup") return await adminConfirmBalanceTopup(request, env);
+    if (route === "admin-reverse-balance-topup") return await adminReverseBalanceTopup(request, env);
+    if (route === "admin-set-balance-status") return await adminSetBalanceStatus(request, env);
+    if (route === "admin-content-drafts") return await adminContentDrafts(request, env);
+    if (route === "admin-content-calendar") return await adminContentCalendar(request, env);
+    if (route === "admin-orders") return await adminOrders(request, env);
+    if (route === "admin-opportunities") return await adminOpportunities(request, env);
+    if (route === "admin-agent-runs") return await adminAgentRuns(request, env);
+    if (route === "admin-content-performance") return await adminContentPerformance(request, env);
+    if (route === "admin-marketing-insights") return await adminMarketingInsights(request, env);
+    if (route === "admin-update-content-draft") return await adminUpdateContentDraft(request, env);
+    if (route === "admin-update-content-calendar") return await adminUpdateContentCalendar(request, env);
+    if (route === "admin-update-content-performance") return await adminUpdateContentPerformance(request, env);
+    if (route === "admin-update-opportunity") return await adminUpdateOpportunity(request, env);
+    if (route === "admin-update-balance-topup") return await adminUpdateBalanceTopup(request, env);
+    if (route === "admin-update-order") return await adminUpdateOrder(request, env);
+    if (route === "account-balance") return await accountBalance(request, env);
+    if (route === "account-login") return await accountLogin(request, env);
+    if (route === "account-signup") return await accountSignup(request, env);
+    if (route === "catalog") return await catalog(request, env);
+    if (route === "create-balance-topup") return await createBalanceTopup(request, env);
+    if (route === "create-order") return await createOrder(request, env);
+    if (route === "mlbb-lookup") return await mlbbLookup(request, env);
+    if (route === "moogold-topup") return await moogoldTopup(request, env);
+    if (route === "mxshop-diagnostic") return await mxshopDiagnostic(request, env);
+    if (route === "hok-mapping-diagnostic") return await hokMappingDiagnostic(request, env);
+    if (route === "mxshop-packages") return await mxshopPackages(request, env);
+    if (route === "mxshop-topup") return await mxshopTopup(request, env);
+    if (route === "order-status") return await orderStatus(request, env);
+    if (route === "payment-webhook") return await paymentWebhook(request, env);
+    if (route === "public-ticker") return await publicTicker(request, env);
+    if (route === "collect-news") return await collectNewsApi(request, env);
+    if (route === "run-opportunity-agent") return await runOpportunityAgentApi(request, env);
+    if (route === "run-writer-agent") return await runWriterAgentApi(request, env);
+    if (route === "run-analyst-agent") return await runAnalystAgentApi(request, env);
+    if (route === "run-daily-opportunity-pipeline") return await runDailyOpportunityPipelineApi(request, env);
+    if (route === "telegram-diagnostic") return await telegramDiagnostic(request, env);
+    if (route === "telegram-notify") return await telegramNotify(request, env);
     return jsonResponse(404, { ok: false, error: "API route not found" });
   } catch (error) {
     if (error.status) return jsonResponse(error.status, { ok: false, error: error.message });
@@ -2698,9 +2698,13 @@ function normalizeOpportunityScore(value) {
 async function enrichOpportunitiesWithQa(env, opportunities) {
   const ids = opportunities.map((item) => item.id).filter(Boolean);
   if (!ids.length) return opportunities.map((item) => ({ ...item, qa: buildOpportunityQa(item, [], []) }));
-  const drafts = await supabaseSelectContentDraftsForOpportunities(env, ids).catch(() => []);
-  const calendar = await supabaseSelectContentCalendarForOpportunities(env, ids).catch(() => []);
-  const performance = await supabaseSelectContentPerformanceForOpportunities(env, ids).catch(() => []);
+  // These optional QA enrichments must run together. Running them serially can
+  // exceed the Pages request budget when Supabase is slow.
+  const [drafts, calendar, performance] = await Promise.all([
+    supabaseSelectContentDraftsForOpportunities(env, ids).catch(() => []),
+    supabaseSelectContentCalendarForOpportunities(env, ids).catch(() => []),
+    supabaseSelectContentPerformanceForOpportunities(env, ids).catch(() => []),
+  ]);
   const draftsByOpportunity = groupBy(drafts, "opportunity_id");
   const calendarByOpportunity = groupBy(calendar, "opportunity_id");
   const performanceByOpportunity = groupBy(performance, "opportunity_id");
