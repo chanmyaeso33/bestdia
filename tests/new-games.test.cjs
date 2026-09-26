@@ -2,17 +2,23 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const source=fs.readFileSync('functions/api/[[path]].js','utf8');
-const apiPromise=import('data:text/javascript;base64,'+Buffer.from(source+'\nexport { PRODUCTS, buildMxUid, getMappedStockReleaseId, performMxshopTopup, productsWithSupplierPrices };').toString('base64'));
+const apiPromise=import('data:text/javascript;base64,'+Buffer.from(source+'\nexport { PRODUCTS, buildMxUid, getMappedStockReleaseId, performMxshopTopup, productsWithSupplierPrices, priceForSupplierCost };').toString('base64'));
 async function orderResult(order){const api=await apiPromise;return api.onRequest({request:new Request('https://test/api/create-order',{method:'POST',body:JSON.stringify({order:{contact:'test',payKey:'kbz',payment:'KBZPay',...order}})}),env:{},params:{path:['create-order']}});}
 
-test('new catalogs have complete supplier mappings and markup prices',async()=>{
+test('new catalogs have complete supplier mappings and floor-margin prices',async()=>{
  const {PRODUCTS}=await apiPromise;
  for(const [key,count,stock] of [['magic-chess-go-go',11,'91'],['genshin-impact',14,'89']]){
   const p=PRODUCTS[key];assert.equal(p.packages.length,count);assert.equal(new Set(p.packages.map(x=>x.mxshopStockReleaseId)).size,count);assert.ok(p.packages.every(x=>x.mxshopStockId===stock&&x.price>0&&x.priceThb>0));
  }
- assert.equal(PRODUCTS['genshin-impact'].packages.find(p=>p.mxshopStockReleaseId==='51103').price,5000);
- assert.equal(PRODUCTS['magic-chess-go-go'].packages.find(p=>p.mxshopStockReleaseId==='16800919').priceThb,50);
+ assert.ok(PRODUCTS['genshin-impact'].packages.find(p=>p.mxshopStockReleaseId==='51103').price>35.93*133.5);
+ assert.ok(PRODUCTS['magic-chess-go-go'].packages.find(p=>p.mxshopStockReleaseId==='16800919').priceThb>48.03);
  assert.equal(PRODUCTS['call-of-duty'],undefined);
+});
+
+test('pricing enforces both profit floors and target margins',async()=>{
+ const {priceForSupplierCost}=await apiPromise;
+ assert.equal(priceForSupplierCost(3500/133.5).price,3800);
+ assert.equal(priceForSupplierCost(200000/133.5).price,208400);
 });
 
 test('missing and unsupported server selections are rejected before persistence',async()=>{
@@ -49,5 +55,5 @@ test('fulfillment sends the trusted package ID and supplier-specific server form
 test('supplier refresh includes both catalogs and updates prices',async()=>{
  const {productsWithSupplierPrices}=await apiPromise;const original=global.fetch,stocks=[];
  global.fetch=async(url,options)=>{assert.ok(url.endsWith('/get_stockreleaselist'));const stock=JSON.parse(options.body).StockIDX;stocks.push(stock);return new Response(JSON.stringify({success:true,result:stock==='89'?[{stockreleaselist_id:'51103',price:30}]:stock==='91'?[{stockreleaselist_id:'16800919',price:40}]:[]}));};
- try{const {products,supplierUpdated}=await productsWithSupplierPrices({MXSHOP_MX_KEY:'test',MXSHOP_PASSKEY:'test'});assert.ok(stocks.includes('89')&&stocks.includes('91'));assert.ok(supplierUpdated);assert.equal(products['genshin-impact'].packages.find(p=>p.id==='genshin-impact-51103').priceThb,32);assert.equal(products['magic-chess-go-go'].packages[0].priceThb,42);}finally{global.fetch=original;}
+ try{const {products,supplierUpdated}=await productsWithSupplierPrices({MXSHOP_MX_KEY:'test',MXSHOP_PASSKEY:'test'});assert.ok(stocks.includes('89')&&stocks.includes('91'));assert.ok(supplierUpdated);assert.ok(products['genshin-impact'].packages.find(p=>p.id==='genshin-impact-51103').priceThb>30);assert.ok(products['magic-chess-go-go'].packages[0].priceThb>40);}finally{global.fetch=original;}
 });

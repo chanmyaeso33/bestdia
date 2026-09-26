@@ -99,23 +99,37 @@ const UNSUPPORTED_MLBB_REGIONS = new Map([
   ["id", "Indonesia"], ["idn", "Indonesia"], ["indonesia", "Indonesia"],
   ["ru", "Russia"], ["rus", "Russia"], ["russia", "Russia"], ["russian federation", "Russia"],
 ]);
-const priceMarginByThb = (thb) => thb < 500 ? 0.05 : 0.08;
-const roundKsToLast2 = (ks) => Math.round(ks / 100) * 100;
-// Preserve the live bestseller prices captured on 2026-09-08, even after supplier refreshes.
-// Keep these overrides in sync with index.html and admin.html.
-const PRICE_OVERRIDES_KS = { 5: 3600, 7: 6900, 10: 35500, 11: 5600, 12: 11000, 13: 16000, "pubg-60": 4500, "pubg-325": 20500, "pubg-660": 40500, "pubg-1800": 99000, "pubg-8100": 385000, "pubg-prime-plus-1-month": 41100 };
-const PRICE_OVERRIDES_THB = { 5: 27, 7: 52, 10: 272, 11: 42, 12: 83, 13: 120, "pubg-60": 34, "pubg-325": 156, "pubg-660": 304, "pubg-1800": 745, "pubg-8100": 2892, "pubg-prime-plus-1-month": 308 };
-const trustedPriceKs = (thb) => roundKsToLast2(Number(thb || 0) * THB_TO_KS * (1 + priceMarginByThb(Number(thb || 0))));
-const trustedPriceThb = (pkg) => PRICE_OVERRIDES_THB[pkg.id] ?? Math.round(Number(pkg.supplierPriceThb || 0) * (1 + priceMarginByThb(Number(pkg.supplierPriceThb || 0))));
-const withPrice = (pkg, product) => ({
+const PRICING_TIERS = Object.freeze([
+  { maxLandedKs: 10_000, minimumProfitKs: 300, targetMargin: 0.06 },
+  { maxLandedKs: 50_000, minimumProfitKs: 1_000, targetMargin: 0.05 },
+  { maxLandedKs: 150_000, minimumProfitKs: 2_500, targetMargin: 0.045 },
+  { maxLandedKs: Infinity, minimumProfitKs: 5_000, targetMargin: 0.04 },
+]);
+const roundPriceKs = (ks) => Math.ceil(Math.max(0, Number(ks) || 0) / 100) * 100;
+const configuredRate = (env, name) => Math.max(0, Math.min(0.25, Number(env?.[name] || 0)));
+function priceForSupplierCost(thb, env = {}) {
+  const supplierCostKs = Number(thb || 0) * THB_TO_KS;
+  const landedCostKs = supplierCostKs * (1 + configuredRate(env, "PRICING_FX_COST_RATE"));
+  const paymentCostRate = configuredRate(env, "PRICING_PAYMENT_FEE_RATE");
+  const tier = PRICING_TIERS.find((candidate) => landedCostKs < candidate.maxLandedKs) || PRICING_TIERS.at(-1);
+  const floorPrice = (landedCostKs + tier.minimumProfitKs) / (1 - paymentCostRate);
+  const marginPrice = landedCostKs / (1 - paymentCostRate - tier.targetMargin);
+  return { price: roundPriceKs(Math.max(floorPrice, marginPrice)), landedCostKs, tier };
+}
+const withPrice = (pkg, product, env = {}) => {
+  const pricing = priceForSupplierCost(pkg.supplierPriceThb, env);
+  return {
   ...pkg,
   gameKey: product.key,
   gameName: product.name,
   unit: product.unit,
-  price: PRICE_OVERRIDES_KS[pkg.id] ?? trustedPriceKs(pkg.supplierPriceThb),
-  priceThb: trustedPriceThb(pkg),
+  price: pricing.price,
+  priceThb: Math.ceil(pricing.price / THB_TO_KS),
   exchangeRateThbToKs: THB_TO_KS,
-});
+  landedCostKs: Math.round(pricing.landedCostKs),
+  pricingTier: { minimumProfitKs: pricing.tier.minimumProfitKs, targetMargin: pricing.tier.targetMargin },
+};
+};
 const PRODUCTS = (() => {
   const mlbb = { key: "mlbb", name: "Mobile Legends", unit: "Diamonds", requiresZone: true };
   const pubg = { key: "pubg", name: "PUBG Mobile", unit: "UC", requiresZone: false };
@@ -244,7 +258,7 @@ async function productsWithSupplierPrices(env) {
       return withPrice({ ...pkg, supplierPriceThb, ...(mapping ? {
         supplier: "mxshop", mxshopStockReleaseId: mapping.variationId,
         mxshopStockId: mapping.productId, checkoutAvailable: mapping.valid,
-      } : {}) }, product);
+      } : {}) }, product, env);
     }),
   }]));
   return { products, supplierUpdated: supplierPrices.updated };

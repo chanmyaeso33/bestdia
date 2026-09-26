@@ -585,14 +585,10 @@ Object.assign(PRODUCTS,{
 Object.values(PRODUCTS).forEach(product=>{if(["magic-chess-go-go","genshin-impact"].includes(product.key)){product.img=assetUrl(product.img);product.packages.forEach(pkg=>pkg.img=assetUrl(pkg.img));}});
 if(!HOK_ENABLED)delete PRODUCTS.hok;
 
-const priceMarginByThb=thb=>thb<500?.05:.08;
-const roundKsToLast2=ks=>Math.round(ks/100)*100;
-// Preserve the live bestseller prices captured on 2026-09-08, even after supplier refreshes.
-// Keep these overrides in sync with admin.html and functions/api/[[path]].js.
-const PRICE_OVERRIDES_KS={5:3600,7:6900,10:35500,11:5600,12:11000,13:16000,"pubg-60":4500,"pubg-325":20500,"pubg-660":40500,"pubg-1800":99000,"pubg-8100":385000,"pubg-prime-plus-1-month":41100};
-const PRICE_OVERRIDES_THB={5:27,7:52,10:272,11:42,12:83,13:120,"pubg-60":34,"pubg-325":156,"pubg-660":304,"pubg-1800":745,"pubg-8100":2892,"pubg-prime-plus-1-month":308};
-const packagePriceThb=p=>PRICE_OVERRIDES_THB[p.id]??Math.round(Number(p.supplierPriceThb||0)*(1+priceMarginByThb(Number(p.supplierPriceThb||0))));
-const packagePriceKs=p=>PRICE_OVERRIDES_KS[p.id]??roundKsToLast2(Number(p.supplierPriceThb||0)*THB_TO_KS*(1+priceMarginByThb(Number(p.supplierPriceThb||0))));
+const PRICING_TIERS=[{max:10000,floor:300,margin:.06},{max:50000,floor:1000,margin:.05},{max:150000,floor:2500,margin:.045},{max:Infinity,floor:5000,margin:.04}];
+const packagePricing=p=>{const landed=Number(p.supplierPriceThb||0)*THB_TO_KS,tier=PRICING_TIERS.find(t=>landed<t.max),price=Math.ceil(Math.max(landed+tier.floor,landed/(1-tier.margin))/100)*100;return{price,priceThb:Math.ceil(price/THB_TO_KS)};};
+const packagePriceThb=p=>packagePricing(p).priceThb;
+const packagePriceKs=p=>packagePricing(p).price;
 Object.values(PRODUCTS).forEach(product=>product.packages.forEach(p=>{p.price=packagePriceKs(p);p.priceThb=packagePriceThb(p);}));
 
 let activeGameKey="mlbb",activeProduct=PRODUCTS.mlbb,PKGS=activeProduct.packages,sPkg=null,sPay=null,displayCurrency="ks",cart=[];
