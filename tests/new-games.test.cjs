@@ -21,6 +21,12 @@ test('missing and unsupported server selections are rejected before persistence'
  for(const key of ['genshin-impact','magic-chess-go-go'])assert.equal((await orderResult({gameKey:key,userId:'812345678',zoneId:'Asia',pkg:{id:key+'-unknown',mxshopStockReleaseId:'999'}})).status,400);
 });
 
+test('cart items are validated against the trusted catalog before persistence',async()=>{
+ const response=await orderResult({gameKey:'free-fire',pkg:{id:'free-fire-68'},items:[{id:'free-fire-68',quantity:2},{id:'free-fire-unmapped',quantity:1}],userId:'123456789',payment:'KBZPay',payKey:'kbz'});
+ assert.equal(response.status,400);
+ assert.match((await response.json()).error,/Invalid package selection/);
+});
+
 test('new game supplier mappings ignore caller supplied IDs and preserve required UID formats',async()=>{
  const {buildMxUid,getMappedStockReleaseId}=await apiPromise;
  assert.equal(buildMxUid({gameKey:'genshin-impact',userId:'812345678',zoneId:'Asia'},{}),'812345678/Asia');

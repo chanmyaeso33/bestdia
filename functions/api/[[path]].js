@@ -429,16 +429,25 @@ async function createOrder(request, env) {
   const { products: currentProducts } = await productsWithSupplierPrices(env);
   const requestedGameKey = String(order.gameKey || "").trim();
   const trustedProduct = currentProducts[requestedGameKey] || await regionalMlbbProduct(requestedGameKey);
-  const trustedPkg = trustedProduct && pkg ? trustedProduct.packages.find((item) => String(item.id) === String(pkg.id)) : null;
+  const requestedItems = Array.isArray(order.items) && order.items.length ? order.items : (pkg ? [{ id: pkg.id, quantity: 1 }] : []);
+  const trustedItems = trustedProduct ? requestedItems.slice(0, 10).map((item) => {
+    const trustedPkg = trustedProduct.packages.find((candidate) => String(candidate.id) === String(item?.id));
+    const quantity = Math.max(1, Math.min(10, Number.parseInt(item?.quantity, 10) || 1));
+    return trustedPkg ? { pkg: trustedPkg, quantity } : null;
+  }) : [];
+  const trustedPkg = trustedItems[0]?.pkg || null;
+  const totalPrice = trustedItems.reduce((sum, item) => sum + Number(item?.pkg?.price || 0) * Number(item?.quantity || 0), 0);
+  const totalPriceThb = trustedItems.reduce((sum, item) => sum + Number(item?.pkg?.priceThb || item?.pkg?.supplierPriceThb || 0) * Number(item?.quantity || 0), 0);
   if (!orderId || !userId || !contact || !pkg) return jsonResponse(400, { ok: false, error: "Missing order information" });
-  if (!trustedProduct || !trustedPkg) return jsonResponse(400, { ok: false, error: "Invalid package selection" });
-  if (trustedProduct.key === "hok" && !trustedPkg.checkoutAvailable) return jsonResponse(409, { ok: false, error: "This Honor of Kings package is temporarily unavailable: supplier mapping is missing." });
+  if (!trustedProduct || !trustedPkg || trustedItems.length !== requestedItems.length || trustedItems.some((item) => !item)) return jsonResponse(400, { ok: false, error: "Invalid package selection" });
+  if (trustedProduct.key === "hok" && trustedItems.some((item) => !item.pkg.checkoutAvailable)) return jsonResponse(409, { ok: false, error: "An Honor of Kings package is temporarily unavailable: supplier mapping is missing." });
   if (trustedProduct.requiresZone && !String(order.zoneId || "").trim()) return jsonResponse(400, { ok: false, error: "Missing Zone ID" });
   if (trustedProduct.zoneOptions && !trustedProduct.zoneOptions.includes(String(order.zoneId || "").trim())) return jsonResponse(400, { ok: false, error: "Unsupported server. Genshin Impact supports Asia only." });
   if (["genshin-impact", "magic-chess-go-go"].includes(trustedProduct.key) && (!/^\d+$/.test(userId) || (!trustedProduct.zoneOptions && !/^\d+$/.test(String(order.zoneId || "").trim())))) return jsonResponse(400, { ok: false, error: "Player and server IDs must be numeric" });
   const trustedPay = PAYMENTS[String(order.payKey || "").trim()];
   if (!trustedPay || String(order.payment || "").trim() !== trustedPay.name) return jsonResponse(400, { ok: false, error: "Invalid payment method" });
   if (trustedProduct.key === "hok" && trustedPay.key === "balance") return jsonResponse(400, { ok: false, error: "BestDia Balance is unavailable for manually fulfilled Honor of Kings orders" });
+  if (trustedPay.key === "balance" && trustedItems.length > 1) return jsonResponse(400, { ok: false, error: "BestDia Balance supports one package per order" });
 
   const now = new Date().toISOString();
   const initialStatus = trustedPay.key === "balance" ? "processing" : "pending";
@@ -464,6 +473,9 @@ async function createOrder(request, env) {
     region: mlbbAccount?.region || "",
     accountId: String(order.accountId || "").trim().slice(0, 160),
     pkg: trustedPkg,
+    items: trustedItems.map((item) => ({ pkg: item.pkg, quantity: item.quantity })),
+    totalPrice,
+    totalPriceThb,
     payment: trustedPay.name,
     payKey: trustedPay.key,
     paymentReference: orderId,
