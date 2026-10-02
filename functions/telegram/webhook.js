@@ -131,8 +131,10 @@ function buildCheckoutUrl(origin, selection, from) {
   url.searchParams.set("userId", selection.userId);
   url.searchParams.set("zoneId", selection.zoneId);
   url.searchParams.set("pkgId", selection.pkgId);
+  const telegramChatId = String(from?.id || "").trim();
+  if (/^-?\d{1,20}$/.test(telegramChatId)) url.searchParams.set("tgChatId", telegramChatId);
   const username = String(from?.username || "").trim();
-  const contact = username ? `@${username}` : from?.id ? `telegram:${from.id}` : "";
+  const contact = username ? `@${username}` : telegramChatId ? `telegram:${telegramChatId}` : "";
   if (contact) url.searchParams.set("contact", contact);
   return url.toString();
 }
