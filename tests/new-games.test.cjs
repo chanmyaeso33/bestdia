@@ -44,7 +44,7 @@ test('new game supplier mappings ignore caller supplied IDs and preserve require
 
 test('fulfillment sends the trusted package ID and supplier-specific server format',async()=>{
  const {performMxshopTopup}=await apiPromise;const original=global.fetch,calls=[];
- global.fetch=async(url,options)=>{calls.push({url,body:JSON.parse(options.body)});return new Response(JSON.stringify({success:true,result:{transaction_id:'test'}}));};
+ global.fetch=async(url,options)=>{if(url.endsWith('/api/v1/get_balance'))return new Response(JSON.stringify({success:true,result:{balance:10000}}));calls.push({url,body:JSON.parse(options.body)});return new Response(JSON.stringify({success:true,result:{transaction_id:'test'}}));};
  try{const env={MXSHOP_AUTO_TOPUP_ENABLED:'true',MXSHOP_MX_KEY:'test',MXSHOP_PASSKEY:'test'};
  await performMxshopTopup(env,{gameKey:'genshin-impact',userId:'812345678',zoneId:'Asia',pkg:{id:'genshin-impact-51103',mxshopStockReleaseId:'999'}});
  await performMxshopTopup(env,{gameKey:'magic-chess-go-go',userId:'2605021',zoneId:'2011',pkg:{id:'magic-chess-go-go-16802105',mxshopStockReleaseId:'999'}});

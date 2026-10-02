@@ -73,6 +73,7 @@ const BALANCE_THB_TO_KS = 133.5;
 const HOK_ENABLED = true;
 const HOK_MXSHOP_STOCK_IDX = "1712";
 const FREE_FIRE_MXSHOP_STOCK_IDX = "15";
+const MXSHOP_LOW_BALANCE_THB = 300;
 const HOK_MXSHOP_PACKAGES = Object.freeze({
   "hok-80": { variationId: "16802454", supplierName: "80 Tokens" },
   "hok-240": { variationId: "16802455", supplierName: "240 Tokens" },
@@ -564,6 +565,11 @@ async function createOrder(request, env) {
       timeline.push({ status: "failed", time: Date.now() });
       await updateOrderDoc(firestore, created.docId, orderUpdates);
       finalOrder = { ...cleanOrder, ...orderUpdates };
+    } else if (autoTopup.status === "held") {
+      orderUpdates.status = "held";
+      timeline.push({ status: "held", time: Date.now() });
+      await updateOrderDoc(firestore, created.docId, orderUpdates);
+      finalOrder = { ...cleanOrder, ...orderUpdates };
     } else {
       orderUpdates.status = "processing";
       await updateOrderDoc(firestore, created.docId, orderUpdates);
@@ -645,12 +651,12 @@ async function adminOrders(request, env) {
       });
       return { docId: order.docId, data: updated };
     }
-    if (!isBestDiaBalance || data.status === "cancelled" || data.status === "failed" || mxStatus === "success" || mxStatus === "submitted" || mxStatus === "failed" || mxStatus === "skipped") return order;
+    if (!isBestDiaBalance || data.status === "cancelled" || data.status === "failed" || data.status === "held" || mxStatus === "success" || mxStatus === "submitted" || mxStatus === "failed" || mxStatus === "held" || mxStatus === "skipped") return order;
     const now = new Date().toISOString();
     const autoTopup = await tryAutoFulfillMxshopOrder(env, data);
     const timeline = Array.isArray(data.timeline) ? [...data.timeline] : [];
     const updates = {
-      status: autoTopup.status === "success" ? "completed" : "processing",
+      status: autoTopup.status === "success" ? "completed" : autoTopup.status === "held" ? "held" : "processing",
       mxshopTopup: autoTopup,
       updatedAt: now,
       timeline,
@@ -670,7 +676,8 @@ async function adminOrders(request, env) {
     const updated = await updateOrderDoc(firestore, order.docId, updates);
     return { docId: order.docId, data: updated };
   }));
-  return jsonResponse(200, { ok: true, orders: repairedOrders.map(adminOrder) });
+  const supplierBalance = await getMxshopBalance(env);
+  return jsonResponse(200, { ok: true, orders: repairedOrders.map(adminOrder), supplierBalance });
 }
 
 async function adminOpportunities(request, env) {
@@ -918,7 +925,7 @@ async function adminUpdateOrder(request, env) {
   const updates = { updatedAt: new Date().toISOString() };
   if (payload.status) {
     const status = String(payload.status);
-    if (!["pending", "processing", "completed", "failed", "cancelled"].includes(status)) {
+    if (!["pending", "processing", "held", "completed", "failed", "cancelled"].includes(status)) {
       return jsonResponse(400, { ok: false, error: "Invalid status" });
     }
     updates.status = status;
@@ -950,9 +957,15 @@ async function adminUpdateOrder(request, env) {
       updates.failedReason = payload.mxshopTopup.error || payload.mxshopTopup.reason || "Supplier top-up failed";
       updates.timeline = Array.isArray(current.timeline) ? [...current.timeline] : [];
       updates.timeline.push({ status: "failed", time: Date.now() });
+    } else if (payload.mxshopTopup.status === "held") {
+      updates.status = "held";
+      updates.failedAt = "";
+      updates.failedReason = "";
+      updates.timeline = Array.isArray(current.timeline) ? [...current.timeline] : [];
+      updates.timeline.push({ status: "held", time: Date.now() });
     }
   }
-  if (updates.status === "processing" && !updates.mxshopTopup && !current.mxshopTopup) {
+  if (updates.status === "processing" && !updates.mxshopTopup && (!current.mxshopTopup || ["held", "failed", "skipped"].includes(current.mxshopTopup.status))) {
     const candidateOrder = { ...current, ...updates };
     if (getMappedStockReleaseId(String(candidateOrder.pkg?.id || ""), env, candidateOrder)) {
       const autoTopup = await tryAutoFulfillMxshopOrder(env, candidateOrder);
@@ -967,6 +980,9 @@ async function adminUpdateOrder(request, env) {
         updates.failedAt = autoTopup.failedAt || new Date().toISOString();
         updates.failedReason = autoTopup.error || autoTopup.reason || "Supplier top-up failed";
         updates.timeline.push({ status: "failed", time: Date.now() });
+      } else if (autoTopup.status === "held") {
+        updates.status = "held";
+        updates.timeline.push({ status: "held", time: Date.now() });
       }
     }
   }
@@ -1349,7 +1365,7 @@ async function mxshopTopup(request, env) {
   if (String(payload.adminPassword || "") !== env.ADMIN_PASSWORD) return jsonResponse(401, { ok: false, error: "Wrong admin password" });
   try {
     const topup = await performMxshopTopup(env, payload.order || {});
-    return jsonResponse(200, { ok: true, status: topup.status || "submitted", skipped: Boolean(topup.skipped), reason: topup.reason || "", mxshop: topup.response || null, request: topup.request || null });
+    return jsonResponse(200, { ok: true, status: topup.status || "submitted", skipped: Boolean(topup.skipped), reason: topup.reason || "", supplierBalance: topup.supplierBalance || null, mxshop: topup.response || null, request: topup.request || null });
   } catch (error) {
     return jsonResponse(error.status || 502, {
       ok: false,
@@ -1449,7 +1465,7 @@ async function tryAutoFulfillMxshopOrder(env, order) {
   try {
     const topup = await performMxshopTopup(env, order);
     const now = new Date().toISOString();
-    return { status: topup.status || (topup.skipped ? "skipped" : "submitted"), skipped: Boolean(topup.skipped), reason: topup.reason || "", transactionId: topup.transactionId || getSupplierTransactionId(topup.response) || "", request: topup.request || null, response: topup.response || null, completedAt: topup.status === "success" ? now : "", submittedAt: topup.status === "submitted" ? now : "" };
+    return { status: topup.status || (topup.skipped ? "skipped" : "submitted"), skipped: Boolean(topup.skipped), reason: topup.reason || "", supplierBalance: topup.supplierBalance || null, transactionId: topup.transactionId || getSupplierTransactionId(topup.response) || "", request: topup.request || null, response: topup.response || null, completedAt: topup.status === "success" ? now : "", submittedAt: topup.status === "submitted" ? now : "", heldAt: topup.status === "held" ? now : "" };
   } catch (error) {
     return { status: "failed", error: error.message || "MXShop purchase failed", request: error.request || null, response: error.mxshop || null, failedAt: new Date().toISOString() };
   }
@@ -1493,6 +1509,27 @@ async function performMxshopTopup(env, order) {
     const error = new Error("MXShop credentials are not configured. Set MXSHOP_MX_KEY and MXSHOP_PASSKEY.");
     error.status = 500;
     throw error;
+  }
+
+  const requiredThb = Math.max(0, Number(order.pkg?.supplierPriceThb || order.pkg?.priceThb || 0));
+  const supplierBalance = await getMxshopBalance(env);
+  if (supplierBalance.available) {
+    const isLow = supplierBalance.amount <= MXSHOP_LOW_BALANCE_THB;
+    const isInsufficient = supplierBalance.amount < requiredThb;
+    if (isLow || isInsufficient) {
+      await notifyLowSupplierBalance(env, order, supplierBalance.amount, requiredThb, isInsufficient);
+    }
+    if (isInsufficient) {
+      return {
+        skipped: false,
+        status: "held",
+        reason: `Insufficient MXShop balance: ${formatAmount(supplierBalance.amount)} THB available, ${formatAmount(requiredThb)} THB required`,
+        supplierBalance,
+        response: null,
+        request: null,
+        transactionId: "",
+      };
+    }
   }
 
   const requestBody = { stockreleaselist_id: stockReleaseId, uid };
@@ -2127,6 +2164,42 @@ async function runOpportunityAgent(env, options = {}) {
     results.push(await processOpportunityArticle(env, article, products, memoryInsights));
   }
   return { processed: results.length, memoryInsightsUsed: memoryInsights.map((item) => item.id), results };
+}
+
+async function getMxshopBalance(env) {
+  if (!env.MXSHOP_MX_KEY || !env.MXSHOP_PASSKEY) return { available: false, amount: null, currency: "THB", error: "MXShop credentials are not configured" };
+  const response = await mxPost(env, "/api/v1/get_balance");
+  const amount = extractMxBalanceAmount(response);
+  return Number.isFinite(amount)
+    ? { available: true, amount, currency: "THB", checkedAt: new Date().toISOString() }
+    : { available: false, amount: null, currency: "THB", error: response.msg || response.message || response.error || "Supplier balance unavailable", checkedAt: new Date().toISOString() };
+}
+
+function extractMxBalanceAmount(response) {
+  const candidates = [response?.result, response?.balance, response?.credit, response?.amount, response?.data?.balance, response?.data?.credit, response?.result?.balance, response?.result?.credit, response?.result?.amount];
+  for (const value of candidates) {
+    const number = typeof value === "string" ? Number(value.replace(/[^0-9.-]/g, "")) : Number(value);
+    if (Number.isFinite(number)) return number;
+  }
+  const queue = [response?.result, response?.data].filter((value) => value && typeof value === "object");
+  while (queue.length) {
+    const value = queue.shift();
+    for (const [key, nested] of Object.entries(value)) {
+      if (nested && typeof nested === "object") queue.push(nested);
+      if (!/(balance|credit|wallet|amount)/i.test(key)) continue;
+      const number = typeof nested === "string" ? Number(nested.replace(/[^0-9.-]/g, "")) : Number(nested);
+      if (Number.isFinite(number)) return number;
+    }
+  }
+  return NaN;
+}
+
+async function notifyLowSupplierBalance(env, order, balanceThb, requiredThb, held) {
+  try {
+    await notifyTelegram(env, `<b>[Low Supplier Balance]</b>\nSupplier: MXShop\nBalance: <b>${escapeHtml(formatAmount(balanceThb))} THB</b>\nOrder: <code>${escapeHtml(order.id || "-")}</code>\nRequired: ${escapeHtml(formatAmount(requiredThb))} THB\nStatus: ${held ? "HELD — replenish balance, then resume in Admin" : `LOW — below ${MXSHOP_LOW_BALANCE_THB} THB`}`);
+  } catch (error) {
+    console.warn("Low supplier balance notification failed", error);
+  }
 }
 
 
