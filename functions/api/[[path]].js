@@ -476,6 +476,15 @@ async function createOrder(request, env) {
     return jsonResponse(422, { ok: false, error: `Invalid order: ${mlbbAccount.region} server accounts are not supported.`, region: mlbbAccount.region });
   }
   const verifiedIgn = mlbbAccount?.nickname || "";
+  const submittedTelegramChatId = String(order.telegramChatId || "").trim();
+  const submittedTelegramChatSig = String(order.telegramChatSig || "").trim().toLowerCase();
+  const telegramChatId = await verifyTelegramCheckoutIdentity(
+    env,
+    submittedTelegramChatId,
+    submittedTelegramChatSig,
+    `${userId}.${String(order.zoneId || "").trim()}.${trustedPkg.id}.${submittedTelegramChatId}`,
+  ) ? submittedTelegramChatId : "";
+
   const cleanOrder = {
     id: orderId,
     gameKey: trustedProduct.key,
@@ -486,7 +495,7 @@ async function createOrder(request, env) {
     ign: verifiedIgn || submittedIgn,
     region: mlbbAccount?.region || "",
     accountId: String(order.accountId || "").trim().slice(0, 160),
-    telegramChatId: /^-?\d{1,20}$/.test(String(order.telegramChatId || "").trim()) ? String(order.telegramChatId).trim() : "",
+    telegramChatId,
     telegramLastNotifiedStatus: "",
     pkg: trustedPkg,
     items: trustedItems.map((item) => ({ pkg: item.pkg, quantity: item.quantity })),
@@ -4314,6 +4323,28 @@ async function findOrderDocName(projectId, token, orderId) {
   if (!response.ok) throw new Error(data.error?.message || "Could not query Firestore order");
   const hit = Array.isArray(data) ? data.find((item) => item.document) : null;
   return hit?.document?.name || "";
+}
+
+async function verifyTelegramCheckoutIdentity(env, chatId, signature, value) {
+  const secret = String(env.TELEGRAM_WEBHOOK_SECRET || "").trim();
+  if (!secret || !/^-?\d{1,20}$/.test(chatId) || !/^[a-f0-9]{64}$/i.test(signature)) return false;
+  try {
+    const key = await crypto.subtle.importKey(
+      "raw",
+      new TextEncoder().encode(secret),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"],
+    );
+    const expectedBuffer = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(String(value)));
+    const expected = Array.from(new Uint8Array(expectedBuffer), byte => byte.toString(16).padStart(2, "0")).join("");
+    if (expected.length !== signature.length) return false;
+    let diff = 0;
+    for (let i = 0; i < expected.length; i += 1) diff |= expected.charCodeAt(i) ^ signature.charCodeAt(i);
+    return diff === 0;
+  } catch {
+    return false;
+  }
 }
 
 async function notifyTelegramCustomerOrderStatus(env, order) {
