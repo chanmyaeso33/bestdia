@@ -118,7 +118,7 @@ async function showPackageConfirmation(chatId, from, selection, request, env) {
   const origin = new URL(request.url).origin;
   const pkg = await findPackage(origin, selection.pkgId);
   if (!pkg) return sendFlowExpired(chatId, env);
-  const checkoutUrl = buildCheckoutUrl(origin, selection, from);
+  const checkoutUrl = await buildCheckoutUrl(origin, selection, from, env);
   await tg(env, "sendMessage", {
     chat_id: chatId,
     text: `Order confirm\n\n🎮 MLBB Global\n💎 ${packageTitle(pkg)}\n💵 ${formatKs(pkg.price)} Ks / ฿${formatThb(pkg.priceThb)}\n🆔 ${selection.userId} (${selection.zoneId})\n\nPayment ကို BestDia website checkout မှာဆက်လုပ်ပါ။`,
@@ -126,17 +126,34 @@ async function showPackageConfirmation(chatId, from, selection, request, env) {
   });
 }
 
-function buildCheckoutUrl(origin, selection, from) {
+async function buildCheckoutUrl(origin, selection, from, env) {
   const url = new URL("/telegram-checkout.html", origin);
   url.searchParams.set("userId", selection.userId);
   url.searchParams.set("zoneId", selection.zoneId);
   url.searchParams.set("pkgId", selection.pkgId);
   const telegramChatId = String(from?.id || "").trim();
-  if (/^-?\d{1,20}$/.test(telegramChatId)) url.searchParams.set("tgChatId", telegramChatId);
+  if (/^-?\d{1,20}$/.test(telegramChatId)) {
+    url.searchParams.set("tgChatId", telegramChatId);
+    const signature = await signTelegramCheckout(env.TELEGRAM_WEBHOOK_SECRET, `${selection.userId}.${selection.zoneId}.${selection.pkgId}.${telegramChatId}`);
+    if (signature) url.searchParams.set("tgSig", signature);
+  }
   const username = String(from?.username || "").trim();
   const contact = username ? `@${username}` : telegramChatId ? `telegram:${telegramChatId}` : "";
   if (contact) url.searchParams.set("contact", contact);
   return url.toString();
+}
+
+async function signTelegramCheckout(secret, value) {
+  if (!secret) return "";
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(String(secret)),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(String(value)));
+  return Array.from(new Uint8Array(signature), byte => byte.toString(16).padStart(2, "0")).join("");
 }
 
 async function getMlbbCatalog(origin) {
