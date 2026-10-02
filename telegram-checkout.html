@@ -82,7 +82,7 @@ const PAY={
 };
 const $=id=>document.getElementById(id);
 const params=new URLSearchParams(location.search);
-const state={userId:"",zoneId:"",pkg:null,lookup:null,payKey:"",slipDataUrl:"",slipFileName:"",account:null,session:"",orderId:"",poll:null};
+const state={userId:"",zoneId:"",pkg:null,lookup:null,payKey:"",slipDataUrl:"",slipFileName:"",account:null,session:"",orderId:"",poll:null,telegramChatId:""};
 const fmt=n=>Math.round(Number(n||0)).toLocaleString("en-US");
 const esc=s=>String(s??"").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));
 
@@ -103,6 +103,8 @@ async function init(){
   const pkgId=String(params.get("pkgId")||"").trim();
   if(!/^\d{5,20}$/.test(userId)||!/^\d{3,10}$/.test(zoneId)||!/^\d{1,8}$/.test(pkgId))return fail("Telegram checkout link မမှန်ပါ။ Bot ထဲကနေ package ကိုပြန်ရွေးပါ။");
   state.userId=userId;state.zoneId=zoneId;
+  const tgChatId=String(params.get("tgChatId")||"").trim();
+  state.telegramChatId=/^-?\d{1,20}$/.test(tgChatId)?tgChatId:"";
   $("contact").value=String(params.get("contact")||"").slice(0,160);
   try{
     const [catalog,lookup]=await Promise.all([api("/api/catalog",{}),api("/api/mlbb-lookup",{userId,zoneId})]);
@@ -165,7 +167,7 @@ async function submitOrder(){
   if(state.payKey!=="balance"&&!state.slipDataUrl)return alert("Payment slip တင်ပါ။");
   const btn=$("submitBtn");btn.disabled=true;btn.textContent="Submitting…";
   const oid="BD"+Date.now().toString().slice(-6);
-  const order={id:oid,gameKey:"mlbb",gameName:"Mobile Legends",userId:state.userId,zoneId:state.zoneId,contact,ign:state.lookup.nickname,region:state.lookup.region,accountId:state.payKey==="balance"?state.account.id:"",pkg:{id:state.pkg.id},items:[{id:state.pkg.id,quantity:1}],payment:PAY[state.payKey].name,payKey:state.payKey};
+  const order={id:oid,gameKey:"mlbb",gameName:"Mobile Legends",userId:state.userId,zoneId:state.zoneId,contact,ign:state.lookup.nickname,region:state.lookup.region,accountId:state.payKey==="balance"?state.account.id:"",telegramChatId:state.telegramChatId,pkg:{id:state.pkg.id},items:[{id:state.pkg.id,quantity:1}],payment:PAY[state.payKey].name,payKey:state.payKey};
   try{
     const data=await api("/api/create-order",{order,slipDataUrl:state.payKey==="balance"?"":state.slipDataUrl,slipFileName:state.slipFileName},state.payKey==="balance"?state.session:"");
     state.orderId=data.orderId||oid;showStatus(data.order||{id:state.orderId,status:"pending",pkg:state.pkg});startPolling();$("checkout").hidden=true;window.scrollTo({top:0,behavior:"smooth"});
