@@ -477,6 +477,15 @@ async function createOrder(request, env) {
     return jsonResponse(422, { ok: false, error: `Invalid order: ${mlbbAccount.region} server accounts are not supported.`, region: mlbbAccount.region });
   }
   const verifiedIgn = mlbbAccount?.nickname || "";
+  const submittedTelegramChatId = String(order.telegramChatId || "").trim();
+  const submittedTelegramChatSig = String(order.telegramChatSig || "").trim().toLowerCase();
+  const telegramChatId = await verifyTelegramCheckoutIdentity(
+    env,
+    submittedTelegramChatId,
+    submittedTelegramChatSig,
+    `${userId}.${String(order.zoneId || "").trim()}.${trustedPkg.id}.${submittedTelegramChatId}`,
+  ) ? submittedTelegramChatId : "";
+
   const cleanOrder = {
     id: orderId,
     gameKey: trustedProduct.key,
@@ -487,6 +496,8 @@ async function createOrder(request, env) {
     ign: verifiedIgn || submittedIgn,
     region: mlbbAccount?.region || "",
     accountId: String(order.accountId || "").trim().slice(0, 160),
+    telegramChatId,
+    telegramLastNotifiedStatus: "",
     pkg: trustedPkg,
     items: trustedItems.map((item) => ({ pkg: item.pkg, quantity: item.quantity })),
     totalPrice,
@@ -992,7 +1003,17 @@ async function adminUpdateOrder(request, env) {
   }
   if (Object.keys(updates).length === 1) return jsonResponse(400, { ok: false, error: "No order update was provided" });
 
-  const updated = await updateOrderDoc(firestore, docId, updates);
+  let updated = await updateOrderDoc(firestore, docId, updates);
+  const statusChanged = Boolean(updated?.status) && updated.status !== current.status;
+  if (statusChanged && ["processing", "completed", "failed", "cancelled"].includes(updated.status)) {
+    const customerNotification = await notifyTelegramCustomerOrderStatus(env, updated);
+    if (customerNotification.sent) {
+      updated = await updateOrderDoc(firestore, docId, {
+        telegramLastNotifiedStatus: updated.status,
+        telegramLastNotifiedAt: new Date().toISOString(),
+      });
+    }
+  }
   return jsonResponse(200, { ok: true, order: adminOrder({ docId, data: updated }) });
 }
 
@@ -4375,6 +4396,76 @@ async function findOrderDocName(projectId, token, orderId) {
   if (!response.ok) throw new Error(data.error?.message || "Could not query Firestore order");
   const hit = Array.isArray(data) ? data.find((item) => item.document) : null;
   return hit?.document?.name || "";
+}
+
+async function verifyTelegramCheckoutIdentity(env, chatId, signature, value) {
+  const secret = String(env.TELEGRAM_WEBHOOK_SECRET || "").trim();
+  if (!secret || !/^-?\d{1,20}$/.test(chatId) || !/^[a-f0-9]{64}$/i.test(signature)) return false;
+  try {
+    const key = await crypto.subtle.importKey(
+      "raw",
+      new TextEncoder().encode(secret),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"],
+    );
+    const expectedBuffer = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(String(value)));
+    const expected = Array.from(new Uint8Array(expectedBuffer), byte => byte.toString(16).padStart(2, "0")).join("");
+    if (expected.length !== signature.length) return false;
+    let diff = 0;
+    for (let i = 0; i < expected.length; i += 1) diff |= expected.charCodeAt(i) ^ signature.charCodeAt(i);
+    return diff === 0;
+  } catch {
+    return false;
+  }
+}
+
+async function notifyTelegramCustomerOrderStatus(env, order) {
+  const token = String(env.TELEGRAM_CUSTOMER_BOT_TOKEN || "").trim();
+  const chatId = String(order?.telegramChatId || "").trim();
+  const status = String(order?.status || "").trim();
+  if (!token || !/^-?\d{1,20}$/.test(chatId) || !status) return { sent: false, skipped: true };
+  if (String(order?.telegramLastNotifiedStatus || "") === status) return { sent: false, skipped: true, duplicate: true };
+
+  const labels = {
+    processing: "⏳ Processing",
+    completed: "✅ Top-up completed",
+    failed: "❌ Top-up failed",
+    cancelled: "🚫 Order cancelled",
+  };
+  const title = labels[status] || status;
+  const lines = [
+    title,
+    "",
+    `Order ID: ${String(order.id || "-")}`,
+    `Package: ${packageText(order.pkg || {})}`,
+    `Player: ${order.zoneId ? `${order.userId} (${order.zoneId})` : String(order.userId || "-")}`,
+  ];
+  if (order.ign) lines.push(`IGN: ${order.ign}`);
+  if (status === "completed") {
+    lines.push("", "💎 Top-up အောင်မြင်ပြီးပါပြီ။");
+    if (order.supplierTransactionId) lines.push(`Transaction: ${order.supplierTransactionId}`);
+  } else if (status === "processing") {
+    lines.push("", "Order ကို စတင်လုပ်ဆောင်နေပါပြီ။");
+  } else if (status === "failed") {
+    lines.push("", `Reason: ${String(order.failedReason || "Supplier top-up could not be completed.")}`);
+    lines.push("BestDia support ကိုဆက်သွယ်ပေးပါ။");
+  } else if (status === "cancelled") {
+    lines.push("", "Order ကိုပယ်ဖျက်ထားပါတယ်။");
+  }
+
+  try {
+    const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: chatId, text: lines.join("\n") }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || data.ok === false) return { sent: false, error: data.description || response.statusText || "Telegram send failed" };
+    return { sent: true, messageId: data.result?.message_id || null };
+  } catch (error) {
+    return { sent: false, error: error?.message || "Telegram send failed" };
+  }
 }
 
 async function notifyTelegram(env, text) {

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<meta name="theme-color" content="#07090F"/>
+<title>BestDia · Telegram Checkout</title>
+<style>
+:root{--gold:#F5C542;--cyan:#5BE3FF;--cyan2:#00B8D9;--bg:#07090F;--panel:#111827;--panel2:#1A2035;--text:#E8EAF0;--muted:#8B96AE;--ok:#2ECC71;--warn:#F39C12;--danger:#E74C3C}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 20% 0%,rgba(91,227,255,.12),transparent 34%),linear-gradient(180deg,#07090F,#0E1220 55%,#07090F);color:var(--text);font-family:system-ui,-apple-system,"Noto Sans Myanmar",sans-serif}button,input{font:inherit}.wrap{max-width:760px;margin:0 auto;padding:20px 14px 48px}.brand{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}.logo{font-size:1.55rem;font-weight:900;background:linear-gradient(135deg,var(--cyan),var(--gold));-webkit-background-clip:text;color:transparent}.tag{font-size:.76rem;color:var(--cyan);border:1px solid rgba(91,227,255,.24);border-radius:999px;padding:6px 10px;background:rgba(91,227,255,.07)}.card{background:linear-gradient(180deg,rgba(26,32,53,.98),rgba(14,18,32,.98));border:1px solid rgba(91,227,255,.14);border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 18px 50px rgba(0,0,0,.25)}h1,h2,p{margin-top:0}h1{font-size:1.35rem;margin-bottom:6px}h2{font-size:1rem;color:var(--cyan);margin-bottom:12px}.muted{color:var(--muted);font-size:.86rem;line-height:1.55}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.item{background:rgba(7,9,15,.52);border:1px solid rgba(91,227,255,.09);border-radius:11px;padding:11px}.item span{display:block;color:var(--muted);font-size:.7rem;margin-bottom:4px}.item b{font-size:.92rem}.gold{color:var(--gold)}.ok{color:var(--ok)}.warn{color:var(--warn)}.payments{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.pay{border:1px solid rgba(91,227,255,.16);border-radius:11px;background:#0E1220;color:var(--text);padding:12px;text-align:left;cursor:pointer}.pay.active{border-color:var(--cyan);box-shadow:0 0 0 1px rgba(91,227,255,.25)}.pay b{display:block}.pay small{display:block;color:var(--muted);margin-top:3px}.detail{margin-top:12px;border-radius:11px;padding:12px;background:rgba(7,9,15,.56);border:1px solid rgba(91,227,255,.1)}.row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)}.row:last-child{border-bottom:0}.row span:first-child{color:var(--muted);font-size:.78rem}.copy{border:1px solid rgba(91,227,255,.25);background:rgba(91,227,255,.08);color:var(--cyan);border-radius:8px;padding:6px 9px;cursor:pointer}.qr{display:block;width:min(100%,300px);margin:12px auto;border-radius:12px}.field{margin-top:10px}.field label{display:block;color:var(--muted);font-size:.76rem;margin-bottom:6px}.field input{width:100%;border:1px solid rgba(91,227,255,.17);border-radius:10px;background:#090D17;color:var(--text);padding:11px 12px;outline:none}.field input:focus{border-color:var(--cyan)}.btn{width:100%;border:0;border-radius:11px;padding:12px 14px;font-weight:800;cursor:pointer;background:linear-gradient(135deg,var(--cyan2),var(--cyan));color:#071019;margin-top:12px}.btn.secondary{background:rgba(91,227,255,.08);color:var(--cyan);border:1px solid rgba(91,227,255,.2)}.btn:disabled{opacity:.55;cursor:not-allowed}.slip-preview{display:none;margin-top:10px}.slip-preview.show{display:block}.slip-preview img{max-height:230px;border-radius:10px;border:1px solid rgba(91,227,255,.14)}.status{display:none}.status.show{display:block}.status-badge{display:inline-block;border-radius:999px;padding:5px 9px;font-size:.72rem;font-weight:800;background:rgba(243,156,18,.12);color:var(--warn)}.status-badge.completed{background:rgba(46,204,113,.12);color:var(--ok)}.status-badge.failed,.status-badge.cancelled{background:rgba(231,76,60,.12);color:var(--danger)}.error{display:none;border-color:rgba(231,76,60,.28);color:#ffb6ae}.error.show{display:block}.balance-login{display:none}.balance-login.show{display:block}.footer{text-align:center;color:var(--muted);font-size:.74rem;margin-top:20px}@media(max-width:560px){.grid,.payments{grid-template-columns:1fr}.wrap{padding-top:14px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand"><div class="logo">BestDia</div><div class="tag">Telegram Checkout</div></div>
+
+  <div class="card" id="loadingCard">
+    <h1>Order ကို စစ်ဆေးနေပါတယ်…</h1>
+    <p class="muted">Package price နဲ့ MLBB account ကို BestDia server ကနေပြန် verify လုပ်နေပါတယ်။</p>
+  </div>
+
+  <div class="card error" id="errorCard"></div>
+
+  <div id="checkout" hidden>
+    <div class="card">
+      <h1>💎 MLBB Global Top-up</h1>
+      <p class="muted">Telegram ကနေရွေးထားတဲ့ order ကို BestDia website မှာ secure checkout ဆက်လုပ်ပါ။</p>
+      <div class="grid">
+        <div class="item"><span>IGN</span><b id="ign">-</b></div>
+        <div class="item"><span>Region</span><b id="region">-</b></div>
+        <div class="item"><span>Player</span><b id="player">-</b></div>
+        <div class="item"><span>Package</span><b id="package">-</b></div>
+        <div class="item"><span>Price</span><b class="gold" id="priceKs">-</b></div>
+        <div class="item"><span>THB</span><b id="priceThb">-</b></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>1. Payment method ရွေးပါ</h2>
+      <div class="payments" id="payments"></div>
+      <div class="detail" id="payDetail" hidden></div>
+    </div>
+
+    <div class="card balance-login" id="balanceLogin">
+      <h2>BestDia Balance Login</h2>
+      <p class="muted">Balance နဲ့ဝယ်ရန် သင့် BestDia account ကို login ဝင်ပါ။ Password ကို Telegram bot ဆီမပို့ပါဘူး—BestDia website API ဆီကိုပဲပို့ပါတယ်။</p>
+      <div class="field"><label>Login email / phone</label><input id="loginId" autocomplete="username"/></div>
+      <div class="field"><label>Password</label><input id="password" type="password" autocomplete="current-password"/></div>
+      <button class="btn secondary" id="loginBtn" type="button">Login to BestDia</button>
+      <div class="detail" id="balanceInfo" hidden></div>
+    </div>
+
+    <div class="card" id="manualPayment">
+      <h2>2. Payment slip</h2>
+      <p class="muted">Payment account ကိုငွေလွှဲပြီး slip screenshot ကိုတင်ပါ။</p>
+      <div class="field"><label>Payment slip image</label><input id="slip" type="file" accept="image/*"/></div>
+      <div class="slip-preview" id="slipPreview"><img id="slipImg" alt="Payment slip preview"/></div>
+    </div>
+
+    <div class="card">
+      <h2>3. Contact & Submit</h2>
+      <div class="field"><label>Telegram / Phone</label><input id="contact" maxlength="160" placeholder="@username or phone number"/></div>
+      <button class="btn" id="submitBtn" type="button">Order တင်မည်</button>
+      <p class="muted" style="margin:10px 0 0">Server က package price, payment method, Player ID နဲ့ Zone ID ကို submit အချိန်မှာထပ်စစ်ပါတယ်။</p>
+    </div>
+  </div>
+
+  <div class="card status" id="statusCard">
+    <h2>Order Status</h2>
+    <div id="statusBody"></div>
+  </div>
+
+  <div class="footer">BestDia · Secure game top-up checkout</div>
+</div>
+<script>
+const PAY={
+  kbz:{name:"KBZPay",number:"09752588797",holder:"MayThet Wai"},
+  wave:{name:"Wave Money",number:"09752588797",holder:"MayThet Wai"},
+  truemoney:{name:"TrueMoney",number:"0946207494",holder:"Chan Myae Soe"},
+  promptpay:{name:"PromptPay",holder:"Chan Myae Soe",qr:"assets/payments/promptpay-chan-myae-soe.png"},
+  balance:{name:"BestDia Balance",holder:"BestDia Wallet"}
+};
+const $=id=>document.getElementById(id);
+const params=new URLSearchParams(location.search);
+const state={userId:"",zoneId:"",pkg:null,lookup:null,payKey:"",slipDataUrl:"",slipFileName:"",account:null,session:"",orderId:"",poll:null,telegramChatId:"",telegramChatSig:""};
+const fmt=n=>Math.round(Number(n||0)).toLocaleString("en-US");
+const esc=s=>String(s??"").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));
+
+async function api(path,body={},session=""){
+  const headers={"Content-Type":"application/json"};
+  if(session)headers.Authorization=`Bearer ${session}`;
+  const res=await fetch(path,{method:"POST",headers,body:JSON.stringify(body)});
+  const data=await res.json().catch(()=>({ok:false,error:"Invalid API response"}));
+  if(!res.ok||data.ok===false)throw new Error(data.error||data.details||"Request failed");
+  return data;
+}
+function fail(message){$("loadingCard").hidden=true;$("checkout").hidden=true;$("errorCard").textContent=message;$("errorCard").classList.add("show");}
+function packageTitle(pkg){return String(pkg?.title||pkg?.name||`${pkg?.diamonds||""} Diamonds`).trim();}
+
+async function init(){
+  const userId=String(params.get("userId")||"").replace(/\D/g,"");
+  const zoneId=String(params.get("zoneId")||"").replace(/\D/g,"");
+  const pkgId=String(params.get("pkgId")||"").trim();
+  if(!/^\d{5,20}$/.test(userId)||!/^\d{3,10}$/.test(zoneId)||!/^\d{1,8}$/.test(pkgId))return fail("Telegram checkout link မမှန်ပါ။ Bot ထဲကနေ package ကိုပြန်ရွေးပါ။");
+  state.userId=userId;state.zoneId=zoneId;
+  const tgChatId=String(params.get("tgChatId")||"").trim();
+  state.telegramChatId=/^-?\d{1,20}$/.test(tgChatId)?tgChatId:"";
+  state.telegramChatSig=/^[a-f0-9]{64}$/i.test(String(params.get("tgSig")||"").trim())?String(params.get("tgSig")).trim().toLowerCase():"";
+  $("contact").value=String(params.get("contact")||"").slice(0,160);
+  try{
+    const [catalog,lookup]=await Promise.all([api("/api/catalog",{}),api("/api/mlbb-lookup",{userId,zoneId})]);
+    const mlbb=(catalog.products||[]).find(p=>p.key==="mlbb");
+    const pkg=(mlbb?.packages||[]).find(p=>String(p.id)===pkgId);
+    if(!pkg)throw new Error("ဒီ MLBB package ကိုလက်ရှိ catalog မှာမတွေ့ပါ။ Bot ထဲကနေ package ကိုပြန်ရွေးပါ။");
+    if(lookup.unsupported||lookup.validOrder===false)throw new Error(`${lookup.region||"ဒီ"} server account ကို MLBB Global မှာ support မလုပ်ပါ။`);
+    if(!lookup.nickname||!lookup.region)throw new Error("MLBB account ကို verify မလုပ်နိုင်ပါ။ Player ID / Zone ID ကိုပြန်စစ်ပါ။");
+    state.pkg=pkg;state.lookup=lookup;
+    $("ign").textContent=lookup.nickname;$("region").textContent=lookup.region;$("player").textContent=`${userId} (${zoneId})`;$("package").textContent=packageTitle(pkg);$("priceKs").textContent=`${fmt(pkg.price)} Ks`;$("priceThb").textContent=`฿${fmt(pkg.priceThb)}`;
+    renderPayments();
+    $("loadingCard").hidden=true;$("checkout").hidden=false;
+  }catch(e){fail(e.message||"Checkout စတင်မရပါ။");}
+}
+
+function renderPayments(){
+  $("payments").innerHTML=Object.entries(PAY).map(([key,p])=>`<button class="pay" type="button" data-pay="${key}"><b>${esc(p.name)}</b><small>${key==="balance"?"BestDia wallet":"Transfer + slip"}</small></button>`).join("");
+  document.querySelectorAll("[data-pay]").forEach(btn=>btn.addEventListener("click",()=>selectPay(btn.dataset.pay)));
+}
+function selectPay(key){
+  state.payKey=key;document.querySelectorAll("[data-pay]").forEach(btn=>btn.classList.toggle("active",btn.dataset.pay===key));
+  const p=PAY[key];const detail=$("payDetail");detail.hidden=false;
+  if(key==="balance"){
+    detail.innerHTML=`<div class="row"><span>Method</span><b>BestDia Balance</b></div><div class="row"><span>Charge</span><b class="gold">${fmt(Math.ceil(Number(state.pkg.priceThb||state.pkg.supplierPriceThb||0)))} BD</b></div><div class="row"><span>Rate</span><b>1 BD = 1 THB</b></div>`;
+    $("balanceLogin").classList.add("show");$("manualPayment").hidden=true;return;
+  }
+  $("balanceLogin").classList.remove("show");$("manualPayment").hidden=false;
+  state.account=null;state.session="";
+  detail.innerHTML=`<div class="row"><span>Method</span><b>${esc(p.name)}</b></div>${p.number?`<div class="row"><span>Phone</span><button class="copy" type="button" data-copy="${esc(p.number)}">${esc(p.number)}</button></div>`:""}<div class="row"><span>Name</span><b>${esc(p.holder)}</b></div>${p.qr?`<img class="qr" src="${esc(p.qr)}" alt="PromptPay QR"/>`:""}<div class="row"><span>Amount</span><b class="gold">${fmt(state.pkg.price)} Ks / ฿${fmt(state.pkg.priceThb)}</b></div>`;
+  detail.querySelector("[data-copy]")?.addEventListener("click",e=>navigator.clipboard?.writeText(e.currentTarget.dataset.copy));
+}
+
+$("loginBtn").addEventListener("click",async()=>{
+  const loginId=$("loginId").value.trim().toLowerCase(),password=$("password").value;
+  if(!loginId||!password)return alert("Login ID နဲ့ password ထည့်ပါ။");
+  const btn=$("loginBtn");btn.disabled=true;btn.textContent="Logging in…";
+  try{
+    const data=await api("/api/account-login",{loginId,password});
+    if(!data.account?.id||!data.session)throw new Error("Login failed");
+    state.account=data.account;state.session=data.session;
+    const charge=Math.ceil(Number(state.pkg.priceThb||state.pkg.supplierPriceThb||0));
+    $("balanceInfo").hidden=false;$("balanceInfo").innerHTML=`<div class="row"><span>Account</span><b>${esc(data.account.id)}</b></div><div class="row"><span>Available</span><b class="gold">${fmt(data.account.balance)} BD</b></div><div class="row"><span>Required</span><b>${fmt(charge)} BD</b></div>`;
+  }catch(e){alert(e.message||"Login failed");}
+  finally{btn.disabled=false;btn.textContent="Login to BestDia";}
+});
+
+$("slip").addEventListener("change",async e=>{
+  const file=e.target.files?.[0];state.slipDataUrl="";state.slipFileName="";$("slipPreview").classList.remove("show");if(!file)return;
+  if(!file.type.startsWith("image/"))return alert("Slip image ကိုပဲတင်ပါ။");
+  if(file.size>6*1024*1024){e.target.value="";return alert("Slip image က 6MB အောက်ဖြစ်ရပါမယ်။");}
+  try{state.slipDataUrl=await compressImage(file);state.slipFileName=file.name;$("slipImg").src=state.slipDataUrl;$("slipPreview").classList.add("show");}catch{alert("Slip image ဖတ်မရပါ။");}
+});
+function compressImage(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>{const img=new Image();img.onload=()=>{let max=1200,quality=.82,out="";const canvas=document.createElement("canvas"),ctx=canvas.getContext("2d");do{const scale=Math.min(1,max/Math.max(img.width,img.height));canvas.width=Math.round(img.width*scale);canvas.height=Math.round(img.height*scale);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);out=canvas.toDataURL("image/jpeg",quality);max=Math.round(max*.85);quality=Math.max(.58,quality-.08);}while(out.length>850000&&max>520);resolve(out);};img.onerror=reject;img.src=reader.result;};reader.onerror=reject;reader.readAsDataURL(file);});}
+
+$("submitBtn").addEventListener("click",submitOrder);
+async function submitOrder(){
+  if(!state.payKey)return alert("Payment method ရွေးပါ။");
+  const contact=$("contact").value.trim();if(!contact)return alert("Telegram username သို့မဟုတ် phone number ထည့်ပါ။");
+  if(state.payKey==="balance"&&!state.session)return alert("BestDia Balance သုံးရန် account login အရင်ဝင်ပါ။");
+  if(state.payKey!=="balance"&&!state.slipDataUrl)return alert("Payment slip တင်ပါ။");
+  const btn=$("submitBtn");btn.disabled=true;btn.textContent="Submitting…";
+  const oid="BD"+Date.now().toString().slice(-6);
+  const order={id:oid,gameKey:"mlbb",gameName:"Mobile Legends",userId:state.userId,zoneId:state.zoneId,contact,ign:state.lookup.nickname,region:state.lookup.region,accountId:state.payKey==="balance"?state.account.id:"",telegramChatId:state.telegramChatId,telegramChatSig:state.telegramChatSig,pkg:{id:state.pkg.id},items:[{id:state.pkg.id,quantity:1}],payment:PAY[state.payKey].name,payKey:state.payKey};
+  try{
+    const data=await api("/api/create-order",{order,slipDataUrl:state.payKey==="balance"?"":state.slipDataUrl,slipFileName:state.slipFileName},state.payKey==="balance"?state.session:"");
+    state.orderId=data.orderId||oid;showStatus(data.order||{id:state.orderId,status:"pending",pkg:state.pkg});startPolling();$("checkout").hidden=true;window.scrollTo({top:0,behavior:"smooth"});
+  }catch(e){alert(`Order submit failed: ${e.message||"try again"}`);}
+  finally{btn.disabled=false;btn.textContent="Order တင်မည်";}
+}
+function showStatus(order){
+  const status=String(order?.status||"pending");$("statusCard").classList.add("show");$("statusBody").innerHTML=`<div class="row"><span>Order ID</span><b class="gold">${esc(order?.id||state.orderId)}</b></div><div class="row"><span>Status</span><span class="status-badge ${esc(status)}">${esc(status)}</span></div><div class="row"><span>Package</span><b>${esc(packageTitle(order?.pkg||state.pkg))}</b></div><div class="row"><span>Player</span><b>${esc(state.userId)} (${esc(state.zoneId)})</b></div>${order?.failedReason?`<p class="warn">${esc(order.failedReason)}</p>`:""}<button class="btn secondary" type="button" id="checkNow">Check status</button>`;
+  $("checkNow")?.addEventListener("click",pollStatus);
+  if(["completed","failed","cancelled"].includes(status)&&state.poll){clearInterval(state.poll);state.poll=null;}
+}
+async function pollStatus(){if(!state.orderId)return;try{const data=await api("/api/order-status",{orderId:state.orderId});showStatus(data.order);}catch(e){console.warn(e);}}
+function startPolling(){if(state.poll)clearInterval(state.poll);state.poll=setInterval(pollStatus,8000);}
+
+init();
+</script>
+</body>
+</html>
