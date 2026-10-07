@@ -123,6 +123,11 @@ async function handleCallback(callback, request, env) {
     return tg(env, "sendMessage", { chat_id: chatId, text: "MLBB Global အတွက် Player ID နဲ့ Zone ID ကို space ခြားပြီးပို့ပါ။ ဥပမာ — 123456789 1234" });
   }
   if (data === "game:mlbb") return sendMlbbPrompt(chatId, env);
+  if (data.startsWith(`${FLOW_PREFIX}:cats:`)) {
+    const account = decodeAccount(data.slice(`${FLOW_PREFIX}:cats:`.length));
+    if (!account) return sendFlowExpired(chatId, env);
+    return showCategoryMenu(chatId, account, request, env);
+  }
   if (data.startsWith(`${FLOW_PREFIX}:cat:`)) {
     const parsed = decodeCategorySelection(data.slice(`${FLOW_PREFIX}:cat:`.length));
     if (!parsed) return sendFlowExpired(chatId, env);
@@ -185,11 +190,32 @@ async function showPackageCategory(chatId, selection, request, env) {
     text: `${packageTitle(pkg)}  •  ${formatKs(pkg.price)} Ks`,
     callback_data: `${FLOW_PREFIX}:pkg:${encodeSelection({ userId: selection.userId, zoneId: selection.zoneId, pkgId: pkg.id })}`,
   }]);
-  buttons.push([{ text: "⬅️ Categories", callback_data: `${FLOW_PREFIX}:cat:popular:${encodeAccount(selection)}` }, { text: "🏠 Menu", callback_data: "home" }]);
+  buttons.push([{ text: "⬅️ Categories", callback_data: `${FLOW_PREFIX}:cats:${encodeAccount(selection)}` }, { text: "🏠 Menu", callback_data: "home" }]);
   return tg(env, "sendMessage", {
     chat_id: chatId,
     parse_mode: "HTML",
     text: `<b>${labels[selection.category] || "MLBB Packages"}</b>\n\nPackage တစ်ခုရွေးပါ 👇`,
+    reply_markup: { inline_keyboard: buttons },
+  });
+}
+
+async function showCategoryMenu(chatId, ids, request, env) {
+  const origin = new URL(request.url).origin;
+  const catalog = await getMlbbCatalog(origin);
+  const categories = packageCategories(catalog.packages);
+  const buttons = [
+    categories.popular.length ? [{ text: "🔥 Popular", callback_data: `${FLOW_PREFIX}:cat:popular:${encodeAccount(ids)}` }] : [],
+    [
+      categories.normal.length ? { text: `💎 Diamonds (${categories.normal.length})`, callback_data: `${FLOW_PREFIX}:cat:normal:${encodeAccount(ids)}` } : null,
+      categories.passes.length ? { text: `🎫 Passes (${categories.passes.length})`, callback_data: `${FLOW_PREFIX}:cat:passes:${encodeAccount(ids)}` } : null,
+    ].filter(Boolean),
+    categories.double.length ? [{ text: `✨ Double Diamond (${categories.double.length})`, callback_data: `${FLOW_PREFIX}:cat:double:${encodeAccount(ids)}` }] : [],
+    [{ text: "🔄 Change account", callback_data: "game:mlbb" }],
+  ].filter(row => row.length);
+  return tg(env, "sendMessage", {
+    chat_id: chatId,
+    parse_mode: "HTML",
+    text: "<b>💎 MLBB Package Categories</b>\n\nရွေးချယ်လိုတဲ့ category ကိုနှိပ်ပါ 👇",
     reply_markup: { inline_keyboard: buttons },
   });
 }
@@ -205,6 +231,11 @@ function packageCategories(packages) {
 }
 
 function encodeAccount({ userId, zoneId }) { return `${userId}.${zoneId}`; }
+function decodeAccount(value) {
+  const [userId, zoneId, ...rest] = String(value || "").split(".");
+  if (rest.length || !/^\d{5,20}$/.test(userId) || !/^\d{3,10}$/.test(zoneId)) return null;
+  return { userId, zoneId };
+}
 function decodeCategorySelection(value) {
   const [category, userId, zoneId, ...rest] = String(value || "").split(":").flatMap((part, index) => index === 1 ? part.split(".") : [part]);
   if (rest.length || !["popular","normal","passes","double"].includes(category) || !/^\d{5,20}$/.test(userId) || !/^\d{3,10}$/.test(zoneId)) return null;
