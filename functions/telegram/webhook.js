@@ -49,8 +49,20 @@ async function handleMessage(message, request, env) {
   const chatId = message.chat?.id;
   if (!chatId) return;
   const text = String(message.text || "").trim();
-  if (/^\/start(?:\s|$)/i.test(text) || /^\/menu(?:\s|$)/i.test(text)) return sendWelcome(chatId, env);
-  if (/^\/help(?:\s|$)/i.test(text)) {
+
+  const startMatch = text.match(/^\/start(?:@\w+)?(?:\s+([^\s]+))?/i);
+  if (startMatch) {
+    await configureBotUx(env).catch(() => {});
+    const payload = String(startMatch[1] || "").trim().toLowerCase();
+    if (payload === "mlbb" || payload === "topup" || payload === "mlbb-global") {
+      return sendMlbbPrompt(chatId, env, true);
+    }
+    return sendWelcome(chatId, env);
+  }
+
+  if (/^\/topup(?:@\w+)?(?:\s|$)/i.test(text)) return sendMlbbPrompt(chatId, env, true);
+  if (/^\/menu(?:@\w+)?(?:\s|$)/i.test(text)) return sendWelcome(chatId, env);
+  if (/^\/help(?:@\w+)?(?:\s|$)/i.test(text)) {
     await tg(env, "sendMessage", {
       chat_id: chatId,
       text: "BestDia Auto Top-up Bot\n\n1) MLBB ကိုရွေးပါ\n2) Player ID + Zone ID ပို့ပါ\n3) Account verify လုပ်ပါ\n4) Package ရွေးပါ\n5) BestDia website checkout ကိုဖွင့်ပါ\n6) KBZPay / Wave Money / TrueMoney / PromptPay / BestDia Balance နဲ့ပေးချေပါ\n7) BestDia backend က order နဲ့ supplier top-up ကိုဆက်လုပ်ပါမယ်။",
@@ -60,11 +72,10 @@ async function handleMessage(message, request, env) {
   }
   const pair = parseMlbbIds(text);
   if (pair) return handleMlbbLookupMessage(chatId, pair, request, env);
-  await tg(env, "sendMessage", {
-    chat_id: chatId,
-    text: "MLBB top-up အတွက် Player ID နဲ့ Zone ID ကို ဒီပုံစံနဲ့ပို့ပါ။\n\n123456789 1234",
-    reply_markup: { inline_keyboard: [[{ text: "🏠 Main menu", callback_data: "home" }]] },
-  });
+
+  // A new customer should never hit a dead end. Any unrecognized first message
+  // falls back to the normal welcome screen with a clear Top-up action.
+  return sendWelcome(chatId, env);
 }
 
 async function sendWelcome(chatId, env) {
@@ -84,9 +95,7 @@ async function handleCallback(callback, request, env) {
   if (data === "help") {
     return tg(env, "sendMessage", { chat_id: chatId, text: "MLBB Global အတွက် Player ID နဲ့ Zone ID ကို space ခြားပြီးပို့ပါ။ ဥပမာ — 123456789 1234" });
   }
-  if (data === "game:mlbb") {
-    return tg(env, "sendMessage", { chat_id: chatId, text: "🎮 MLBB Global\n\nPlayer ID နဲ့ Zone ID ကို space ခြားပြီးပို့ပါ။\nဥပမာ — 123456789 1234" });
-  }
+  if (data === "game:mlbb") return sendMlbbPrompt(chatId, env);
   if (data.startsWith(`${FLOW_PREFIX}:pkg:`)) {
     const selection = decodeSelection(data.slice(`${FLOW_PREFIX}:pkg:`.length));
     if (!selection) return sendFlowExpired(chatId, env);
