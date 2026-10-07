@@ -113,6 +113,40 @@ async function sendWelcome(chatId, env) {
   await tg(env, "sendMessage", { ...body, text: caption });
 }
 
+async function sendMlbbPrompt(chatId, env, direct = false) {
+  return tg(env, "sendMessage", {
+    chat_id: chatId,
+    parse_mode: "HTML",
+    text: [
+      direct ? "💎 <b>MLBB Top-up</b>" : "🎮 <b>MLBB Global</b>",
+      "",
+      "Player ID နဲ့ Zone ID ကို space ခြားပြီးပို့ပါ။",
+      "",
+      "<code>123456789 1234</code>",
+    ].join("\n"),
+    reply_markup: { inline_keyboard: [[{ text: "🏠 Main Menu", callback_data: "home" }]] },
+  });
+}
+
+async function configureBotUx(env) {
+  await Promise.allSettled([
+    tg(env, "setMyCommands", {
+      commands: [
+        { command: "topup", description: "MLBB Top-up စတင်ရန်" },
+        { command: "menu", description: "Main menu ဖွင့်ရန်" },
+        { command: "help", description: "အသုံးပြုနည်း ကြည့်ရန်" },
+      ],
+    }),
+    tg(env, "setChatMenuButton", { menu_button: { type: "commands" } }),
+    tg(env, "setMyDescription", {
+      description: "BestDia MLBB Auto Top-up — Player ID verify, package ရွေးပြီး BestDia checkout ကနေ လုံခြုံစွာ Top-up လုပ်နိုင်ပါတယ်။",
+    }),
+    tg(env, "setMyShortDescription", {
+      short_description: "MLBB Diamonds ကို BestDia နဲ့ မြန်မြန်ဆန်ဆန် Top-up လုပ်ပါ။",
+    }),
+  ]);
+}
+
 async function handleCallback(callback, request, env) {
   const chatId = callback.message?.chat?.id || callback.from?.id;
   const data = String(callback.data || "");
