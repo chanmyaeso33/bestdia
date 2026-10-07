@@ -1005,7 +1005,7 @@ async function adminUpdateOrder(request, env) {
 
   let updated = await updateOrderDoc(firestore, docId, updates);
   const statusChanged = Boolean(updated?.status) && updated.status !== current.status;
-  if (statusChanged && ["processing", "completed", "failed", "cancelled"].includes(updated.status)) {
+  if (statusChanged && ["processing", "held", "completed", "failed", "cancelled"].includes(updated.status)) {
     const customerNotification = await notifyTelegramCustomerOrderStatus(env, updated);
     if (customerNotification.sent) {
       updated = await updateOrderDoc(firestore, docId, {
@@ -4427,38 +4427,47 @@ async function notifyTelegramCustomerOrderStatus(env, order) {
   if (!token || !/^-?\d{1,20}$/.test(chatId) || !status) return { sent: false, skipped: true };
   if (String(order?.telegramLastNotifiedStatus || "") === status) return { sent: false, skipped: true, duplicate: true };
 
-  const labels = {
-    processing: "⏳ Processing",
-    completed: "✅ Top-up completed",
-    failed: "❌ Top-up failed",
-    cancelled: "🚫 Order cancelled",
+  const meta = {
+    processing: { icon: "⏳", title: "Top-up Processing", note: "Order ကို စတင်လုပ်ဆောင်နေပါပြီ။ ခဏစောင့်ပေးပါ။" },
+    held: { icon: "🟠", title: "Top-up On Hold", note: "Supplier balance / fulfillment condition ကြောင့် order ကို ခဏ hold ထားပါတယ်။ BestDia က ဆက်လက်စစ်ဆေးပေးပါမယ်။" },
+    completed: { icon: "✅", title: "Top-up Completed", note: "💎 Diamond / item ပို့ဆောင်မှု အောင်မြင်ပြီးပါပြီ။" },
+    failed: { icon: "❌", title: "Top-up Failed", note: "Order ကို အပြီးသတ်မလုပ်နိုင်ခဲ့ပါ။ BestDia support ကိုဆက်သွယ်ပေးပါ။" },
+    cancelled: { icon: "🚫", title: "Order Cancelled", note: "ဒီ order ကို ပယ်ဖျက်ထားပါတယ်။" },
   };
-  const title = labels[status] || status;
+  const current = meta[status] || { icon: "ℹ️", title: status, note: "" };
+  const player = order.zoneId ? `${order.userId} (${order.zoneId})` : String(order.userId || "-");
   const lines = [
-    title,
+    `${current.icon} <b>${escapeHtml(current.title)}</b>`,
     "",
-    `Order ID: ${String(order.id || "-")}`,
-    `Package: ${packageText(order.pkg || {})}`,
-    `Player: ${order.zoneId ? `${order.userId} (${order.zoneId})` : String(order.userId || "-")}`,
+    `🧾 <b>Order:</b> <code>${escapeHtml(String(order.id || "-"))}</code>`,
+    `🎮 <b>Game:</b> ${escapeHtml(String(order.gameName || "Mobile Legends"))}`,
+    `💎 <b>Package:</b> ${escapeHtml(packageText(order.pkg || {}))}`,
+    `🆔 <b>Player:</b> ${escapeHtml(player)}`,
   ];
-  if (order.ign) lines.push(`IGN: ${order.ign}`);
-  if (status === "completed") {
-    lines.push("", "💎 Top-up အောင်မြင်ပြီးပါပြီ။");
-    if (order.supplierTransactionId) lines.push(`Transaction: ${order.supplierTransactionId}`);
-  } else if (status === "processing") {
-    lines.push("", "Order ကို စတင်လုပ်ဆောင်နေပါပြီ။");
-  } else if (status === "failed") {
-    lines.push("", `Reason: ${String(order.failedReason || "Supplier top-up could not be completed.")}`);
-    lines.push("BestDia support ကိုဆက်သွယ်ပေးပါ။");
-  } else if (status === "cancelled") {
-    lines.push("", "Order ကိုပယ်ဖျက်ထားပါတယ်။");
+  if (order.ign) lines.push(`👤 <b>IGN:</b> ${escapeHtml(order.ign)}`);
+  lines.push("", escapeHtml(current.note));
+
+  if (status === "completed" && order.supplierTransactionId) {
+    lines.push(`🔖 <b>Transaction:</b> <code>${escapeHtml(order.supplierTransactionId)}</code>`);
   }
+  if (status === "failed" && order.failedReason) {
+    lines.push(`⚠️ <b>Reason:</b> ${escapeHtml(String(order.failedReason))}`);
+  }
+
+  const keyboard = status === "completed"
+    ? [[{ text: "💎 Top-up Again", callback_data: "game:mlbb" }], [{ text: "🏠 Main Menu", callback_data: "home" }]]
+    : [[{ text: "🏠 Main Menu", callback_data: "home" }]];
 
   try {
     const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ chat_id: chatId, text: lines.join("\n") }),
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: lines.join("\n"),
+        parse_mode: "HTML",
+        reply_markup: { inline_keyboard: keyboard },
+      }),
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok || data.ok === false) return { sent: false, error: data.description || response.statusText || "Telegram send failed" };
