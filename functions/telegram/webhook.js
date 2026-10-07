@@ -79,11 +79,38 @@ async function handleMessage(message, request, env) {
 }
 
 async function sendWelcome(chatId, env) {
-  await tg(env, "sendMessage", {
+  const caption = [
+    "💎 <b>BestDia Auto Top-up</b>",
+    "",
+    "🎮 <b>MLBB Global</b>",
+    "⚡ Account verification",
+    "💳 KBZPay • Wave • TrueMoney • PromptPay",
+    "🪙 BestDia Balance",
+    "",
+    "Fast • Secure • Simple",
+    "",
+    "အောက်က button ကနေ Top-up စတင်ပါ။",
+  ].join("\n");
+  const body = {
     chat_id: chatId,
-    text: "💎 BestDia Auto Top-up\n\nTelegram ထဲကနေ MLBB account verify → package ရွေးပြီး BestDia website checkout မှာ KBZPay / Wave / TrueMoney / PromptPay / BestDia Balance နဲ့ပေးချေနိုင်ပါတယ်။\n\nMVP မှာ MLBB Global ကိုအရင်ဖွင့်ထားပါတယ်။",
-    reply_markup: { inline_keyboard: [[{ text: "🎮 MLBB Global", callback_data: "game:mlbb" }],[{ text: "ℹ️ Help", callback_data: "help" }]] },
-  });
+    parse_mode: "HTML",
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "💎 Top-up MLBB", callback_data: "game:mlbb" }],
+        [{ text: "📦 How it works", callback_data: "help" }, { text: "🏠 Menu", callback_data: "home" }],
+      ],
+    },
+  };
+  const imageUrl = String(env.TELEGRAM_WELCOME_IMAGE_URL || "").trim();
+  if (imageUrl) {
+    try {
+      await tg(env, "sendPhoto", { ...body, photo: imageUrl, caption });
+      return;
+    } catch (error) {
+      console.warn("Telegram welcome image failed; falling back to text", error);
+    }
+  }
+  await tg(env, "sendMessage", { ...body, text: caption });
 }
 
 async function handleCallback(callback, request, env) {
@@ -96,6 +123,11 @@ async function handleCallback(callback, request, env) {
     return tg(env, "sendMessage", { chat_id: chatId, text: "MLBB Global အတွက် Player ID နဲ့ Zone ID ကို space ခြားပြီးပို့ပါ။ ဥပမာ — 123456789 1234" });
   }
   if (data === "game:mlbb") return sendMlbbPrompt(chatId, env);
+  if (data.startsWith(`${FLOW_PREFIX}:cat:`)) {
+    const parsed = decodeCategorySelection(data.slice(`${FLOW_PREFIX}:cat:`.length));
+    if (!parsed) return sendFlowExpired(chatId, env);
+    return showPackageCategory(chatId, parsed, request, env);
+  }
   if (data.startsWith(`${FLOW_PREFIX}:pkg:`)) {
     const selection = decodeSelection(data.slice(`${FLOW_PREFIX}:pkg:`.length));
     if (!selection) return sendFlowExpired(chatId, env);
@@ -115,12 +147,71 @@ async function handleMlbbLookupMessage(chatId, ids, request, env) {
   }
   const catalog = await getMlbbCatalog(origin);
   if (!catalog.packages.length) return tg(env, "sendMessage", { chat_id: chatId, text: "⚠️ MLBB package list ကို အခုချိန်မှာမရနိုင်သေးပါ။" });
-  const buttons = catalog.packages.filter(pkg => Number.isFinite(Number(pkg.id))).slice(0,24).map(pkg => [{ text: `${packageTitle(pkg)} — ${formatKs(pkg.price)} Ks`, callback_data: `${FLOW_PREFIX}:pkg:${encodeSelection({ userId: ids.userId, zoneId: ids.zoneId, pkgId: pkg.id })}` }]);
+  const categories = packageCategories(catalog.packages);
+  const categoryButtons = [
+    categories.popular.length ? [{ text: "🔥 Popular", callback_data: `${FLOW_PREFIX}:cat:popular:${encodeAccount(ids)}` }] : [],
+    [
+      categories.normal.length ? { text: `💎 Diamonds (${categories.normal.length})`, callback_data: `${FLOW_PREFIX}:cat:normal:${encodeAccount(ids)}` } : null,
+      categories.passes.length ? { text: `🎫 Passes (${categories.passes.length})`, callback_data: `${FLOW_PREFIX}:cat:passes:${encodeAccount(ids)}` } : null,
+    ].filter(Boolean),
+    categories.double.length ? [{ text: `✨ Double Diamond (${categories.double.length})`, callback_data: `${FLOW_PREFIX}:cat:double:${encodeAccount(ids)}` }] : [],
+    [{ text: "🔄 Change account", callback_data: "game:mlbb" }],
+  ].filter(row => row.length);
   await tg(env, "sendMessage", {
     chat_id: chatId,
-    text: `✅ Account verified\n\nIGN: ${lookup.nickname || "Verified"}\nRegion: ${lookup.region || "Global"}\nPlayer ID: ${ids.userId}\nZone ID: ${ids.zoneId}\n\nDiamond package ရွေးပါ။`,
+    parse_mode: "HTML",
+    text: [
+      "✅ <b>Account Verified</b>",
+      "",
+      `👤 <b>${escapeHtmlText(lookup.nickname || "Verified")}</b>`,
+      `🌏 ${escapeHtmlText(lookup.region || "Global")}`,
+      `🆔 ${ids.userId} (${ids.zoneId})`,
+      "",
+      "Package category ရွေးပါ 👇",
+    ].join("\n"),
+    reply_markup: { inline_keyboard: categoryButtons },
+  });
+}
+
+
+async function showPackageCategory(chatId, selection, request, env) {
+  const origin = new URL(request.url).origin;
+  const catalog = await getMlbbCatalog(origin);
+  const categories = packageCategories(catalog.packages);
+  const packages = (categories[selection.category] || []).slice(0, 24);
+  if (!packages.length) return sendFlowExpired(chatId, env);
+  const labels = { popular: "🔥 Popular", normal: "💎 Normal Diamonds", passes: "🎫 Passes & Bundles", double: "✨ Double Diamond" };
+  const buttons = packages.map(pkg => [{
+    text: `${packageTitle(pkg)}  •  ${formatKs(pkg.price)} Ks`,
+    callback_data: `${FLOW_PREFIX}:pkg:${encodeSelection({ userId: selection.userId, zoneId: selection.zoneId, pkgId: pkg.id })}`,
+  }]);
+  buttons.push([{ text: "⬅️ Categories", callback_data: `${FLOW_PREFIX}:cat:popular:${encodeAccount(selection)}` }, { text: "🏠 Menu", callback_data: "home" }]);
+  return tg(env, "sendMessage", {
+    chat_id: chatId,
+    parse_mode: "HTML",
+    text: `<b>${labels[selection.category] || "MLBB Packages"}</b>\n\nPackage တစ်ခုရွေးပါ 👇`,
     reply_markup: { inline_keyboard: buttons },
   });
+}
+
+function packageCategories(packages) {
+  const valid = (Array.isArray(packages) ? packages : []).filter(pkg => Number.isFinite(Number(pkg?.id)));
+  const passes = valid.filter(pkg => /(weekly|pass|bundle|monthly|twilight|super\s*value|starlight)/i.test(packageTitle(pkg)));
+  const double = valid.filter(pkg => /(double|\d+\s*\+\s*\d+)/i.test(packageTitle(pkg)));
+  const special = new Set([...passes, ...double]);
+  const normal = valid.filter(pkg => !special.has(pkg));
+  const popular = normal.slice(0, 6);
+  return { popular, normal, passes, double };
+}
+
+function encodeAccount({ userId, zoneId }) { return `${userId}.${zoneId}`; }
+function decodeCategorySelection(value) {
+  const [category, userId, zoneId, ...rest] = String(value || "").split(":").flatMap((part, index) => index === 1 ? part.split(".") : [part]);
+  if (rest.length || !["popular","normal","passes","double"].includes(category) || !/^\d{5,20}$/.test(userId) || !/^\d{3,10}$/.test(zoneId)) return null;
+  return { category, userId, zoneId };
+}
+function escapeHtmlText(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[char]));
 }
 
 async function showPackageConfirmation(chatId, from, selection, request, env) {
@@ -130,8 +221,18 @@ async function showPackageConfirmation(chatId, from, selection, request, env) {
   const checkoutUrl = await buildCheckoutUrl(origin, selection, from, env);
   await tg(env, "sendMessage", {
     chat_id: chatId,
-    text: `Order confirm\n\n🎮 MLBB Global\n💎 ${packageTitle(pkg)}\n💵 ${formatKs(pkg.price)} Ks / ฿${formatThb(pkg.priceThb)}\n🆔 ${selection.userId} (${selection.zoneId})\n\nPayment ကို BestDia website checkout မှာဆက်လုပ်ပါ။`,
-    reply_markup: { inline_keyboard: [[{ text: "💳 Continue to BestDia Checkout", url: checkoutUrl }],[{ text: "⬅️ Change account", callback_data: "game:mlbb" }]] },
+    parse_mode: "HTML",
+    text: [
+      "🧾 <b>Order Summary</b>",
+      "",
+      "🎮 MLBB Global",
+      `💎 <b>${escapeHtmlText(packageTitle(pkg))}</b>`,
+      `💵 <b>${formatKs(pkg.price)} Ks</b>  •  ฿${formatThb(pkg.priceThb)}`,
+      `🆔 ${selection.userId} (${selection.zoneId})`,
+      "",
+      "Payment ကို BestDia secure checkout မှာဆက်လုပ်ပါ။",
+    ].join("\n"),
+    reply_markup: { inline_keyboard: [[{ text: "💳 Secure Checkout", url: checkoutUrl }],[{ text: "🔄 Change account", callback_data: "game:mlbb" }, { text: "🏠 Menu", callback_data: "home" }]] },
   });
 }
 
