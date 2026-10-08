@@ -52,6 +52,7 @@ export async function onRequest(context) {
     if (route === "run-analyst-agent") return await runAnalystAgentApi(request, env);
     if (route === "run-daily-opportunity-pipeline") return await runDailyOpportunityPipelineApi(request, env);
     if (route === "telegram-diagnostic") return await telegramDiagnostic(request, env);
+    if (route === "telegram-customer-orders") return await telegramCustomerOrders(request, env);
     if (route === "telegram-notify") return await telegramNotify(request, env);
     return jsonResponse(404, { ok: false, error: "API route not found" });
   } catch (error) {
@@ -623,6 +624,27 @@ async function orderStatus(request, env) {
     }
   }
   return jsonResponse(200, { ok: true, order: publicOrder(found.data) });
+}
+
+async function telegramCustomerOrders(request, env) {
+  if (request.method !== "POST") return jsonResponse(405, { ok: false, error: "Method not allowed" });
+  const suppliedSecret = String(request.headers.get("X-BestDia-Secret") || "");
+  const expectedSecret = String(env.TELEGRAM_WEBHOOK_SECRET || "");
+  if (!expectedSecret || suppliedSecret !== expectedSecret) return jsonResponse(401, { ok: false, error: "Unauthorized" });
+
+  const payload = await readJson(request);
+  const telegramChatId = String(payload.telegramChatId || "").trim();
+  if (!/^-?\d{1,20}$/.test(telegramChatId)) return jsonResponse(400, { ok: false, error: "Invalid Telegram chat ID" });
+
+  const firestore = await firestoreClient(env);
+  const orders = await listOrders(firestore);
+  const customerOrders = orders
+    .filter((item) => String(item?.data?.telegramChatId || "") === telegramChatId && !item?.data?.archived)
+    .sort((a, b) => new Date(b?.data?.createdAt || 0).getTime() - new Date(a?.data?.createdAt || 0).getTime())
+    .slice(0, 5)
+    .map((item) => publicOrder(item.data));
+
+  return jsonResponse(200, { ok: true, orders: customerOrders });
 }
 
 async function publicTicker(request, env) {
