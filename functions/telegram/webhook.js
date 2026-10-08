@@ -61,6 +61,9 @@ async function handleMessage(message, request, env) {
   }
 
   if (/^\/topup(?:@\w+)?(?:\s|$)/i.test(text)) return sendMlbbPrompt(chatId, env, true);
+  if (/^\/orders?(?:@\w+)?(?:\s|$)/i.test(text)) return sendMyOrders(chatId, request, env);
+  if (/^\/payments?(?:@\w+)?(?:\s|$)/i.test(text)) return sendPaymentMethods(chatId, env);
+  if (/^\/support(?:@\w+)?(?:\s|$)/i.test(text)) return sendSupport(chatId, env);
   if (/^\/menu(?:@\w+)?(?:\s|$)/i.test(text)) return sendWelcome(chatId, env);
   if (/^\/help(?:@\w+)?(?:\s|$)/i.test(text)) {
     await tg(env, "sendMessage", {
@@ -97,7 +100,8 @@ async function sendWelcome(chatId, env) {
     reply_markup: {
       inline_keyboard: [
         [{ text: "💎 Top-up MLBB", callback_data: "game:mlbb" }],
-        [{ text: "📦 How it works", callback_data: "help" }, { text: "🏠 Menu", callback_data: "home" }],
+        [{ text: "📦 My Orders", callback_data: "orders" }, { text: "💳 Payments", callback_data: "payments" }],
+        [{ text: "🆘 Support", callback_data: "support" }, { text: "ℹ️ How it works", callback_data: "help" }],
       ],
     },
   };
@@ -133,6 +137,9 @@ async function configureBotUx(env) {
     tg(env, "setMyCommands", {
       commands: [
         { command: "topup", description: "MLBB Top-up စတင်ရန်" },
+        { command: "orders", description: "My Orders ကြည့်ရန်" },
+        { command: "payments", description: "Payment methods ကြည့်ရန်" },
+        { command: "support", description: "BestDia support" },
         { command: "menu", description: "Main menu ဖွင့်ရန်" },
         { command: "help", description: "အသုံးပြုနည်း ကြည့်ရန်" },
       ],
@@ -147,12 +154,94 @@ async function configureBotUx(env) {
   ]);
 }
 
+async function sendMyOrders(chatId, request, env) {
+  const origin = new URL(request.url).origin;
+  let data;
+  try {
+    data = await bestDiaPrivateApi(origin, "/api/telegram-customer-orders", { telegramChatId: String(chatId) }, env);
+  } catch (error) {
+    return tg(env, "sendMessage", {
+      chat_id: chatId,
+      text: "⚠️ Order history ကို အခုချိန်မှာမဖတ်နိုင်သေးပါ။ နောက်မှပြန်စမ်းပါ။",
+      reply_markup: { inline_keyboard: [[{ text: "🏠 Main Menu", callback_data: "home" }]] },
+    });
+  }
+  const orders = Array.isArray(data.orders) ? data.orders : [];
+  if (!orders.length) {
+    return tg(env, "sendMessage", {
+      chat_id: chatId,
+      parse_mode: "HTML",
+      text: "📦 <b>My Orders</b>\n\nဒီ Telegram account နဲ့ချိတ်ထားတဲ့ order မတွေ့သေးပါ။\n\nTop-up အသစ်လုပ်ပြီး checkout တင်ပြီးတာနဲ့ ဒီနေရာမှာ order history ပေါ်လာပါမယ်။",
+      reply_markup: { inline_keyboard: [[{ text: "💎 Top-up MLBB", callback_data: "game:mlbb" }],[{ text: "🏠 Main Menu", callback_data: "home" }]] },
+    });
+  }
+  const statusMeta = {
+    pending: ["🟡","Pending"],
+    processing: ["⏳","Processing"],
+    held: ["🟠","On Hold"],
+    completed: ["✅","Completed"],
+    failed: ["❌","Failed"],
+    cancelled: ["🚫","Cancelled"],
+  };
+  const sections = orders.map((order, index) => {
+    const [icon,label] = statusMeta[String(order.status||"")] || ["ℹ️",String(order.status||"Unknown")];
+    const pkg = packageTitle(order.pkg || {});
+    const player = order.zoneId ? `${order.userId} (${order.zoneId})` : String(order.userId || "-");
+    return [
+      `${index+1}. ${icon} <b>${escapeHtmlText(label)}</b>`,
+      `🧾 <code>${escapeHtmlText(order.id || "-")}</code>`,
+      `💎 ${escapeHtmlText(pkg)}`,
+      `🆔 ${escapeHtmlText(player)}`,
+    ].join("\n");
+  });
+  return tg(env, "sendMessage", {
+    chat_id: chatId,
+    parse_mode: "HTML",
+    text: ["📦 <b>My Orders</b>","",...sections.flatMap((section,i)=>i?[ "", section ]:[section])].join("\n"),
+    reply_markup: { inline_keyboard: [[{ text: "🔄 Refresh", callback_data: "orders" }],[{ text: "💎 Top-up Again", callback_data: "game:mlbb" }, { text: "🏠 Main Menu", callback_data: "home" }]] },
+  });
+}
+
+function sendPaymentMethods(chatId, env) {
+  return tg(env, "sendMessage", {
+    chat_id: chatId,
+    parse_mode: "HTML",
+    text: [
+      "💳 <b>BestDia Payment Methods</b>",
+      "",
+      "🇲🇲 KBZPay",
+      "🇲🇲 Wave Money",
+      "🇹🇭 TrueMoney",
+      "🇹🇭 PromptPay",
+      "🪙 BestDia Balance",
+      "",
+      "Payment details နဲ့ QR/number တွေကို checkout မှာ package ရွေးပြီးနောက် ပြပေးပါတယ်။",
+    ].join("\n"),
+    reply_markup: { inline_keyboard: [[{ text: "💎 Start Top-up", callback_data: "game:mlbb" }],[{ text: "🏠 Main Menu", callback_data: "home" }]] },
+  });
+}
+
+function sendSupport(chatId, env) {
+  const support = String(env.TELEGRAM_SUPPORT_USERNAME || "@BestDiaa").trim();
+  const username = support.replace(/^@/,"");
+  const keyboard = username ? [[{ text: "💬 Contact BestDia", url: `https://t.me/${username}` }],[{ text: "🏠 Main Menu", callback_data: "home" }]] : [[{ text: "🏠 Main Menu", callback_data: "home" }]];
+  return tg(env, "sendMessage", {
+    chat_id: chatId,
+    parse_mode: "HTML",
+    text: `🆘 <b>BestDia Support</b>\n\nOrder, payment, account verification ပြဿနာရှိရင် BestDia support ကိုဆက်သွယ်နိုင်ပါတယ်။\n\nTelegram: <b>${escapeHtmlText(support)}</b>`,
+    reply_markup: { inline_keyboard: keyboard },
+  });
+}
+
 async function handleCallback(callback, request, env) {
   const chatId = callback.message?.chat?.id || callback.from?.id;
   const data = String(callback.data || "");
   if (callback.id) await tg(env, "answerCallbackQuery", { callback_query_id: callback.id }).catch(() => {});
   if (!chatId) return;
   if (data === "home") return sendWelcome(chatId, env);
+  if (data === "orders") return sendMyOrders(chatId, request, env);
+  if (data === "payments") return sendPaymentMethods(chatId, env);
+  if (data === "support") return sendSupport(chatId, env);
   if (data === "help") {
     return tg(env, "sendMessage", { chat_id: chatId, text: "MLBB Global အတွက် Player ID နဲ့ Zone ID ကို space ခြားပြီးပို့ပါ။ ဥပမာ — 123456789 1234" });
   }
@@ -347,6 +436,17 @@ async function bestDiaApi(origin, path, body) {
   const response = await fetch(`${origin}${path}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {}) });
   const data = await response.json().catch(() => ({}));
   return { httpOk: response.ok, ...data, ok: response.ok && data.ok !== false };
+}
+
+async function bestDiaPrivateApi(origin, path, body, env) {
+  const response = await fetch(`${origin}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-BestDia-Secret": String(env.TELEGRAM_WEBHOOK_SECRET || "") },
+    body: JSON.stringify(body || {}),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || data.ok === false) throw new Error(data.error || "Private BestDia API request failed");
+  return data;
 }
 
 async function tg(env, method, body) {
