@@ -401,9 +401,6 @@ async function buildCheckoutUrl(origin, selection, from, env) {
     const signature = await signTelegramCheckout(env.TELEGRAM_WEBHOOK_SECRET, `${selection.userId}.${selection.zoneId}.${selection.pkgId}.${telegramChatId}`);
     if (signature) url.searchParams.set("tgSig", signature);
   }
-  const username = String(from?.username || "").trim();
-  const contact = username ? `@${username}` : telegramChatId ? `telegram:${telegramChatId}` : "";
-  if (contact) url.searchParams.set("contact", contact);
   return url.toString();
 }
 
