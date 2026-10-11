@@ -314,10 +314,26 @@ async function showPackageCategory(chatId, selection, request, env) {
     callback_data: `${FLOW_PREFIX}:pkg:${encodeSelection({ userId: selection.userId, zoneId: selection.zoneId, pkgId: pkg.id })}`,
   }]);
   buttons.push([{ text: "⬅️ Categories", callback_data: `${FLOW_PREFIX}:cats:${encodeAccount(selection)}` }, { text: "🏠 Menu", callback_data: "home" }]);
+  const title = labels[selection.category] || "MLBB Packages";
+  const caption = `<b>${title}</b>\n\nWebsite storefront ထဲက MLBB artwork နဲ့ package list ကိုရွေးနိုင်ပါတယ်။\n\nPackage တစ်ခုရွေးပါ 👇`;
+  const photo = mlbbCategoryArtwork(origin, selection.category, packages);
+  if (photo) {
+    try {
+      return await tg(env, "sendPhoto", {
+        chat_id: chatId,
+        photo,
+        caption,
+        parse_mode: "HTML",
+        reply_markup: { inline_keyboard: buttons },
+      });
+    } catch (error) {
+      console.warn("Telegram category image failed; falling back to text", error);
+    }
+  }
   return tg(env, "sendMessage", {
     chat_id: chatId,
     parse_mode: "HTML",
-    text: `<b>${labels[selection.category] || "MLBB Packages"}</b>\n\nPackage တစ်ခုရွေးပါ 👇`,
+    text: caption,
     reply_markup: { inline_keyboard: buttons },
   });
 }
@@ -341,6 +357,19 @@ async function showCategoryMenu(chatId, ids, request, env) {
     text: "<b>💎 MLBB Package Categories</b>\n\nရွေးချယ်လိုတဲ့ category ကိုနှိပ်ပါ 👇",
     reply_markup: { inline_keyboard: buttons },
   });
+}
+
+function mlbbCategoryArtwork(origin, category, packages = []) {
+  const firstTitle = packageTitle(packages[0] || {});
+  if (category === "passes") {
+    if (/Twilight/i.test(firstTitle)) return "https://cdn.unipin.com/images/denom_group/ml-twilight.png";
+    if (/Elite/i.test(firstTitle)) return "https://cdn.unipin.com/images/denom_group/ml-weeklyeb.png";
+    if (/Monthly/i.test(firstTitle)) return "https://cdn.unipin.com/images/denom_group/ml-monthlyeb.png";
+    return "https://cdn.unipin.com/images/denom_group/ml-weekly.png";
+  }
+  if (category === "double") return "https://cdn.unipin.com/images/denom_group/ml-diamonds.png";
+  if (category === "popular") return new URL("/assets/mlbb/diamonds-tier-2.png", origin).toString();
+  return new URL("/assets/mlbb/diamonds-tier-3.png", origin).toString();
 }
 
 function packageCategories(packages) {
