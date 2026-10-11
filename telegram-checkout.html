@@ -7,7 +7,7 @@
 <title>BestDia · Telegram Checkout</title>
 <style>
 :root{--gold:#F5C542;--cyan:#5BE3FF;--cyan2:#00B8D9;--bg:#07090F;--panel:#111827;--panel2:#1A2035;--text:#E8EAF0;--muted:#8B96AE;--ok:#2ECC71;--warn:#F39C12;--danger:#E74C3C}
-*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 20% 0%,rgba(91,227,255,.12),transparent 34%),linear-gradient(180deg,#07090F,#0E1220 55%,#07090F);color:var(--text);font-family:system-ui,-apple-system,"Noto Sans Myanmar",sans-serif}button,input{font:inherit}.wrap{max-width:760px;margin:0 auto;padding:20px 14px 48px}.brand{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}.logo{font-size:1.55rem;font-weight:900;background:linear-gradient(135deg,var(--cyan),var(--gold));-webkit-background-clip:text;color:transparent}.tag{font-size:.76rem;color:var(--cyan);border:1px solid rgba(91,227,255,.24);border-radius:999px;padding:6px 10px;background:rgba(91,227,255,.07)}.card{background:linear-gradient(180deg,rgba(26,32,53,.98),rgba(14,18,32,.98));border:1px solid rgba(91,227,255,.14);border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 18px 50px rgba(0,0,0,.25)}h1,h2,p{margin-top:0}h1{font-size:1.35rem;margin-bottom:6px}h2{font-size:1rem;color:var(--cyan);margin-bottom:12px}.muted{color:var(--muted);font-size:.86rem;line-height:1.55}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.item{background:rgba(7,9,15,.52);border:1px solid rgba(91,227,255,.09);border-radius:11px;padding:11px}.item span{display:block;color:var(--muted);font-size:.7rem;margin-bottom:4px}.item b{font-size:.92rem}.gold{color:var(--gold)}.ok{color:var(--ok)}.warn{color:var(--warn)}.payments{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.pay{border:1px solid rgba(91,227,255,.16);border-radius:11px;background:#0E1220;color:var(--text);padding:12px;text-align:left;cursor:pointer}.pay.active{border-color:var(--cyan);box-shadow:0 0 0 1px rgba(91,227,255,.25)}.pay b{display:block}.pay small{display:block;color:var(--muted);margin-top:3px}.detail{margin-top:12px;border-radius:11px;padding:12px;background:rgba(7,9,15,.56);border:1px solid rgba(91,227,255,.1)}.row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)}.row:last-child{border-bottom:0}.row span:first-child{color:var(--muted);font-size:.78rem}.copy{border:1px solid rgba(91,227,255,.25);background:rgba(91,227,255,.08);color:var(--cyan);border-radius:8px;padding:6px 9px;cursor:pointer}.qr{display:block;width:min(100%,300px);margin:12px auto;border-radius:12px}.field{margin-top:10px}.field label{display:block;color:var(--muted);font-size:.76rem;margin-bottom:6px}.field input{width:100%;border:1px solid rgba(91,227,255,.17);border-radius:10px;background:#090D17;color:var(--text);padding:11px 12px;outline:none}.field input:focus{border-color:var(--cyan)}.btn{width:100%;border:0;border-radius:11px;padding:12px 14px;font-weight:800;cursor:pointer;background:linear-gradient(135deg,var(--cyan2),var(--cyan));color:#071019;margin-top:12px}.btn.secondary{background:rgba(91,227,255,.08);color:var(--cyan);border:1px solid rgba(91,227,255,.2)}.btn:disabled{opacity:.55;cursor:not-allowed}.slip-preview{display:none;margin-top:10px}.slip-preview.show{display:block}.slip-preview img{max-height:230px;border-radius:10px;border:1px solid rgba(91,227,255,.14)}.status{display:none}.status.show{display:block}.status-badge{display:inline-block;border-radius:999px;padding:5px 9px;font-size:.72rem;font-weight:800;background:rgba(243,156,18,.12);color:var(--warn)}.status-badge.completed{background:rgba(46,204,113,.12);color:var(--ok)}.status-badge.failed,.status-badge.cancelled{background:rgba(231,76,60,.12);color:var(--danger)}.error{display:none;border-color:rgba(231,76,60,.28);color:#ffb6ae}.error.show{display:block}.balance-login{display:none}.balance-login.show{display:block}.footer{text-align:center;color:var(--muted);font-size:.74rem;margin-top:20px}@media(max-width:560px){.grid,.payments{grid-template-columns:1fr}.wrap{padding-top:14px}}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 20% 0%,rgba(91,227,255,.12),transparent 34%),linear-gradient(180deg,#07090F,#0E1220 55%,#07090F);color:var(--text);font-family:system-ui,-apple-system,"Noto Sans Myanmar",sans-serif}button,input{font:inherit}.wrap{max-width:760px;margin:0 auto;padding:20px 14px 48px}.brand{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}.logo{font-size:1.55rem;font-weight:900;background:linear-gradient(135deg,var(--cyan),var(--gold));-webkit-background-clip:text;color:transparent}.tag{font-size:.76rem;color:var(--cyan);border:1px solid rgba(91,227,255,.24);border-radius:999px;padding:6px 10px;background:rgba(91,227,255,.07)}.card{background:linear-gradient(180deg,rgba(26,32,53,.98),rgba(14,18,32,.98));border:1px solid rgba(91,227,255,.14);border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 18px 50px rgba(0,0,0,.25)}h1,h2,p{margin-top:0}h1{font-size:1.35rem;margin-bottom:6px}h2{font-size:1rem;color:var(--cyan);margin-bottom:12px}.muted{color:var(--muted);font-size:.86rem;line-height:1.55}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.item{background:rgba(7,9,15,.52);border:1px solid rgba(91,227,255,.09);border-radius:11px;padding:11px}.item span{display:block;color:var(--muted);font-size:.7rem;margin-bottom:4px}.item b{font-size:.92rem}.gold{color:var(--gold)}.ok{color:var(--ok)}.warn{color:var(--warn)}.payments{display:grid;grid-template-columns:1fr;gap:10px}.pay{width:100%;display:flex;align-items:center;gap:14px;border:1px solid rgba(91,227,255,.16);border-radius:14px;background:#0E1220;color:var(--text);padding:12px 14px;text-align:left;cursor:pointer;transition:.18s ease}.pay:hover{border-color:rgba(91,227,255,.34);transform:translateY(-1px)}.pay.active{border-color:var(--cyan);box-shadow:0 0 0 1px rgba(91,227,255,.25),0 10px 28px rgba(0,0,0,.2)}.pay-logo{width:58px;height:58px;border-radius:13px;background:#fff;display:grid;place-items:center;overflow:hidden;flex:0 0 58px}.pay-logo img{width:86%;height:86%;object-fit:contain}.pay-logo.balance{background:linear-gradient(135deg,#5BE3FF,#F5C542);color:#071019;font-weight:900;font-size:1.05rem}.pay-copy{min-width:0}.pay b{display:block;font-size:1rem}.pay small{display:block;color:var(--muted);margin-top:4px;line-height:1.35}.pay.active small{color:#b9c7dd}.detail{margin-top:12px;border-radius:11px;padding:12px;background:rgba(7,9,15,.56);border:1px solid rgba(91,227,255,.1)}.row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)}.row:last-child{border-bottom:0}.row span:first-child{color:var(--muted);font-size:.78rem}.copy{border:1px solid rgba(91,227,255,.25);background:rgba(91,227,255,.08);color:var(--cyan);border-radius:8px;padding:6px 9px;cursor:pointer}.qr{display:block;width:min(100%,300px);margin:12px auto;border-radius:12px}.field{margin-top:10px}.field label{display:block;color:var(--muted);font-size:.76rem;margin-bottom:6px}.field input{width:100%;border:1px solid rgba(91,227,255,.17);border-radius:10px;background:#090D17;color:var(--text);padding:11px 12px;outline:none}.field input:focus{border-color:var(--cyan)}.btn{width:100%;border:0;border-radius:11px;padding:12px 14px;font-weight:800;cursor:pointer;background:linear-gradient(135deg,var(--cyan2),var(--cyan));color:#071019;margin-top:12px}.btn.secondary{background:rgba(91,227,255,.08);color:var(--cyan);border:1px solid rgba(91,227,255,.2)}.btn:disabled{opacity:.55;cursor:not-allowed}.slip-preview{display:none;margin-top:10px}.slip-preview.show{display:block}.slip-preview img{max-height:230px;border-radius:10px;border:1px solid rgba(91,227,255,.14)}.status{display:none}.status.show{display:block}.status-badge{display:inline-block;border-radius:999px;padding:5px 9px;font-size:.72rem;font-weight:800;background:rgba(243,156,18,.12);color:var(--warn)}.status-badge.completed{background:rgba(46,204,113,.12);color:var(--ok)}.status-badge.failed,.status-badge.cancelled{background:rgba(231,76,60,.12);color:var(--danger)}.error{display:none;border-color:rgba(231,76,60,.28);color:#ffb6ae}.error.show{display:block}.balance-login{display:none}.balance-login.show{display:block}.footer{text-align:center;color:var(--muted);font-size:.74rem;margin-top:20px}@media(max-width:560px){.grid,.payments{grid-template-columns:1fr}.wrap{padding-top:14px}}
 </style>
 </head>
 <body>
@@ -59,7 +59,7 @@
 
     <div class="card">
       <h2>3. Contact & Submit</h2>
-      <div class="field"><label>Telegram / Phone</label><input id="contact" maxlength="160" placeholder="@username or phone number"/></div>
+      <div class="field"><label>Telegram / Phone <span style="color:var(--danger)">*</span></label><input id="contact" maxlength="160" placeholder="@username or phone number" required autocomplete="tel"/></div>
       <button class="btn" id="submitBtn" type="button">Order တင်မည်</button>
       <p class="muted" style="margin:10px 0 0">Server က package price, payment method, Player ID နဲ့ Zone ID ကို submit အချိန်မှာထပ်စစ်ပါတယ်။</p>
     </div>
@@ -74,11 +74,11 @@
 </div>
 <script>
 const PAY={
-  kbz:{name:"KBZPay",number:"09752588797",holder:"MayThet Wai"},
-  wave:{name:"Wave Money",number:"09752588797",holder:"MayThet Wai"},
-  truemoney:{name:"TrueMoney",number:"0946207494",holder:"Chan Myae Soe"},
-  promptpay:{name:"PromptPay",holder:"Chan Myae Soe",qr:"assets/payments/promptpay-chan-myae-soe.png"},
-  balance:{name:"BestDia Balance",holder:"BestDia Wallet"}
+  kbz:{name:"KBZPay",number:"09752588797",holder:"MayThet Wai",logo:"https://www.kbzpay.com/assets/img/kbz-logo.webp",hint:"KBZPay ငွေလွှဲရန်"},
+  wave:{name:"Wave Money",number:"09752588797",holder:"MayThet Wai",logo:"https://www.wavemoney.com.mm/wp-content/uploads/2024/11/wave-logo-small.svg",hint:"Wave ငွေလွှဲရန်"},
+  truemoney:{name:"TrueMoney",number:"0946207494",holder:"Chan Myae Soe",logo:"https://www.truemoney.com/wp-content/uploads/2023/02/truemoney_logo_2x.png",hint:"TrueMoney ငွေလွှဲရန်"},
+  promptpay:{name:"PromptPay",holder:"Chan Myae Soe",logo:"assets/payments/promptpay-logo.png",qr:"assets/payments/promptpay-chan-myae-soe.png",hint:"Scan Thai QR to pay"},
+  balance:{name:"BestDia Balance",holder:"BestDia Wallet",logo:"",hint:"ချက်ချင်း ပေးချေ"}
 };
 const $=id=>document.getElementById(id);
 const params=new URLSearchParams(location.search);
@@ -106,7 +106,7 @@ async function init(){
   const tgChatId=String(params.get("tgChatId")||"").trim();
   state.telegramChatId=/^-?\d{1,20}$/.test(tgChatId)?tgChatId:"";
   state.telegramChatSig=/^[a-f0-9]{64}$/i.test(String(params.get("tgSig")||"").trim())?String(params.get("tgSig")).trim().toLowerCase():"";
-  $("contact").value=String(params.get("contact")||"").slice(0,160);
+  $("contact").value="";
   try{
     const [catalog,lookup]=await Promise.all([api("/api/catalog",{}),api("/api/mlbb-lookup",{userId,zoneId})]);
     const mlbb=(catalog.products||[]).find(p=>p.key==="mlbb");
@@ -122,7 +122,12 @@ async function init(){
 }
 
 function renderPayments(){
-  $("payments").innerHTML=Object.entries(PAY).map(([key,p])=>`<button class="pay" type="button" data-pay="${key}"><b>${esc(p.name)}</b><small>${key==="balance"?"BestDia wallet":"Transfer + slip"}</small></button>`).join("");
+  $("payments").innerHTML=Object.entries(PAY).map(([key,p])=>{
+    const logo=key==="balance"
+      ? `<span class="pay-logo balance" aria-hidden="true">BD</span>`
+      : `<span class="pay-logo"><img src="${esc(p.logo||"")}" alt="${esc(p.name)} logo" loading="lazy" referrerpolicy="no-referrer"/></span>`;
+    return `<button class="pay" type="button" data-pay="${key}">${logo}<span class="pay-copy"><b>${esc(p.name)}</b><small>${esc(p.hint||"Transfer + slip")}</small></span></button>`;
+  }).join("");
   document.querySelectorAll("[data-pay]").forEach(btn=>btn.addEventListener("click",()=>selectPay(btn.dataset.pay)));
 }
 function selectPay(key){
@@ -163,7 +168,14 @@ function compressImage(file){return new Promise((resolve,reject)=>{const reader=
 $("submitBtn").addEventListener("click",submitOrder);
 async function submitOrder(){
   if(!state.payKey)return alert("Payment method ရွေးပါ။");
-  const contact=$("contact").value.trim();if(!contact)return alert("Telegram username သို့မဟုတ် phone number ထည့်ပါ။");
+  const contactInput=$("contact");
+  const contact=contactInput.value.trim();
+  if(!contact){
+    contactInput.focus();
+    contactInput.style.borderColor="var(--danger)";
+    return alert("Contact မပါမဖြစ်ထည့်ရပါမယ်။ Telegram username သို့မဟုတ် phone number ထည့်ပါ။");
+  }
+  contactInput.style.borderColor="";
   if(state.payKey==="balance"&&!state.session)return alert("BestDia Balance သုံးရန် account login အရင်ဝင်ပါ။");
   if(state.payKey!=="balance"&&!state.slipDataUrl)return alert("Payment slip တင်ပါ။");
   const btn=$("submitBtn");btn.disabled=true;btn.textContent="Submitting…";
