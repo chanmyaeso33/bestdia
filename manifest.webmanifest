@@ -1,7 +1,7 @@
 {
   "name": "BestDia",
   "short_name": "BestDia",
-  "description": "BestDia game top-up web app for Mobile Legends and PUBG Mobile.",
+  "description": "Mobile Legends နှင့် PUBG Mobile အတွက် BestDia ဂိမ်းငွေဖြည့် ဝက်ဘ်အက်ပ်။",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

@@ -39,7 +39,7 @@ button{cursor:pointer}
 <body>
 <div class="topbar">
   <div class="topbar-inner">
-    <div class="brand"><div class="mark">BD</div><div><h1>BestDia မားကတ်တင်း OS</h1><span>အခွင့်အလမ်း Agent ဒက်ရှ်ဘုတ်</span></div></div>
+    <div class="brand"><div class="mark">BD</div><div><h1>BestDia မားကတ်တင်းစနစ်</h1><span>အခွင့်အလမ်း ကိုယ်စားလှယ်ဒက်ရှ်ဘုတ်</span></div></div>
     <div class="top-actions">
       <a class="btn" href="admin.html">အော်ဒါစီမံရန်</a>
     </div>
@@ -51,12 +51,12 @@ button{cursor:pointer}
     <div class="panel headline">
       <div>
         <h2>ယနေ့ အခွင့်အလမ်းများ</h2>
-        <p>AI စီထားသော MLBB နှင့် PUBG ပို့စ်အခွင့်အလမ်းများ၊ ကိုက်ညီသော product များ၊ channel များနှင့် အကြောင်းပြချက်များကို စစ်ဆေးပါ။ မည်သည့်အရာမှ အလိုအလျောက် publish မလုပ်ပါ။</p>
+        <p>AI စီထားသော MLBB နှင့် PUBG ပို့စ်အခွင့်အလမ်းများ၊ ကိုက်ညီသော ထုတ်ကုန်များ၊ ဖြန့်ချိရာလမ်းကြောင်းများနှင့် အကြောင်းပြချက်များကို စစ်ဆေးပါ။ မည်သည့်အရာမှ အလိုအလျောက် မထုတ်ဝေပါ။</p>
       </div>
-      <button class="btn primary" id="runPipelineBtn" type="button">နေ့စဉ် Pipeline လုပ်ဆောင်ရန်</button>
+      <button class="btn primary" id="runPipelineBtn" type="button">နေ့စဉ်လုပ်ငန်းစဉ် စတင်ရန်</button>
     </div>
     <div class="panel login">
-      <label><span class="label">Admin စကားဝှက်</span><input class="input" id="adminPassword" type="password" autocomplete="current-password" placeholder="Admin စကားဝှက်ထည့်ပါ"/></label>
+      <label><span class="label">အက်ဒမင် စကားဝှက်</span><input class="input" id="adminPassword" type="password" autocomplete="current-password" placeholder="အက်ဒမင် စကားဝှက်ထည့်ပါ"/></label>
       <button class="btn primary" id="unlockBtn" type="button">ဒက်ရှ်ဘုတ်ဖွင့်ရန်</button>
     </div>
   </section>
@@ -70,8 +70,8 @@ button{cursor:pointer}
 
   <section class="panel" style="margin-bottom:14px">
     <div class="calendar-toolbar">
-      <div><h2 style="font-family:'Chakra Petch',sans-serif;font-size:1.1rem">ယနေ့ BestDia အကျဉ်းချုပ်</h2><p class="review-hint">အမှတ်များ၊ QA စစ်ဆေးချက်များ၊ product များနှင့် channel များအပေါ် အခြေခံထားသော မနက်ပိုင်း ပို့စ်အကျဉ်းချုပ်။</p></div>
-      <button class="btn" id="refreshBriefBtn" type="button">အကျဉ်းချုပ် Refresh</button>
+      <div><h2 style="font-family:'Chakra Petch',sans-serif;font-size:1.1rem">ယနေ့ BestDia အကျဉ်းချုပ်</h2><p class="review-hint">အမှတ်များ၊ အရည်အသွေးစစ်ဆေးချက်များ၊ ထုတ်ကုန်များနှင့် ဖြန့်ချိရာလမ်းကြောင်းများအပေါ် အခြေခံထားသော မနက်ပိုင်း ပို့စ်အကျဉ်းချုပ်။</p></div>
+      <button class="btn" id="refreshBriefBtn" type="button">အကျဉ်းချုပ် ပြန်ဖတ်ရန်</button>
     </div>
     <div class="status ok" id="briefStatusLine">နေ့စဉ် အကျဉ်းချုပ်ကြည့်ရန် ဒက်ရှ်ဘုတ်ကို ဖွင့်ပါ။</div>
     <div class="brief-layout" id="dailyBrief"></div>
@@ -79,35 +79,35 @@ button{cursor:pointer}
 
   <section class="panel">
     <div class="toolbar">
-      <input class="input" id="searchInput" placeholder="အခွင့်အလမ်း၊ အကြောင်းပြချက်၊ product ရှာရန်..."/>
+      <input class="input" id="searchInput" placeholder="အခွင့်အလမ်း၊ အကြောင်းပြချက်၊ ထုတ်ကုန် ရှာရန်..."/>
       <select class="select" id="gameFilter"><option value="">ဂိမ်းအားလုံး</option><option value="mlbb">MLBB</option><option value="pubg">PUBG</option><option value="hok">Honor of Kings</option><option value="free-fire">Free Fire</option><option value="genshin-impact">Genshin Impact</option><option value="magic-chess-go-go">Magic Chess: Go Go</option></select>
       <select class="select" id="statusFilter"><option value="new">အသစ်</option><option value="all">မြင်နိုင်သမျှ</option></select>
-      <button class="btn" id="refreshBtn" type="button">Refresh</button>
+      <button class="btn" id="refreshBtn" type="button">ပြန်ဖတ်ရန်</button>
     </div>
-    <div class="status" id="statusLine">အခွင့်အလမ်းများကြည့်ရန် Admin စကားဝှက်ထည့်ပါ။</div>
+    <div class="status" id="statusLine">အခွင့်အလမ်းများကြည့်ရန် အက်ဒမင် စကားဝှက်ထည့်ပါ။</div>
     <div class="grid" id="opportunityGrid"></div>
   </section>
 
   <section class="panel" style="margin-top:14px">
     <div class="calendar-toolbar">
-      <div><h2 style="font-family:'Chakra Petch',sans-serif;font-size:1.1rem">Content Calendar</h2><p class="review-hint">လူကိုယ်တိုင် publish လုပ်ရန် schedule ထားသော approved draft များ။</p></div>
-      <div class="actions" style="margin-top:0"><select class="select" id="calendarStatus" style="width:auto"><option value="scheduled">Schedule ထားပြီး</option><option value="published">Publish ပြီး</option><option value="cancelled">Cancel ပြီး</option><option value="all">အားလုံး</option></select><button class="btn" id="refreshCalendarBtn" type="button">Calendar Refresh</button></div>
+      <div><h2 style="font-family:'Chakra Petch',sans-serif;font-size:1.1rem">အကြောင်းအရာ ပြက္ခဒိန်</h2><p class="review-hint">လူကိုယ်တိုင် ထုတ်ဝေရန် အချိန်သတ်မှတ်ထားသော အတည်ပြုပြီး မူကြမ်းများ။</p></div>
+      <div class="actions" style="margin-top:0"><select class="select" id="calendarStatus" style="width:auto"><option value="scheduled">အချိန်သတ်မှတ်ပြီး</option><option value="published">ထုတ်ဝေပြီး</option><option value="cancelled">ပယ်ဖျက်ပြီး</option><option value="all">အားလုံး</option></select><button class="btn" id="refreshCalendarBtn" type="button">ပြက္ခဒိန် ပြန်ဖတ်ရန်</button></div>
     </div>
-    <div class="status" id="calendarStatusLine">Schedule ထားသော content များကြည့်ရန် ဒက်ရှ်ဘုတ်ကို ဖွင့်ပါ။</div>
+    <div class="status" id="calendarStatusLine">အချိန်သတ်မှတ်ထားသော အကြောင်းအရာများကြည့်ရန် ဒက်ရှ်ဘုတ်ကို ဖွင့်ပါ။</div>
     <div class="calendar-list" id="calendarList"></div>
   </section>
 
   <section class="panel" style="margin-top:14px">
     <div class="calendar-toolbar">
-      <div><h2 style="font-family:'Chakra Petch',sans-serif;font-size:1.1rem">Performance အကျဉ်းချုပ်</h2><p class="review-hint">Order တက်စေသော content များကို လေ့လာရန် publish ပြီးရလဒ်များ။</p></div>
-      <div class="actions" style="margin-top:0"><button class="btn primary" id="runAnalystBtn" type="button">Insight ထုတ်ရန်</button><button class="btn" id="refreshPerformanceBtn" type="button">Performance Refresh</button></div>
+      <div><h2 style="font-family:'Chakra Petch',sans-serif;font-size:1.1rem">စွမ်းဆောင်ရည် အကျဉ်းချုပ်</h2><p class="review-hint">အော်ဒါတက်စေသော အကြောင်းအရာများကို လေ့လာရန် ထုတ်ဝေပြီး ရလဒ်များ။</p></div>
+      <div class="actions" style="margin-top:0"><button class="btn primary" id="runAnalystBtn" type="button">သုံးသပ်ချက် ထုတ်ရန်</button><button class="btn" id="refreshPerformanceBtn" type="button">စွမ်းဆောင်ရည် ပြန်ဖတ်ရန်</button></div>
     </div>
-    <div class="status" id="performanceStatusLine">Performance ကြည့်ရန် ဒက်ရှ်ဘုတ်ကို ဖွင့်ပါ။</div>
+    <div class="status" id="performanceStatusLine">စွမ်းဆောင်ရည်ကြည့်ရန် ဒက်ရှ်ဘုတ်ကို ဖွင့်ပါ။</div>
     <div class="performance-grid" id="performanceKpis">
       <div class="metric"><span>ကြည့်ရှုမှု</span><b>0</b></div>
       <div class="metric"><span>အော်ဒါ</span><b>0</b></div>
       <div class="metric"><span>ဝင်ငွေ</span><b>0</b></div>
-      <div class="metric"><span>Click နှုန်း</span><b>0%</b></div>
+      <div class="metric"><span>နှိပ်သည့်နှုန်း</span><b>0%</b></div>
     </div>
     <div class="performance-layout">
       <div>
@@ -115,22 +115,22 @@ button{cursor:pointer}
         <div class="performance-list" id="topPerformanceList"></div>
       </div>
       <div>
-        <h3 style="font-family:'Chakra Petch',sans-serif;font-size:.95rem">Channel များ</h3>
+        <h3 style="font-family:'Chakra Petch',sans-serif;font-size:.95rem">ဖြန့်ချိရာလမ်းကြောင်းများ</h3>
         <div class="channel-list" id="channelPerformanceList"></div>
       </div>
     </div>
     <div class="insight-box" id="latestInsightBox">
-      <h3>နောက်ဆုံး Analyst Insight</h3>
-      <p class="review-hint">Insight မရှိသေးပါ။</p>
+      <h3>နောက်ဆုံး သုံးသပ်ချက်</h3>
+      <p class="review-hint">သုံးသပ်ချက် မရှိသေးပါ။</p>
     </div>
   </section>
 
   <section class="panel" style="margin-top:14px">
     <div class="calendar-toolbar">
-      <div><h2 style="font-family:'Chakra Petch',sans-serif;font-size:1.1rem">Agent Run နှင့် Scoring စစ်ဆေးချက်</h2><p class="review-hint">နောက်ဆုံး agent လုပ်ဆောင်ချက်၊ memory အသုံးပြုမှု၊ scoring rule များနှင့် error များ။</p></div>
-      <div class="actions" style="margin-top:0"><select class="select" id="agentRunFilter" style="width:auto"><option value="">Agent အားလုံး</option><option value="opportunity_agent">Opportunity</option><option value="writer_agent">Writer</option><option value="analyst_agent">Analyst</option></select><button class="btn" id="refreshAgentRunsBtn" type="button">Run များ Refresh</button></div>
+      <div><h2 style="font-family:'Chakra Petch',sans-serif;font-size:1.1rem">ကိုယ်စားလှယ်လုပ်ဆောင်မှုနှင့် အမှတ်ပေးစစ်ဆေးချက်</h2><p class="review-hint">နောက်ဆုံး ကိုယ်စားလှယ်လုပ်ဆောင်ချက်၊ မှတ်ဉာဏ်အသုံးပြုမှု၊ အမှတ်ပေးစည်းမျဉ်းများနှင့် အမှားများ။</p></div>
+      <div class="actions" style="margin-top:0"><select class="select" id="agentRunFilter" style="width:auto"><option value="">ကိုယ်စားလှယ်အားလုံး</option><option value="opportunity_agent">အခွင့်အလမ်း</option><option value="writer_agent">စာရေးသူ</option><option value="analyst_agent">သုံးသပ်သူ</option></select><button class="btn" id="refreshAgentRunsBtn" type="button">လုပ်ဆောင်မှုများ ပြန်ဖတ်ရန်</button></div>
     </div>
-    <div class="status" id="agentRunsStatusLine">Agent run များကြည့်ရန် ဒက်ရှ်ဘုတ်ကို ဖွင့်ပါ။</div>
+    <div class="status" id="agentRunsStatusLine">ကိုယ်စားလှယ်လုပ်ဆောင်မှုများကြည့်ရန် ဒက်ရှ်ဘုတ်ကို ဖွင့်ပါ။</div>
     <div class="agent-runs" id="agentRunsList"></div>
   </section>
 </main>
@@ -149,21 +149,21 @@ button{cursor:pointer}
     <div class="modal-body">
       <p id="reviewSummary" class="review-hint"></p>
       <div class="form-grid">
-        <label><span class="label">ဆုံးဖြတ်ချက်</span><select class="select" id="reviewDecision"><option value="reviewed">စစ်ဆေးပြီး</option><option value="approved">Approve ပြီး</option><option value="used">ပို့စ်တင်ပြီး / သုံးပြီး</option><option value="rejected">Reject ပြီး</option></select></label>
-        <label><span class="label">Channel</span><select class="select" id="reviewChannel"><option value="">မရွေးရသေး</option><option value="facebook">Facebook</option><option value="tiktok">TikTok</option><option value="telegram">Telegram</option><option value="website">Website</option></select></label>
-        <label class="wide"><span class="label">Published URL</span><input class="input" id="reviewPublishedUrl" placeholder="Publish ပြီးသော post URL ထည့်ပါ"/></label>
-        <label><span class="label">Feedback</span><select class="select" id="reviewFeedback"><option value="">အမှတ်မပေးရသေး</option><option value="good">ကောင်း</option><option value="neutral">ပုံမှန်</option><option value="bad">မကောင်း</option></select></label>
-        <label class="wide"><span class="label">မှတ်ချက်</span><textarea class="textarea" id="reviewNotes" placeholder="ဘာကြောင့် approve/reject လုပ်မလဲ။ Writer သုံးရမည့် angle ကဘာလဲ။"></textarea></label>
+        <label><span class="label">ဆုံးဖြတ်ချက်</span><select class="select" id="reviewDecision"><option value="reviewed">စစ်ဆေးပြီး</option><option value="approved">အတည်ပြုပြီး</option><option value="used">ပို့စ်တင်ပြီး / သုံးပြီး</option><option value="rejected">ငြင်းပယ်ပြီး</option></select></label>
+        <label><span class="label">ဖြန့်ချိရာလမ်းကြောင်း</span><select class="select" id="reviewChannel"><option value="">မရွေးရသေး</option><option value="facebook">Facebook</option><option value="tiktok">TikTok</option><option value="telegram">Telegram</option><option value="website">ဝက်ဘ်ဆိုက်</option></select></label>
+        <label class="wide"><span class="label">ထုတ်ဝေပြီး လင့်ခ်</span><input class="input" id="reviewPublishedUrl" placeholder="ထုတ်ဝေပြီးသော ပို့စ်လင့်ခ် ထည့်ပါ"/></label>
+        <label><span class="label">တုံ့ပြန်ချက်</span><select class="select" id="reviewFeedback"><option value="">အမှတ်မပေးရသေး</option><option value="good">ကောင်း</option><option value="neutral">ပုံမှန်</option><option value="bad">မကောင်း</option></select></label>
+        <label class="wide"><span class="label">မှတ်ချက်</span><textarea class="textarea" id="reviewNotes" placeholder="ဘာကြောင့် အတည်ပြု သို့မဟုတ် ငြင်းပယ်သလဲ။ စာရေးသူသုံးရမည့် အမြင်ကဘာလဲ။"></textarea></label>
       </div>
-      <p class="review-hint">Review သည် နောက်ပိုင်း Agent လေ့လာရန် ဆုံးဖြတ်ချက်မှတ်တမ်းကို သိမ်းထားသည်။ BestDia တကယ် publish လုပ်ပြီးမှ ပို့စ်တင်ပြီး / သုံးပြီး ဟု သတ်မှတ်ပါ။</p>
+      <p class="review-hint">စစ်ဆေးမှုသည် နောက်ပိုင်း ကိုယ်စားလှယ်လေ့လာရန် ဆုံးဖြတ်ချက်မှတ်တမ်းကို သိမ်းထားသည်။ BestDia တကယ်ထုတ်ဝေပြီးမှ ပို့စ်တင်ပြီး / သုံးပြီး ဟု သတ်မှတ်ပါ။</p>
     </div>
-    <div class="actions"><button class="btn primary" type="button" id="saveReviewBtn">Review သိမ်းရန်</button><button class="btn" type="button" id="closeReviewBtn">Cancel</button></div>
+    <div class="actions"><button class="btn primary" type="button" id="saveReviewBtn">စစ်ဆေးမှု သိမ်းရန်</button><button class="btn" type="button" id="closeReviewBtn">ပယ်ဖျက်ရန်</button></div>
   </div>
 </div>
 
 <div class="modal" id="draftModal">
   <div class="modal-card">
-    <div class="modal-title" id="draftTitle">Draft များ</div>
+    <div class="modal-title" id="draftTitle">မူကြမ်းများ</div>
     <div class="modal-body" id="draftBody"></div>
     <div class="actions"><button class="btn primary" type="button" id="closeDraftBtn">ပိတ်ရန်</button></div>
   </div>
@@ -171,23 +171,23 @@ button{cursor:pointer}
 
 <div class="modal" id="performanceModal">
   <div class="modal-card">
-    <div class="modal-title" id="performanceTitle">Performance ထည့်ရန်</div>
+    <div class="modal-title" id="performanceTitle">စွမ်းဆောင်ရည် ထည့်ရန်</div>
     <div class="modal-body">
       <p class="review-hint" id="performanceSummary"></p>
       <div class="form-grid">
         <label><span class="label">ကြည့်ရှုမှု</span><input class="input" id="metricViews" type="number" min="0" step="1" value="0"/></label>
-        <label><span class="label">Like</span><input class="input" id="metricLikes" type="number" min="0" step="1" value="0"/></label>
-        <label><span class="label">Comment</span><input class="input" id="metricComments" type="number" min="0" step="1" value="0"/></label>
-        <label><span class="label">Share</span><input class="input" id="metricShares" type="number" min="0" step="1" value="0"/></label>
-        <label><span class="label">Click</span><input class="input" id="metricClicks" type="number" min="0" step="1" value="0"/></label>
+        <label><span class="label">နှစ်သက်မှု</span><input class="input" id="metricLikes" type="number" min="0" step="1" value="0"/></label>
+        <label><span class="label">မှတ်ချက်</span><input class="input" id="metricComments" type="number" min="0" step="1" value="0"/></label>
+        <label><span class="label">မျှဝေမှု</span><input class="input" id="metricShares" type="number" min="0" step="1" value="0"/></label>
+        <label><span class="label">နှိပ်မှု</span><input class="input" id="metricClicks" type="number" min="0" step="1" value="0"/></label>
         <label><span class="label">အော်ဒါ</span><input class="input" id="metricOrders" type="number" min="0" step="1" value="0"/></label>
         <label><span class="label">ဝင်ငွေ</span><input class="input" id="metricRevenue" type="number" min="0" step="0.01" value="0"/></label>
         <label><span class="label">တိုင်းတာချိန်</span><input class="input" id="metricMeasuredAt" type="datetime-local"/></label>
-        <label class="wide"><span class="label">မှတ်ချက်</span><textarea class="textarea" id="metricNotes" placeholder="Publish ပြီးနောက် ဘာဖြစ်ခဲ့လဲ။"></textarea></label>
+        <label class="wide"><span class="label">မှတ်ချက်</span><textarea class="textarea" id="metricNotes" placeholder="ထုတ်ဝေပြီးနောက် ဘာဖြစ်ခဲ့လဲ။"></textarea></label>
       </div>
-      <p class="review-hint">ဤ metric များသည် နောက်ပိုင်း opportunity scoring အတွက် feedback loop ဖြစ်လာမည်။</p>
+      <p class="review-hint">ဤတိုင်းတာချက်များသည် နောက်ပိုင်း အခွင့်အလမ်းအမှတ်ပေးမှုအတွက် တုံ့ပြန်ချက်ဖြစ်လာမည်။</p>
     </div>
-    <div class="actions"><button class="btn primary" type="button" id="savePerformanceBtn">Metric သိမ်းရန်</button><button class="btn" type="button" id="closePerformanceBtn">Cancel</button></div>
+    <div class="actions"><button class="btn primary" type="button" id="savePerformanceBtn">တိုင်းတာချက် သိမ်းရန်</button><button class="btn" type="button" id="closePerformanceBtn">ပယ်ဖျက်ရန်</button></div>
   </div>
 </div>
 
@@ -207,11 +207,11 @@ function setCalendarStatus(message,type=""){const el=$("#calendarStatusLine");el
 function setPerformanceStatus(message,type=""){const el=$("#performanceStatusLine");el.textContent=message;el.className=`status ${type}`;}
 function setAgentRunsStatus(message,type=""){const el=$("#agentRunsStatusLine");el.textContent=message;el.className=`status ${type}`;}
 function setBriefStatus(message,type=""){const el=$("#briefStatusLine");el.textContent=message;el.className=`status ${type}`;}
-function statusLabel(status){const labels={new:"အသစ်",approved:"Approve ပြီး",used:"သုံးပြီး",rejected:"Reject ပြီး",reviewed:"စစ်ဆေးပြီး",draft:"Draft",scheduled:"Schedule ထားပြီး",published:"Publish ပြီး",cancelled:"Cancel ပြီး",failed:"မအောင်မြင်ပါ",success:"အောင်မြင်သည်",unknown:"မသိပါ"};return labels[String(status||"")]||String(status||"");}
+function statusLabel(status){const labels={new:"အသစ်",approved:"အတည်ပြုပြီး",used:"သုံးပြီး",rejected:"ငြင်းပယ်ပြီး",reviewed:"စစ်ဆေးပြီး",draft:"မူကြမ်း",scheduled:"အချိန်သတ်မှတ်ပြီး",published:"ထုတ်ဝေပြီး",cancelled:"ပယ်ဖျက်ပြီး",failed:"မအောင်မြင်ပါ",success:"အောင်မြင်သည်",unknown:"မသိပါ"};return labels[String(status||"")]||String(status||"");}
 function adminPayload(extra={}){return {adminPassword,...extra};}
-async function apiPost(path,payload){const res=await fetch(`${API_BASE}${path}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload||{})});const raw=await res.text();let data;try{data=JSON.parse(raw);}catch{const type=res.headers.get("content-type")||"unknown content";throw new Error(`API returned HTTP ${res.status} (${type}), not JSON. Refresh the page and try again.`);}if(!res.ok||data.ok===false)throw new Error(data.error||`API request failed (HTTP ${res.status})`);return data;}
-async function loadOpportunities(){if(!adminPassword){setStatus("Admin စကားဝှက် အရင်ထည့်ပါ။","warn");return;}setStatus("အခွင့်အလမ်းများ ဖတ်နေသည်...");try{const data=await apiPost("/api/admin-opportunities",adminPayload({status:$("#statusFilter").value,game:$("#gameFilter").value,limit:30}));opportunities=Array.isArray(data.opportunities)?data.opportunities:[];render();setStatus(`အခွင့်အလမ်း ${opportunities.length} ခု ဖတ်ပြီးပါပြီ။`,"ok");loadCalendar();loadPerformance();loadAgentRuns();}catch(error){setStatus(error.message||"အခွင့်အလမ်းများ မဖတ်နိုင်ပါ။","warn");}}
-async function runPipeline(){if(!adminPassword){setStatus("Admin စကားဝှက် အရင်ထည့်ပါ။","warn");return;}$("#runPipelineBtn").disabled=true;setStatus("နေ့စဉ် pipeline လုပ်ဆောင်နေသည်...");try{const data=await apiPost("/api/run-daily-opportunity-pipeline",adminPayload({limitPerSource:12,agentLimit:10}));const s=data.summary||{};setStatus(pipelineStatusMessage(s),s.opportunities_created||s.articles_processed?"ok":"warn");await loadOpportunities();loadAgentRuns();}catch(error){setStatus(error.message||"Pipeline မအောင်မြင်ပါ။","warn");}finally{$("#runPipelineBtn").disabled=false;}}
+async function apiPost(path,payload){const res=await fetch(`${API_BASE}${path}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload||{})});const raw=await res.text();let data;try{data=JSON.parse(raw);}catch{const type=res.headers.get("content-type")||"မသိရသော အကြောင်းအရာ";throw new Error(`API မှ JSON မဟုတ်သော HTTP ${res.status} (${type}) အဖြေ ရရှိပါသည်။ စာမျက်နှာကို ပြန်ဖတ်ပြီး ထပ်စမ်းပါ။`);}if(!res.ok||data.ok===false)throw new Error(data.error||`API တောင်းဆိုမှု မအောင်မြင်ပါ (HTTP ${res.status})`);return data;}
+async function loadOpportunities(){if(!adminPassword){setStatus("အက်ဒမင် စကားဝှက် အရင်ထည့်ပါ။","warn");return;}setStatus("အခွင့်အလမ်းများ ဖတ်နေသည်...");try{const data=await apiPost("/api/admin-opportunities",adminPayload({status:$("#statusFilter").value,game:$("#gameFilter").value,limit:30}));opportunities=Array.isArray(data.opportunities)?data.opportunities:[];render();setStatus(`အခွင့်အလမ်း ${opportunities.length} ခု ဖတ်ပြီးပါပြီ။`,"ok");loadCalendar();loadPerformance();loadAgentRuns();}catch(error){setStatus(error.message||"အခွင့်အလမ်းများ မဖတ်နိုင်ပါ။","warn");}}
+async function runPipeline(){if(!adminPassword){setStatus("အက်ဒမင် စကားဝှက် အရင်ထည့်ပါ။","warn");return;}$("#runPipelineBtn").disabled=true;setStatus("နေ့စဉ်လုပ်ငန်းစဉ် လုပ်ဆောင်နေသည်...");try{const data=await apiPost("/api/run-daily-opportunity-pipeline",adminPayload({limitPerSource:12,agentLimit:10}));const s=data.summary||{};setStatus(pipelineStatusMessage(s),s.opportunities_created||s.articles_processed?"ok":"warn");await loadOpportunities();loadAgentRuns();}catch(error){setStatus(error.message||"လုပ်ငန်းစဉ် မအောင်မြင်ပါ။","warn");}finally{$("#runPipelineBtn").disabled=false;}}
 function pipelineStatusMessage(s={}){const base=`Pipeline ပြီးပါပြီ: candidate ${fmt(s.article_candidates)} ခု၊ အသစ်ထည့် ${fmt(s.articles_inserted)} ခု၊ duplicate ${fmt(s.duplicate_candidates)} ခု၊ process ${fmt(s.articles_processed)} ခု၊ opportunity ${fmt(s.opportunities_created)} ခု၊ skip ${fmt(s.skipped)} ခု၊ failed ${fmt(s.failed)} ခု။`;if(!Number(s.articles_inserted||0)&&!Number(s.articles_processed||0))return `${base} လုပ်ဆောင်ရန် article အသစ် မတွေ့ပါ။`;if(Number(s.articles_processed||0)&&!Number(s.opportunities_created||0))return `${base} Article များ process ပြီးသော်လည်း opportunity မဖန်တီးပါ။`;return base;}
 async function updateOpportunity(id,status,extra={}){try{const data=await apiPost("/api/admin-update-opportunity",adminPayload({id,status,...extra}));opportunities=opportunities.filter(item=>item.id!==id);render();const warning=data.reviewWarning?` Review မှတ်ချက် မသိမ်းနိုင်သေးပါ: ${data.reviewWarning}`:"";setStatus(`Opportunity ကို ${statusLabel(status)} ဟု သတ်မှတ်ပြီးပါပြီ။${warning}`,"ok");}catch(error){setStatus(error.message||"Opportunity update မလုပ်နိုင်ပါ။","warn");}}
 async function generateDraft(id){if(!adminPassword){setStatus("Admin စကားဝှက် အရင်ထည့်ပါ။","warn");return;}const item=opportunities.find(opp=>opp.id===id);const channels=getChannels(item||{}).filter(channel=>["facebook","tiktok","telegram","website"].includes(channel));setStatus("Draft ထုတ်နေသည်...");try{const data=await apiPost("/api/run-writer-agent",adminPayload({opportunityId:id,channels:channels.length?channels:["facebook","tiktok"]}));showDrafts(item,data.drafts||[]);setStatus(`Draft ${(data.drafts||[]).length} ခု ထုတ်ပြီးပါပြီ။`,"ok");}catch(error){setStatus(error.message||"Draft မထုတ်နိုင်ပါ။","warn");}}
