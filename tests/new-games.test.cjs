@@ -30,7 +30,7 @@ test('missing and unsupported server selections are rejected before persistence'
 test('cart items are validated against the trusted catalog before persistence',async()=>{
  const response=await orderResult({gameKey:'free-fire',pkg:{id:'free-fire-68'},items:[{id:'free-fire-68',quantity:2},{id:'free-fire-unmapped',quantity:1}],userId:'123456789',payment:'KBZPay',payKey:'kbz'});
  assert.equal(response.status,400);
- assert.match((await response.json()).error,/Invalid package selection/);
+ assert.match((await response.json()).error,/ပက်ကေ့ချ် မမှန်ကန်/);
 });
 
 test('new game supplier mappings ignore caller supplied IDs and preserve required UID formats',async()=>{
