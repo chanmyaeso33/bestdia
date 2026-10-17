@@ -16,6 +16,7 @@ export async function onRequest(context) {
     if (route === "admin-archive-orders") return await adminArchiveOrders(request, env);
     if (route === "admin-balance-topups") return await adminBalanceTopups(request, env);
     if (route === "admin-confirm-balance-topup") return await adminConfirmBalanceTopup(request, env);
+    if (route === "admin-process-refund") return await adminProcessRefund(request, env);
     if (route === "admin-reverse-balance-topup") return await adminReverseBalanceTopup(request, env);
     if (route === "admin-set-balance-status") return await adminSetBalanceStatus(request, env);
     if (route === "admin-content-drafts") return await adminContentDrafts(request, env);
@@ -46,6 +47,7 @@ export async function onRequest(context) {
     if (route === "order-status") return await orderStatus(request, env);
     if (route === "payment-webhook") return await paymentWebhook(request, env);
     if (route === "public-ticker") return await publicTicker(request, env);
+    if (route === "request-refund") return await requestRefund(request, env);
     if (route === "collect-news") return await collectNewsApi(request, env);
     if (route === "run-opportunity-agent") return await runOpportunityAgentApi(request, env);
     if (route === "run-writer-agent") return await runWriterAgentApi(request, env);
@@ -54,15 +56,15 @@ export async function onRequest(context) {
     if (route === "telegram-diagnostic") return await telegramDiagnostic(request, env);
     if (route === "telegram-customer-orders") return await telegramCustomerOrders(request, env);
     if (route === "telegram-notify") return await telegramNotify(request, env);
-    return jsonResponse(404, { ok: false, error: "API route not found" });
+    return jsonResponse(404, { ok: false, error: "API လမ်းကြောင်းကို မတွေ့ပါ။" });
   } catch (error) {
     if (error.status) return jsonResponse(error.status, { ok: false, error: error.message });
-    return jsonResponse(500, { ok: false, error: error.message || "Unexpected API error" });
+    return jsonResponse(500, { ok: false, error: error.message || "မမျှော်လင့်ထားသော API အမှား ဖြစ်ပွားပါသည်။" });
   }
 }
 
 async function adminAuth(request, env) {
-  if (request.method !== "POST") return jsonResponse(405, { error: "Method not allowed" });
+  if (request.method !== "POST") return jsonResponse(405, { error: "ဤတောင်းဆိုမှုနည်းလမ်းကို ခွင့်မပြုပါ။" });
   const payload = await readJson(request);
   const auth = requireAdmin(payload, env);
   if (auth) return auth;
@@ -243,7 +245,7 @@ const PRODUCTS = (() => {
 })();
 
 async function catalog(request, env) {
-  if (request.method !== "POST") return jsonResponse(405, { ok: false, error: "Method not allowed" });
+  if (request.method !== "POST") return jsonResponse(405, { ok: false, error: "ဤတောင်းဆိုမှုနည်းလမ်းကို ခွင့်မပြုပါ။" });
   const { products, supplierUpdated } = await productsWithSupplierPrices(env);
   const regionalResults = await Promise.allSettled([regionalMlbbProduct("mlbb-my"), regionalMlbbProduct("mlbb-sg")]);
   const regionalProducts = regionalResults.filter(result => result.status === "fulfilled").map(result => result.value);
@@ -295,20 +297,20 @@ async function regionalMlbbProduct(key) {
 }
 
 async function createBalanceTopup(request, env) {
-  if (request.method !== "POST") return jsonResponse(405, { ok: false, error: "Method not allowed" });
+  if (request.method !== "POST") return jsonResponse(405, { ok: false, error: "ဤတောင်းဆိုမှုနည်းလမ်းကို ခွင့်မပြုပါ။" });
   const payload = await readJson(request);
   const accountId = normalizeAccountId(payload.accountId);
   const sessionAccountId = await requireAccountSession(request, env);
   if (sessionAccountId instanceof Response) return sessionAccountId;
-  if (sessionAccountId !== accountId) return jsonResponse(403, { ok: false, error: "You can only submit a top up for your own account" });
+  if (sessionAccountId !== accountId) return jsonResponse(403, { ok: false, error: "မိမိအကောင့်အတွက်သာ Balance ဖြည့်သွင်းနိုင်ပါသည်။" });
   const accountName = String(payload.accountName || "").trim().slice(0, 120);
   const amount = Math.round(Number(payload.amount || 0));
   const trustedPay = PAYMENTS[String(payload.payKey || "").trim()];
-  if (!accountId) return jsonResponse(400, { ok: false, error: "Missing BestDia account ID" });
-  if (!amount || amount < 1) return jsonResponse(400, { ok: false, error: "Invalid top up amount" });
-  if (!trustedPay || trustedPay.key === "balance") return jsonResponse(400, { ok: false, error: "Invalid payment method" });
+  if (!accountId) return jsonResponse(400, { ok: false, error: "BestDia အကောင့် ID ထည့်ပေးပါ။" });
+  if (!amount || amount < 1) return jsonResponse(400, { ok: false, error: "Balance ဖြည့်သွင်းပမာဏ မမှန်ကန်ပါ။" });
+  if (!trustedPay || trustedPay.key === "balance") return jsonResponse(400, { ok: false, error: "ငွေပေးချေမှုနည်းလမ်း မမှန်ကန်ပါ။" });
   const slipDataUrl = String(payload.slipDataUrl || "");
-  if (!slipDataUrl.startsWith("data:image/")) return jsonResponse(400, { ok: false, error: "Payment slip image is required" });
+  if (!slipDataUrl.startsWith("data:image/")) return jsonResponse(400, { ok: false, error: "ငွေပေးချေမှု စလစ်ပုံ လိုအပ်ပါသည်။" });
 
   const now = new Date().toISOString();
   const topupId = `BT${Date.now().toString().slice(-7)}${randomToken(3).toUpperCase()}`;
@@ -372,30 +374,30 @@ async function createBalanceTopup(request, env) {
 }
 
 async function accountBalance(request, env) {
-  if (request.method !== "POST") return jsonResponse(405, { ok: false, error: "Method not allowed" });
+  if (request.method !== "POST") return jsonResponse(405, { ok: false, error: "ဤတောင်းဆိုမှုနည်းလမ်းကို ခွင့်မပြုပါ။" });
   const payload = await readJson(request);
   const accountId = normalizeAccountId(payload.accountId);
-  if (!accountId) return jsonResponse(400, { ok: false, error: "Missing BestDia account ID" });
+  if (!accountId) return jsonResponse(400, { ok: false, error: "BestDia အကောင့် ID ထည့်ပေးပါ။" });
   const sessionAccountId = await requireAccountSession(request, env);
   if (sessionAccountId instanceof Response) return sessionAccountId;
-  if (sessionAccountId !== accountId) return jsonResponse(403, { ok: false, error: "Account access denied" });
+  if (sessionAccountId !== accountId) return jsonResponse(403, { ok: false, error: "ဤအကောင့်ကို အသုံးပြုခွင့်မရှိပါ။" });
   const firestore = await firestoreClient(env);
   const account = await getAccountBalanceDoc(firestore, accountId);
   return jsonResponse(200, { ok: true, exists: Boolean(account), accountId, balance: Number(account?.balance || 0), balanceStatus: account?.balanceStatus || "active", history: account?.history || [] });
 }
 
 async function accountSignup(request, env) {
-  if (request.method !== "POST") return jsonResponse(405, { ok: false, error: "Method not allowed" });
+  if (request.method !== "POST") return jsonResponse(405, { ok: false, error: "ဤတောင်းဆိုမှုနည်းလမ်းကို ခွင့်မပြုပါ။" });
   const payload = await readJson(request);
   const loginId = normalizeLoginId(payload.loginId || payload.email);
   const name = String(payload.name || "").trim().slice(0, 120);
   const password = String(payload.password || "");
-  if (!loginId || !name || password.length < 4) return jsonResponse(400, { ok: false, error: "Enter name, email/phone, and 4+ char password." });
+  if (!loginId || !name || password.length < 4) return jsonResponse(400, { ok: false, error: "အမည်၊ အီးမေးလ်/ဖုန်းနှင့် အနည်းဆုံး စာလုံး ၄ လုံးပါ စကားဝှက် ထည့်ပါ။" });
 
   const firestore = await firestoreClient(env);
   const docId = accountLoginDocId(loginId);
   const existing = await getCollectionDoc(firestore, "bestdia_accounts", docId);
-  if (existing) return jsonResponse(409, { ok: false, error: "Account already exists. Login instead." });
+  if (existing) return jsonResponse(409, { ok: false, error: "ဤအကောင့် ရှိပြီးသားဖြစ်ပါသည်။ အကောင့်ဝင်ပါ။" });
 
   const preferredId = normalizeAccountId(payload.preferredAccountId);
   const accountId = /^\d{10}$/.test(preferredId) ? preferredId : await makeUniqueAccountId(firestore);
@@ -419,22 +421,22 @@ async function accountSignup(request, env) {
 }
 
 async function accountLogin(request, env) {
-  if (request.method !== "POST") return jsonResponse(405, { ok: false, error: "Method not allowed" });
+  if (request.method !== "POST") return jsonResponse(405, { ok: false, error: "ဤတောင်းဆိုမှုနည်းလမ်းကို ခွင့်မပြုပါ။" });
   const payload = await readJson(request);
   const loginId = normalizeLoginId(payload.loginId || payload.email);
   const password = String(payload.password || "");
-  if (!loginId || !password) return jsonResponse(400, { ok: false, error: "Enter login and password." });
+  if (!loginId || !password) return jsonResponse(400, { ok: false, error: "အကောင့်အချက်အလက်နှင့် စကားဝှက် ထည့်ပါ။" });
 
   const firestore = await firestoreClient(env);
   const profile = await getCollectionDoc(firestore, "bestdia_accounts", accountLoginDocId(loginId));
-  if (!profile || !profile.passwordSalt || !profile.passwordHash) return jsonResponse(401, { ok: false, error: "Login details do not match." });
+  if (!profile || !profile.passwordSalt || !profile.passwordHash) return jsonResponse(401, { ok: false, error: "အကောင့်အချက်အလက် မကိုက်ညီပါ။" });
   const candidate = await hashPassword(password, profile.passwordSalt);
-  if (!safeEqual(candidate, profile.passwordHash)) return jsonResponse(401, { ok: false, error: "Login details do not match." });
+  if (!safeEqual(candidate, profile.passwordHash)) return jsonResponse(401, { ok: false, error: "အကောင့်အချက်အလက် မကိုက်ညီပါ။" });
   return jsonResponse(200, { ok: true, account: await publicAccount(firestore, profile), session: await createAccountSession(profile.accountId, env) });
 }
 
 async function createOrder(request, env) {
-  if (request.method !== "POST") return jsonResponse(405, { ok: false, error: "Method not allowed" });
+  if (request.method !== "POST") return jsonResponse(405, { ok: false, error: "ဤတောင်းဆိုမှုနည်းလမ်းကို ခွင့်မပြုပါ။" });
   const payload = await readJson(request);
   const order = payload.order && typeof payload.order === "object" ? payload.order : {};
   const submittedOrderId = normalizeOrderId(order.id);
@@ -454,16 +456,16 @@ async function createOrder(request, env) {
   const trustedPkg = trustedItems[0]?.pkg || null;
   const totalPrice = trustedItems.reduce((sum, item) => sum + Number(item?.pkg?.price || 0) * Number(item?.quantity || 0), 0);
   const totalPriceThb = trustedItems.reduce((sum, item) => sum + Number(item?.pkg?.priceThb || item?.pkg?.supplierPriceThb || 0) * Number(item?.quantity || 0), 0);
-  if (!orderId || !userId || !contact || !pkg) return jsonResponse(400, { ok: false, error: "Missing order information" });
-  if (!trustedProduct || !trustedPkg || trustedItems.length !== requestedItems.length || trustedItems.some((item) => !item)) return jsonResponse(400, { ok: false, error: "Invalid package selection" });
-  if (trustedProduct.key === "hok" && trustedItems.some((item) => !item.pkg.checkoutAvailable)) return jsonResponse(409, { ok: false, error: "An Honor of Kings package is temporarily unavailable: supplier mapping is missing." });
-  if (trustedProduct.requiresZone && !String(order.zoneId || "").trim()) return jsonResponse(400, { ok: false, error: "Missing Zone ID" });
-  if (trustedProduct.zoneOptions && !trustedProduct.zoneOptions.includes(String(order.zoneId || "").trim())) return jsonResponse(400, { ok: false, error: "Unsupported server. Genshin Impact supports Asia only." });
-  if (["genshin-impact", "magic-chess-go-go"].includes(trustedProduct.key) && (!/^\d+$/.test(userId) || (!trustedProduct.zoneOptions && !/^\d+$/.test(String(order.zoneId || "").trim())))) return jsonResponse(400, { ok: false, error: "Player and server IDs must be numeric" });
+  if (!orderId || !userId || !contact || !pkg) return jsonResponse(400, { ok: false, error: "အော်ဒါအချက်အလက် မပြည့်စုံပါ။" });
+  if (!trustedProduct || !trustedPkg || trustedItems.length !== requestedItems.length || trustedItems.some((item) => !item)) return jsonResponse(400, { ok: false, error: "ရွေးထားသော ပက်ကေ့ချ် မမှန်ကန်ပါ။" });
+  if (trustedProduct.key === "hok" && trustedItems.some((item) => !item.pkg.checkoutAvailable)) return jsonResponse(409, { ok: false, error: "ဤ Honor of Kings ပက်ကေ့ချ်ကို ယာယီဝယ်ယူ၍ မရနိုင်ပါ။ ပေးသွင်းသူချိတ်ဆက်မှု မရှိသေးပါ။" });
+  if (trustedProduct.requiresZone && !String(order.zoneId || "").trim()) return jsonResponse(400, { ok: false, error: "ဇုန် ID ထည့်ပေးပါ။" });
+  if (trustedProduct.zoneOptions && !trustedProduct.zoneOptions.includes(String(order.zoneId || "").trim())) return jsonResponse(400, { ok: false, error: "ဆာဗာကို မပံ့ပိုးပါ။ Genshin Impact အတွက် အာရှဆာဗာကိုသာ ပံ့ပိုးပါသည်။" });
+  if (["genshin-impact", "magic-chess-go-go"].includes(trustedProduct.key) && (!/^\d+$/.test(userId) || (!trustedProduct.zoneOptions && !/^\d+$/.test(String(order.zoneId || "").trim())))) return jsonResponse(400, { ok: false, error: "ကစားသူနှင့် ဆာဗာ ID များကို ဂဏန်းဖြင့်သာ ထည့်ပါ။" });
   const trustedPay = PAYMENTS[String(order.payKey || "").trim()];
-  if (!trustedPay || String(order.payment || "").trim() !== trustedPay.name) return jsonResponse(400, { ok: false, error: "Invalid payment method" });
-  if (trustedProduct.key === "hok" && trustedPay.key === "balance") return jsonResponse(400, { ok: false, error: "BestDia Balance is unavailable for manually fulfilled Honor of Kings orders" });
-  if (trustedPay.key === "balance" && trustedItems.length > 1) return jsonResponse(400, { ok: false, error: "BestDia Balance supports one package per order" });
+  if (!trustedPay || String(order.payment || "").trim() !== trustedPay.name) return jsonResponse(400, { ok: false, error: "ငွေပေးချေမှုနည်းလမ်း မမှန်ကန်ပါ။" });
+  if (trustedProduct.key === "hok" && trustedPay.key === "balance") return jsonResponse(400, { ok: false, error: "ကိုယ်တိုင်ဖြည့်ပေးရသော Honor of Kings အော်ဒါများအတွက် BestDia Balance ကို အသုံးမပြုနိုင်ပါ။" });
+  if (trustedPay.key === "balance" && trustedItems.length > 1) return jsonResponse(400, { ok: false, error: "BestDia Balance ဖြင့် အော်ဒါတစ်ခုလျှင် ပက်ကေ့ချ်တစ်ခုသာ ဝယ်နိုင်ပါသည်။" });
 
   const now = new Date().toISOString();
   const initialStatus = trustedPay.key === "balance" ? "processing" : "pending";
@@ -472,10 +474,10 @@ async function createOrder(request, env) {
     ? await resolveMlbbNickname(env, userId, String(order.zoneId || "").trim(), true)
     : null;
   if (trustedProduct.key.startsWith("mlbb") && (!mlbbAccount?.nickname || !mlbbAccount?.region)) {
-    return jsonResponse(503, { ok: false, error: "MLBB nickname and region could not be verified. Please try again before ordering." });
+    return jsonResponse(503, { ok: false, error: "MLBB ဂိမ်းအမည်နှင့် ဒေသကို အတည်မပြုနိုင်ပါ။ အော်ဒါမတင်မီ ထပ်မံကြိုးစားပါ။" });
   }
   if (mlbbAccount?.unsupported || (trustedProduct.region && normalizeMlbbRegion(mlbbAccount?.region) !== trustedProduct.region)) {
-    return jsonResponse(422, { ok: false, error: `Invalid order: ${mlbbAccount.region} server accounts are not supported.`, region: mlbbAccount.region });
+    return jsonResponse(422, { ok: false, error: `အော်ဒါမမှန်ပါ: ${mlbbAccount.region} ဆာဗာအကောင့်များကို မပံ့ပိုးပါ။`, region: mlbbAccount.region });
   }
   const verifiedIgn = mlbbAccount?.nickname || "";
   const submittedTelegramChatId = String(order.telegramChatId || "").trim();
@@ -524,14 +526,14 @@ async function createOrder(request, env) {
   let balanceAccountId = "";
   if (trustedPay.key === "balance") {
     balanceAccountId = normalizeAccountId(cleanOrder.accountId);
-    if (!balanceAccountId) return jsonResponse(400, { ok: false, error: "Missing BestDia account ID" });
+    if (!balanceAccountId) return jsonResponse(400, { ok: false, error: "BestDia အကောင့် ID ထည့်ပေးပါ။" });
     const sessionAccountId = await requireAccountSession(request, env);
     if (sessionAccountId instanceof Response) return sessionAccountId;
-    if (sessionAccountId !== balanceAccountId) return jsonResponse(403, { ok: false, error: "Balance account access denied" });
+    if (sessionAccountId !== balanceAccountId) return jsonResponse(403, { ok: false, error: "ဤ Balance အကောင့်ကို အသုံးပြုခွင့်မရှိပါ။" });
     balanceAccount = await getAccountBalanceDoc(firestore, balanceAccountId);
-    if (balanceAccount?.balanceStatus === "frozen") return jsonResponse(423, { ok: false, error: "Your BestDia Balance is temporarily unavailable while we verify your payment." });
+    if (balanceAccount?.balanceStatus === "frozen") return jsonResponse(423, { ok: false, error: "ငွေပေးချေမှုကို စစ်ဆေးနေစဉ် သင့် BestDia Balance ကို ယာယီအသုံးမပြုနိုင်ပါ။" });
     balanceCharge = Math.ceil(Number(trustedPkg.priceThb || trustedPkg.supplierPriceThb || trustedPkg.price || 0));
-    if (Number(balanceAccount?.balance || 0) < balanceCharge) return jsonResponse(400, { ok: false, error: "BestDia balance is not enough" });
+    if (Number(balanceAccount?.balance || 0) < balanceCharge) return jsonResponse(400, { ok: false, error: "BestDia Balance မလုံလောက်ပါ။" });
   }
   const created = await createOrderDoc(firestore, cleanOrder);
   let autoTopup = null;
@@ -552,9 +554,12 @@ async function createOrder(request, env) {
       orderUpdates.status = "completed";
       orderUpdates.completedAt = autoTopup.completedAt || topupNow;
       orderUpdates.supplierTransactionId = autoTopup.transactionId || "";
+      orderUpdates.balanceChargedAmount = balanceCharge;
+      orderUpdates.balanceChargedAt = topupNow;
+      orderUpdates.balanceRefundedAmount = 0;
       timeline.push({ status: "completed", time: Date.now() });
       const history = Array.isArray(balanceAccount?.history) ? [...balanceAccount.history] : [];
-      history.unshift({ type: "purchase", title: `Paid ${packageText(trustedPkg)}`, amount: -balanceCharge, orderId, at: topupNow, supplierTransactionId: autoTopup.transactionId || "" });
+      history.unshift({ type: "purchase", title: `${packageText(trustedPkg)} ဝယ်ယူမှု`, amount: -balanceCharge, orderId, at: topupNow, supplierTransactionId: autoTopup.transactionId || "" });
       const accountUpdates = {
         accountId: balanceAccountId,
         balance: Number(balanceAccount?.balance || 0) - balanceCharge,
@@ -566,14 +571,14 @@ async function createOrder(request, env) {
         transactionId: `purchase_${created.docId}`,
         userId: balanceAccountId, type: "purchase", amount: -balanceCharge, currency: "BD",
         balanceBefore: Number(balanceAccount?.balance || 0), balanceAfter: accountUpdates.balance,
-        referenceType: "order", referenceId: orderId, description: `Paid ${packageText(trustedPkg)}`,
+        referenceType: "order", referenceId: orderId, description: `${packageText(trustedPkg)} ဝယ်ယူမှု`,
         createdBy: balanceAccountId, createdAt: topupNow,
       });
       finalOrder = { ...cleanOrder, ...orderUpdates };
     } else if (autoTopup.status === "failed") {
       orderUpdates.status = "failed";
       orderUpdates.failedAt = autoTopup.failedAt || topupNow;
-      orderUpdates.failedReason = autoTopup.error || autoTopup.reason || "Supplier top-up failed";
+      orderUpdates.failedReason = autoTopup.error || autoTopup.reason || "ပေးသွင်းသူဘက်မှ ဖြည့်သွင်းမှု မအောင်မြင်ပါ။";
       timeline.push({ status: "failed", time: Date.now() });
       await updateOrderDoc(firestore, created.docId, orderUpdates);
       finalOrder = { ...cleanOrder, ...orderUpdates };
@@ -591,7 +596,7 @@ async function createOrder(request, env) {
 
   let notification = { ok: false, skipped: true };
   try {
-    await notifyTelegram(env, `<b>[New Order]</b>\nOrder ID: <code>${escapeHtml(orderId)}</code>\nGame: ${escapeHtml(cleanOrder.gameName)}\nPackage: ${escapeHtml(packageText(trustedPkg))}\nAmount: ${escapeHtml(formatAmount(trustedPkg.price))} Ks\nPlayer: ${escapeHtml(cleanOrder.zoneId ? `${userId} (Zone ${cleanOrder.zoneId})` : userId)}\nIn-game name: ${escapeHtml(cleanOrder.ign || "Not verified")}\nRegion: ${escapeHtml(cleanOrder.region || "Not applicable")}\nContact: ${escapeHtml(contact)}\nPayment: ${escapeHtml(cleanOrder.payment)}`);
+    await notifyTelegram(env, `<b>[အော်ဒါအသစ်]</b>\nအော်ဒါနံပါတ်: <code>${escapeHtml(orderId)}</code>\nဂိမ်း: ${escapeHtml(cleanOrder.gameName)}\nပက်ကေ့ချ်: ${escapeHtml(packageText(trustedPkg))}\nပမာဏ: ${escapeHtml(formatAmount(trustedPkg.price))} Ks\nကစားသူ: ${escapeHtml(cleanOrder.zoneId ? `${userId} (ဇုန် ${cleanOrder.zoneId})` : userId)}\nဂိမ်းအမည်: ${escapeHtml(cleanOrder.ign || "အတည်မပြုရသေး") }\nဒေသ: ${escapeHtml(cleanOrder.region || "မသက်ဆိုင်ပါ") }\nဆက်သွယ်ရန်: ${escapeHtml(contact)}\nငွေပေးချေမှု: ${escapeHtml(cleanOrder.payment)}`);
     notification = { ok: true };
     const slipDataUrl = String(payload.slipDataUrl || "");
     if (slipDataUrl.startsWith("data:image/") && env.TELEGRAM_BOT_TOKEN && env.TELEGRAM_CHAT_ID) {
@@ -607,13 +612,13 @@ async function createOrder(request, env) {
 }
 
 async function orderStatus(request, env) {
-  if (request.method !== "POST") return jsonResponse(405, { ok: false, error: "Method not allowed" });
+  if (request.method !== "POST") return jsonResponse(405, { ok: false, error: "ဤတောင်းဆိုမှုနည်းလမ်းကို ခွင့်မပြုပါ။" });
   const payload = await readJson(request);
   const orderId = normalizeOrderId(payload.orderId || payload.id);
-  if (!orderId) return jsonResponse(400, { ok: false, error: "Missing Order ID" });
+  if (!orderId) return jsonResponse(400, { ok: false, error: "အော်ဒါနံပါတ် ထည့်ပေးပါ။" });
   const firestore = await firestoreClient(env);
   const found = await findOrderById(firestore, orderId);
-  if (!found) return jsonResponse(404, { ok: false, error: "Order not found" });
+  if (!found) return jsonResponse(404, { ok: false, error: "အော်ဒါကို မတွေ့ပါ။" });
   if (!String(found.data?.ign || "").trim() && found.data?.gameKey === "mlbb" && found.data?.userId && found.data?.zoneId) {
     const verifiedIgn = await resolveMlbbNickname(env, found.data.userId, found.data.zoneId);
     if (verifiedIgn) {
@@ -624,6 +629,49 @@ async function orderStatus(request, env) {
     }
   }
   return jsonResponse(200, { ok: true, order: publicOrder(found.data) });
+}
+
+function refundEligibility(order, purchaseLedger = null) {
+  if (!isBestDiaBalanceOrder(order)) return { eligible: false, code: "not_balance", message: "BestDia Balance ဖြင့်ပေးချေထားသော အော်ဒါသာ ငွေပြန်အမ်းရန် တောင်းဆိုနိုင်ပါသည်။" };
+  if (!["failed", "cancelled"].includes(String(order?.status || ""))) return { eligible: false, code: "not_unsuccessful", message: "မအောင်မြင်သော သို့မဟုတ် ပယ်ဖျက်ထားသော အော်ဒါအတွက်သာ ငွေပြန်အမ်းရန် တောင်းဆိုနိုင်ပါသည်။" };
+  if (order?.refundStatus === "requested") return { eligible: false, code: "already_requested", message: "ဤအော်ဒါအတွက် ငွေပြန်အမ်းရန် တောင်းဆိုထားပြီး ဖြစ်ပါသည်။" };
+  if (order?.refundStatus === "approved" || Number(order?.balanceRefundedAmount || 0) > 0) return { eligible: false, code: "already_refunded", message: "ဤအော်ဒါအတွက် BestDia Balance ကို ပြန်အမ်းပြီး ဖြစ်ပါသည်။" };
+  const chargedAmount = purchaseLedger?.type === "purchase" ? Math.abs(Number(purchaseLedger.amount || 0)) : 0;
+  if (!(chargedAmount > 0)) return { eligible: false, code: "not_charged", message: "ဤအော်ဒါမှ BestDia Balance ကို ဖြတ်တောက်ထားခြင်းမရှိသဖြင့် ငွေပြန်အမ်းရန် မလိုအပ်ပါ။" };
+  return { eligible: true, code: "eligible", amount: Math.round(chargedAmount) };
+}
+
+async function requestRefund(request, env) {
+  if (request.method !== "POST") return jsonResponse(405, { ok: false, error: "ဤတောင်းဆိုမှုနည်းလမ်းကို ခွင့်မပြုပါ။" });
+  const payload = await readJson(request);
+  const orderId = normalizeOrderId(payload.orderId || payload.id);
+  if (!orderId) return jsonResponse(400, { ok: false, error: "အော်ဒါနံပါတ် ထည့်ပေးပါ။" });
+  const sessionAccountId = await requireAccountSession(request, env);
+  if (sessionAccountId instanceof Response) return sessionAccountId;
+  const firestore = await firestoreClient(env);
+  const found = await findOrderById(firestore, orderId);
+  if (!found) return jsonResponse(404, { ok: false, error: "အော်ဒါကို မတွေ့ပါ။" });
+  const orderAccountId = normalizeAccountId(found.data?.accountId);
+  if (!orderAccountId || orderAccountId !== sessionAccountId) return jsonResponse(403, { ok: false, error: "ဤအော်ဒါအတွက် ငွေပြန်အမ်းရန် တောင်းဆိုခွင့်မရှိပါ။" });
+  const purchaseLedger = await getCollectionDoc(firestore, "balance_ledger", `purchase_${found.docId}`);
+  const eligibility = refundEligibility(found.data, purchaseLedger);
+  if (!eligibility.eligible) return jsonResponse(409, { ok: false, error: eligibility.message, code: eligibility.code });
+  const now = new Date().toISOString();
+  const reason = String(payload.reason || "").trim().slice(0, 500);
+  const timeline = Array.isArray(found.data.timeline) ? [...found.data.timeline] : [];
+  timeline.push({ status: "refund_requested", time: Date.now() });
+  const updated = await updateOrderDoc(firestore, found.docId, {
+    refundStatus: "requested",
+    refundAmount: eligibility.amount,
+    refundReason: reason,
+    refundRequestedAt: now,
+    refundProcessedAt: "",
+    refundDecisionReason: "",
+    updatedAt: now,
+    timeline,
+  });
+  await notifyTelegram(env, `<b>[BestDia Balance ငွေပြန်အမ်းတောင်းဆိုမှု]</b>\nအော်ဒါ: <code>${escapeHtml(orderId)}</code>\nအကောင့်: <code>${escapeHtml(orderAccountId)}</code>\nပမာဏ: ${escapeHtml(formatAmount(eligibility.amount))} BD\nအကြောင်းရင်း: ${escapeHtml(reason || "မဖော်ပြထားပါ")}`);
+  return jsonResponse(200, { ok: true, message: "ငွေပြန်အမ်းရန် တောင်းဆိုမှုကို လက်ခံရရှိပါပြီ။", order: publicOrder(updated) });
 }
 
 async function telegramCustomerOrders(request, env) {
@@ -1037,6 +1085,89 @@ async function adminUpdateOrder(request, env) {
     }
   }
   return jsonResponse(200, { ok: true, order: adminOrder({ docId, data: updated }) });
+}
+
+async function adminProcessRefund(request, env) {
+  if (request.method !== "POST") return jsonResponse(405, { ok: false, error: "ဤတောင်းဆိုမှုနည်းလမ်းကို ခွင့်မပြုပါ။" });
+  const payload = await readJson(request);
+  const auth = requireAdmin(payload, env);
+  if (auth) return auth;
+  const docId = String(payload.docId || "").trim();
+  const action = String(payload.action || "").trim();
+  const decisionReason = String(payload.reason || "").trim().slice(0, 500);
+  if (!docId || /[/?#]/.test(docId)) return jsonResponse(400, { ok: false, error: "အော်ဒါမှတ်တမ်း ID မမှန်ကန်ပါ။" });
+  if (!["approve", "reject"].includes(action)) return jsonResponse(400, { ok: false, error: "ငွေပြန်အမ်းမှု ဆုံးဖြတ်ချက် မမှန်ကန်ပါ။" });
+
+  const firestore = await firestoreClient(env);
+  const current = await getOrderByDocId(firestore, docId);
+  if (!current) return jsonResponse(404, { ok: false, error: "အော်ဒါကို မတွေ့ပါ။" });
+  if (current.refundStatus !== "requested") return jsonResponse(409, { ok: false, error: "ဤအော်ဒါတွင် စောင့်ဆိုင်းနေသော ငွေပြန်အမ်းတောင်းဆိုမှု မရှိပါ။" });
+
+  const now = new Date().toISOString();
+  const timeline = Array.isArray(current.timeline) ? [...current.timeline] : [];
+  if (action === "reject") {
+    timeline.push({ status: "refund_rejected", time: Date.now() });
+    const updated = await updateOrderDoc(firestore, docId, {
+      refundStatus: "rejected",
+      refundProcessedAt: now,
+      refundDecisionReason: decisionReason,
+      updatedAt: now,
+      timeline,
+    });
+    await writeAuditLog(firestore, "admin", "refund_rejected", current.id || docId, current, updated, decisionReason);
+    await notifyTelegram(env, `<b>[ငွေပြန်အမ်းမှု ငြင်းပယ်ထားသည်]</b>\nအော်ဒါ: <code>${escapeHtml(current.id || docId)}</code>\nအကြောင်းရင်း: ${escapeHtml(decisionReason || "မဖော်ပြထားပါ")}`);
+    return jsonResponse(200, { ok: true, order: adminOrder({ docId, data: updated }) });
+  }
+
+  if (!isBestDiaBalanceOrder(current) || !["failed", "cancelled"].includes(String(current.status || ""))) {
+    return jsonResponse(409, { ok: false, error: "ဤအော်ဒါသည် BestDia Balance ငွေပြန်အမ်းမှု စည်းမျဉ်းနှင့် မကိုက်ညီပါ။" });
+  }
+  const accountId = normalizeAccountId(current.accountId);
+  if (!accountId) return jsonResponse(409, { ok: false, error: "အော်ဒါတွင် BestDia အကောင့် ID မရှိပါ။" });
+  const purchaseLedger = await getCollectionDoc(firestore, "balance_ledger", `purchase_${docId}`);
+  const refundLedger = await getCollectionDoc(firestore, "balance_ledger", `refund_${docId}`);
+  if (refundLedger || current.refundStatus === "approved" || Number(current.balanceRefundedAmount || 0) > 0) {
+    return jsonResponse(409, { ok: false, error: "ဤအော်ဒါအတွက် ငွေပြန်အမ်းပြီး ဖြစ်ပါသည်။" });
+  }
+  const amount = purchaseLedger?.type === "purchase" ? Math.abs(Math.round(Number(purchaseLedger.amount || 0))) : 0;
+  if (!(amount > 0)) return jsonResponse(409, { ok: false, error: "ပြန်အမ်းနိုင်သော BestDia Balance ဖြတ်တောက်မှုမှတ်တမ်း မတွေ့ပါ။" });
+  const account = await getAccountBalanceDoc(firestore, accountId);
+  if (!account) return jsonResponse(404, { ok: false, error: "BestDia Balance အကောင့်ကို မတွေ့ပါ။" });
+  const balanceBefore = Number(account.balance || 0);
+  const balanceAfter = balanceBefore + amount;
+  timeline.push({ status: "refund_approved", time: Date.now() });
+  const orderUpdates = {
+    refundStatus: "approved",
+    refundAmount: amount,
+    balanceRefundedAmount: amount,
+    refundedAt: now,
+    refundProcessedAt: now,
+    refundDecisionReason: decisionReason,
+    updatedAt: now,
+    timeline,
+  };
+  const accountHistory = Array.isArray(account.history) ? [...account.history] : [];
+  accountHistory.unshift({ type: "refund", title: `${current.id || docId} အော်ဒါ ငွေပြန်အမ်းမှု`, amount, orderId: current.id || docId, at: now });
+  const accountUpdates = { accountId, balance: balanceAfter, balanceStatus: account.balanceStatus || "active", history: accountHistory.slice(0, 40), updatedAt: now };
+  await commitOrderAndAccountUpdates(firestore, docId, orderUpdates, accountId, accountUpdates, {
+    transactionId: `refund_${docId}`,
+    userId: accountId,
+    type: "refund",
+    amount,
+    currency: "BD",
+    balanceBefore,
+    balanceAfter,
+    referenceType: "order",
+    referenceId: current.id || docId,
+    description: decisionReason || "မအောင်မြင်သော အော်ဒါအတွက် BestDia Balance ပြန်အမ်းမှု",
+    createdBy: "admin",
+    createdAt: now,
+    reversesTransactionId: `purchase_${docId}`,
+  });
+  const updated = await getOrderByDocId(firestore, docId);
+  await writeAuditLog(firestore, "admin", "refund_approved", current.id || docId, current, updated, decisionReason);
+  await notifyTelegram(env, `<b>[ငွေပြန်အမ်းမှု အတည်ပြုပြီး]</b>\nအော်ဒါ: <code>${escapeHtml(current.id || docId)}</code>\nအကောင့်: <code>${escapeHtml(accountId)}</code>\nပမာဏ: ${escapeHtml(formatAmount(amount))} BD\nပြန်အမ်းပြီးလက်ကျန်: ${escapeHtml(formatAmount(balanceAfter))} BD`);
+  return jsonResponse(200, { ok: true, balance: balanceAfter, order: adminOrder({ docId, data: updated }) });
 }
 
 async function adminBalanceTopups(request, env) {
@@ -3957,26 +4088,26 @@ async function markOrderPaid(env, payment, rawPayload) {
 }
 
 function requireAdmin(payload, env) {
-  if (!env.ADMIN_PASSWORD) return jsonResponse(500, { ok: false, error: "ADMIN_PASSWORD is not configured" });
+  if (!env.ADMIN_PASSWORD) return jsonResponse(500, { ok: false, error: "အက်ဒမင် စကားဝှက်ကို ဆာဗာတွင် မသတ်မှတ်ရသေးပါ။" });
   if (!safeEqual(String(payload.adminPassword || ""), env.ADMIN_PASSWORD)) {
-    return jsonResponse(401, { ok: false, error: "Wrong admin password" });
+    return jsonResponse(401, { ok: false, error: "အက်ဒမင် စကားဝှက် မမှန်ပါ။" });
   }
   return null;
 }
 
 async function createAccountSession(accountId, env) {
-  if (!env.ACCOUNT_SESSION_SECRET) throw new Error("ACCOUNT_SESSION_SECRET is not configured");
+  if (!env.ACCOUNT_SESSION_SECRET) throw new Error("အကောင့်အသုံးပြုခွင့် လျှို့ဝှက်ကုဒ်ကို ဆာဗာတွင် မသတ်မှတ်ရသေးပါ။");
   const expiresAt = Date.now() + 24 * 60 * 60 * 1000;
   const payload = `${normalizeAccountId(accountId)}.${expiresAt}`;
   return `${payload}.${await hmacHex(payload, env.ACCOUNT_SESSION_SECRET)}`;
 }
 
 async function requireAccountSession(request, env) {
-  if (!env.ACCOUNT_SESSION_SECRET) return jsonResponse(500, { ok: false, error: "ACCOUNT_SESSION_SECRET is not configured" });
+  if (!env.ACCOUNT_SESSION_SECRET) return jsonResponse(500, { ok: false, error: "အကောင့်အသုံးပြုခွင့် လျှို့ဝှက်ကုဒ်ကို ဆာဗာတွင် မသတ်မှတ်ရသေးပါ။" });
   const token = String(request.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
   const [accountId, expiresAt, signature] = token.split(".");
   const valid = /^\d{10}$/.test(accountId || "") && Number(expiresAt) > Date.now() && signature && safeEqual(signature, await hmacHex(`${accountId}.${expiresAt}`, env.ACCOUNT_SESSION_SECRET));
-  return valid ? accountId : jsonResponse(401, { ok: false, error: "Please log in again to use BestDia Balance" });
+  return valid ? accountId : jsonResponse(401, { ok: false, error: "BestDia Balance သုံးရန် အကောင့်ပြန်ဝင်ပါ။" });
 }
 
 async function hmacHex(value, secret) {
@@ -4270,6 +4401,12 @@ function publicOrder(order) {
     completedAt: order.completedAt,
     failedAt: order.failedAt,
     failedReason: order.failedReason,
+    refundStatus: order.refundStatus || "",
+    refundAmount: Number(order.refundAmount || order.balanceRefundedAmount || 0),
+    refundReason: order.refundReason || "",
+    refundDecisionReason: order.refundDecisionReason || "",
+    refundRequestedAt: order.refundRequestedAt || "",
+    refundProcessedAt: order.refundProcessedAt || order.refundedAt || "",
     supplierTransactionId: order.supplierTransactionId,
     mxshopTopup: order.mxshopTopup || null,
     createdAt: order.createdAt,
@@ -4450,35 +4587,35 @@ async function notifyTelegramCustomerOrderStatus(env, order) {
   if (String(order?.telegramLastNotifiedStatus || "") === status) return { sent: false, skipped: true, duplicate: true };
 
   const meta = {
-    processing: { icon: "⏳", title: "Top-up Processing", note: "Order ကို စတင်လုပ်ဆောင်နေပါပြီ။ ခဏစောင့်ပေးပါ။" },
-    held: { icon: "🟠", title: "Top-up On Hold", note: "Supplier balance / fulfillment condition ကြောင့် order ကို ခဏ hold ထားပါတယ်။ BestDia က ဆက်လက်စစ်ဆေးပေးပါမယ်။" },
-    completed: { icon: "✅", title: "Top-up Completed", note: "💎 Diamond / item ပို့ဆောင်မှု အောင်မြင်ပြီးပါပြီ။" },
-    failed: { icon: "❌", title: "Top-up Failed", note: "Order ကို အပြီးသတ်မလုပ်နိုင်ခဲ့ပါ။ BestDia support ကိုဆက်သွယ်ပေးပါ။" },
-    cancelled: { icon: "🚫", title: "Order Cancelled", note: "ဒီ order ကို ပယ်ဖျက်ထားပါတယ်။" },
+    processing: { icon: "⏳", title: "ငွေဖြည့်မှု လုပ်ဆောင်နေသည်", note: "အော်ဒါကို စတင်လုပ်ဆောင်နေပါပြီ။ ခဏစောင့်ပေးပါ။" },
+    held: { icon: "🟠", title: "ငွေဖြည့်မှု ခေတ္တရပ်ထားသည်", note: "ပေးသွင်းသူလက်ကျန် သို့မဟုတ် ဖြည့်ဆည်းမှုအခြေအနေကြောင့် အော်ဒါကို ခေတ္တရပ်ထားပါသည်။ BestDia က ဆက်လက်စစ်ဆေးပေးပါမည်။" },
+    completed: { icon: "✅", title: "ငွေဖြည့်မှု အောင်မြင်သည်", note: "💎 Diamond သို့မဟုတ် ပစ္စည်း ပို့ဆောင်မှု အောင်မြင်ပြီးပါပြီ။" },
+    failed: { icon: "❌", title: "ငွေဖြည့်မှု မအောင်မြင်ပါ", note: "အော်ဒါကို အပြီးသတ်မလုပ်နိုင်ခဲ့ပါ။ BestDia အကူအညီဌာနကို ဆက်သွယ်ပေးပါ။" },
+    cancelled: { icon: "🚫", title: "အော်ဒါ ပယ်ဖျက်ထားသည်", note: "ဤအော်ဒါကို ပယ်ဖျက်ထားပါသည်။" },
   };
   const current = meta[status] || { icon: "ℹ️", title: status, note: "" };
   const player = order.zoneId ? `${order.userId} (${order.zoneId})` : String(order.userId || "-");
   const lines = [
     `${current.icon} <b>${escapeHtml(current.title)}</b>`,
     "",
-    `🧾 <b>Order:</b> <code>${escapeHtml(String(order.id || "-"))}</code>`,
-    `🎮 <b>Game:</b> ${escapeHtml(String(order.gameName || "Mobile Legends"))}`,
-    `💎 <b>Package:</b> ${escapeHtml(packageText(order.pkg || {}))}`,
-    `🆔 <b>Player:</b> ${escapeHtml(player)}`,
+    `🧾 <b>အော်ဒါ:</b> <code>${escapeHtml(String(order.id || "-"))}</code>`,
+    `🎮 <b>ဂိမ်း:</b> ${escapeHtml(String(order.gameName || "Mobile Legends"))}`,
+    `💎 <b>ပက်ကေ့ချ်:</b> ${escapeHtml(packageText(order.pkg || {}))}`,
+    `🆔 <b>ကစားသူ:</b> ${escapeHtml(player)}`,
   ];
-  if (order.ign) lines.push(`👤 <b>IGN:</b> ${escapeHtml(order.ign)}`);
+  if (order.ign) lines.push(`👤 <b>ဂိမ်းအမည်:</b> ${escapeHtml(order.ign)}`);
   lines.push("", escapeHtml(current.note));
 
   if (status === "completed" && order.supplierTransactionId) {
-    lines.push(`🔖 <b>Transaction:</b> <code>${escapeHtml(order.supplierTransactionId)}</code>`);
+    lines.push(`🔖 <b>ငွေလွှဲနံပါတ်:</b> <code>${escapeHtml(order.supplierTransactionId)}</code>`);
   }
   if (status === "failed" && order.failedReason) {
-    lines.push(`⚠️ <b>Reason:</b> ${escapeHtml(String(order.failedReason))}`);
+    lines.push(`⚠️ <b>အကြောင်းရင်း:</b> ${escapeHtml(String(order.failedReason))}`);
   }
 
   const keyboard = status === "completed"
-    ? [[{ text: "💎 Top-up Again", callback_data: "game:mlbb" }], [{ text: "🏠 Main Menu", callback_data: "home" }]]
-    : [[{ text: "🏠 Main Menu", callback_data: "home" }]];
+    ? [[{ text: "💎 ထပ်မံငွေဖြည့်ရန်", callback_data: "game:mlbb" }], [{ text: "🏠 ပင်မစာမျက်နှာ", callback_data: "home" }]]
+    : [[{ text: "🏠 ပင်မစာမျက်နှာ", callback_data: "home" }]];
 
   try {
     const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
