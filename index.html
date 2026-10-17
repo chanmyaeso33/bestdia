@@ -88,7 +88,22 @@ h1 span:first-child{margin-top:0;font-size:1.08em;font-weight:800}
 .topup-title{display:flex;align-items:center;gap:12px}
 .topup-title img{width:58px;height:58px;border-radius:14px;object-fit:cover}
 .topup-title h2{font-family:"Chakra Petch",sans-serif;font-size:1.3rem}
-.mlbb-server-bar{display:none;align-items:center;gap:8px;flex-wrap:wrap;margin:-4px 0 18px 70px}.mlbb-server-label{color:var(--muted);font:800 .72rem "Chakra Petch",sans-serif;text-transform:uppercase;letter-spacing:.08em}.server-btn{display:inline-flex;align-items:center;gap:7px;border:1px solid rgba(91,227,255,.18);border-radius:9px;background:#0E1220;color:var(--muted);padding:7px 11px;font:800 .72rem "Chakra Petch",sans-serif;cursor:pointer}.server-btn img{width:22px;height:16px;border-radius:3px;object-fit:cover}.server-btn:hover{border-color:rgba(91,227,255,.55);color:var(--text)}.server-btn.active{border-color:var(--diamond);background:rgba(91,227,255,.12);color:var(--text)}.server-btn:disabled{opacity:.65;cursor:wait}@media(max-width:620px){.mlbb-server-bar{margin:-5px 0 16px;gap:6px}.mlbb-server-label{width:100%}.server-btn{flex:1;justify-content:center;padding:7px 6px}}
+.mlbb-server-bar{display:none;align-items:center;gap:8px;flex-wrap:wrap;margin:-4px 0 18px 70px}.mlbb-server-label{color:var(--muted);font:800 .72rem "Chakra Petch",sans-serif;text-transform:uppercase;letter-spacing:.08em}.server-btn{display:inline-flex;align-items:center;gap:7px;border:1px solid rgba(91,227,255,.18);border-radius:9px;background:#0E1220;color:var(--muted);padding:7px 11px;font:800 .72rem "Chakra Petch",sans-serif;cursor:pointer}.server-btn img{width:22px;height:16px;border-radius:3px;object-fit:cover}.server-btn:hover{border-color:rgba(91,227,255,.55);color:var(--text)}.server-btn.active{border-color:var(--diamond);background:rgba(91,227,255,.12);color:var(--text)}.server-btn:disabled{opacity:.65;cursor:wait}@media(max-width:620px){
+  .mlbb-server-bar{margin:-5px 0 16px;gap:6px;align-items:stretch}
+  .mlbb-server-label{width:100%}
+  .mlbb-server-bar .server-btn{
+    flex:1 1 0;
+    min-width:0;
+    min-height:64px;
+    box-sizing:border-box;
+    justify-content:center;
+    padding:7px 6px;
+    text-align:center;
+    line-height:1.25;
+    overflow-wrap:anywhere;
+  }
+  .mlbb-server-bar .server-btn img{flex-shrink:0}
+}
 .currency-switch{display:inline-flex;gap:4px;border:1px solid rgba(91,227,255,.18);border-radius:10px;background:#0E1220;padding:3px}
 .currency-btn{border:0;border-radius:7px;background:transparent;color:var(--muted);font-family:"Chakra Petch",sans-serif;font-weight:800;font-size:.76rem;min-width:54px;padding:7px 10px}
 .currency-btn.active{background:linear-gradient(135deg,var(--diamond2),var(--diamond));color:var(--dark)}
