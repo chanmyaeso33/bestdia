@@ -1,2 +1,3 @@
+/marketing-os.html /index.html 301
 /api/* /.netlify/functions/:splat 200
 /* /index.html 200
