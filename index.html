@@ -231,6 +231,122 @@ h1 span:first-child{margin-top:0;font-size:1.08em;font-weight:800}
   .pkg-card:hover .pkg-price::before,.best-card:hover .best-price::before{animation:none}
 }
 
+
+/* Artwork illumination: animate a composited halo instead of package artwork.
+   This preserves existing scale(3) / scale(1.1) Honor of Kings art transforms. */
+.pack-visual{
+  position:relative;
+  isolation:isolate;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  min-width:0;
+  height:106px;
+  flex:0 0 106px;
+  margin:0 auto 10px;
+  pointer-events:none;
+}
+.pack-visual::before{
+  content:"";
+  position:absolute;
+  z-index:0;
+  inset:8px 7%;
+  border-radius:50%;
+  background:radial-gradient(ellipse at center,
+    rgba(255,224,146,.24) 0%,
+    rgba(91,227,255,.15) 28%,
+    rgba(245,197,66,.065) 53%,
+    transparent 74%);
+  filter:blur(9px);
+  opacity:.6;
+  transform:scale(.92);
+  transition:opacity .35s ease,transform .4s ease;
+}
+.pack-visual::after{
+  content:"";
+  position:absolute;
+  z-index:0;
+  left:20%;
+  right:20%;
+  bottom:5px;
+  height:16px;
+  border-radius:50%;
+  background:radial-gradient(ellipse at center,rgba(245,197,66,.21),transparent 73%);
+  opacity:.58;
+  transition:opacity .35s ease;
+}
+.pkg-card .pack-visual img,.best-card .pack-visual img,.hero-product .pack-visual img{
+  position:relative;
+  z-index:1;
+  flex:0 1 auto;
+  margin:0;
+}
+.pkg-card.selected .pack-visual::before,.best-card.selected .pack-visual::before{
+  background:radial-gradient(ellipse at center,
+    rgba(255,222,121,.36) 0%,
+    rgba(245,197,66,.22) 36%,
+    rgba(245,197,66,.065) 59%,
+    transparent 75%);
+  opacity:.93;
+  transform:scale(1.06);
+}
+.pkg-card.selected .pack-visual::after,.best-card.selected .pack-visual::after{opacity:.86}
+.hero-product .pack-visual{
+  width:100%;
+  height:72px;
+  flex:none;
+  margin:0 auto 7px;
+}
+.hero-product .pack-visual::before{inset:0 10%;opacity:.48}
+.hero-product .pack-visual::after{bottom:0}
+@keyframes bestdia-artwork-halo{
+  0%,100%{opacity:.55;transform:scale(.92)}
+  50%{opacity:.84;transform:scale(1.055)}
+}
+@keyframes bestdia-selected-halo{
+  0%,100%{opacity:.76;transform:scale(.99)}
+  50%{opacity:1;transform:scale(1.09)}
+}
+/* Only featured or selected artwork pulses continuously; other items retain a
+   polished static glow to avoid dozens of active animations on phones. */
+.best-card:not(.selected) .pack-visual::before{
+  animation:bestdia-artwork-halo 5.4s ease-in-out infinite;
+}
+.pkg-card.selected .pack-visual::before,
+.best-card.selected .pack-visual::before{
+  animation:bestdia-selected-halo 4.2s ease-in-out infinite;
+}
+@media(hover:hover) and (pointer:fine){
+  .pkg-card:hover .pack-visual::before,
+  .best-card:hover .pack-visual::before,
+  .hero-product:hover .pack-visual::before{
+    opacity:1;
+    transform:scale(1.12);
+  }
+  .pkg-card:hover .pack-visual::after,
+  .best-card:hover .pack-visual::after,
+  .hero-product:hover .pack-visual::after{opacity:.95}
+  /* Keep heavily enlarged HOK package art at its original scale. */
+  .pkg-card:hover .pack-visual img:not(.hok-pack-art):not(.hok-pass-art),
+  .best-card:hover .pack-visual img:not(.hok-pack-art):not(.hok-pass-art),
+  .hero-product:hover .pack-visual img:not(.hok-pack-art):not(.hok-pass-art){
+    filter:saturate(1.12) brightness(1.04) drop-shadow(0 11px 17px rgba(245,197,66,.16));
+  }
+}
+@media(max-width:620px){
+  .pkg-card .pack-visual,.best-card .pack-visual{
+    height:101px;
+    flex-basis:101px;
+    margin-bottom:7px;
+  }
+  .pack-visual::before{filter:blur(8px)}
+}
+@media(prefers-reduced-motion:reduce){
+  .pack-visual::before,.pack-visual::after{animation:none!important;transition:none!important}
+  .pkg-card .pack-visual::before,.best-card .pack-visual::before{transform:none}
+}
+
 .order-grid{display:grid;grid-template-columns:1fr;gap:14px;align-items:start}
 .order-box{padding:20px}
 .form-row{margin-bottom:14px}
@@ -805,7 +921,7 @@ function packageFallbackImg(p){
   if(/prime/i.test(`${p?.id||""} ${p?.title||""}`))return PKG_IMG.pubgPrime;
   return PKG_IMG.pubgPack;
 }
-function pkgImgTag(p,cls=""){const src=escapeText(p.img||packageFallbackImg(p)),fallback=escapeText(packageFallbackImg(p)),finalFallback=escapeText(activeProduct.key==="pubg"?PKG_IMG.pubgLogo:activeProduct.img),imgCls=[cls,p.wideArt?"pack-art":"",p.enlargeArt?"hok-pack-art":"",p.passArt?"hok-pass-art":""].filter(Boolean).join(" ");return `<img ${imgCls?`class="${imgCls}"`:""} src="${src}" alt="${escapeText(pkgTitle(p))}" loading="lazy" decoding="async" fetchpriority="low" onerror="if(this.dataset.fallbackUsed){this.onerror=null;this.src='${finalFallback}'}else{this.dataset.fallbackUsed='1';this.src='${fallback}'}"/>`;}
+function pkgImgTag(p,cls=""){const src=escapeText(p.img||packageFallbackImg(p)),fallback=escapeText(packageFallbackImg(p)),finalFallback=escapeText(activeProduct.key==="pubg"?PKG_IMG.pubgLogo:activeProduct.img),imgCls=[cls,p.wideArt?"pack-art":"",p.enlargeArt?"hok-pack-art":"",p.passArt?"hok-pass-art":""].filter(Boolean).join(" ");return `<span class="pack-visual"><img ${imgCls?`class="${imgCls}"`:""} src="${src}" alt="${escapeText(pkgTitle(p))}" loading="lazy" decoding="async" fetchpriority="low" onerror="if(this.dataset.fallbackUsed){this.onerror=null;this.src='${finalFallback}'}else{this.dataset.fallbackUsed='1';this.src='${fallback}'}"/></span>`;}
 function goToOrderDetails(){requestAnimationFrame(()=>{$("#order-details")?.scrollIntoView({behavior:"smooth",block:"start"});});}
 function choosePkgAndOrder(id){selectPkg(id);goToOrderDetails();}
 function renderHero(){const items=activeProduct.heroIds.map(currentPkgById).filter(p=>p.id).slice(0,4);$("#heroGrid").innerHTML=items.map(p=>`<button class="hero-product" type="button" data-pkg="${escapeText(p.id)}">${pkgImgTag(p)}<b>${escapeText(pkgPurchaseTitle(p))}</b><span>${escapeText(priceDisplay(p))}</span></button>`).join("");$("#heroGrid").querySelectorAll("[data-pkg]").forEach(b=>b.addEventListener("click",()=>choosePkgAndOrder(b.dataset.pkg)));}
