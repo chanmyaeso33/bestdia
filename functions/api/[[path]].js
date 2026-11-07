@@ -78,6 +78,8 @@ const HOK_MXSHOP_PACKAGES = Object.freeze({
 const PAYMENTS = {
   kbz: { key: "kbz", name: "KBZPay" },
   wave: { key: "wave", name: "Wave Money" },
+  mytelpay: { key: "mytelpay", name: "MytelPay" },
+  uabpay: { key: "uabpay", name: "UABPay" },
   truemoney: { key: "truemoney", name: "TrueMoney" },
   promptpay: { key: "promptpay", name: "PromptPay" },
   balance: { key: "balance", name: "BestDia Balance" },
