@@ -965,7 +965,7 @@ async function submitOrder(){
   if(!sPay)return showToast("ငွေပေးချေမှုနည်းလမ်း ရွေးပါ။","warn");
   if(activeProduct.key==="hok"&&sPay==="balance")return showToast("Honor of Kings အတွက် BestDia Balance ကို ယာယီအသုံးမပြုနိုင်ပါ။","warn");
   if(sPay==="balance"){
-    if(cart.length>1)return showToast("BestDia Balance ဖြင့် အော်ဒါတစ်ခုလျှင် ပက်ကေ့ချ်တစ်ခုသာ ဝယ်နိုင်ပါသည်။ ပက်ကေ့ချ်များစွာအတွက် အခြားငွေပေးချေမှုနည်းလမ်းကို သုံးပါ။","warn");
+    if(cart.reduce((count,item)=>count+item.quantity,0)>1)return showToast("BestDia Balance ဖြင့် အော်ဒါတစ်ခုလျှင် ပက်ကေ့ချ်တစ်ခုသာ ဝယ်နိုင်ပါသည်။ ပက်ကေ့ချ်များစွာအတွက် အခြားငွေပေးချေမှုနည်းလမ်းကို သုံးပါ။","warn");
     if(!ensureAccount())return;
     if(Number(currentAccount().balance||0)<balanceCharge(sPkg))return showToast("BestDia Balance မလုံလောက်ပါ။ အကောင့်စာမျက်နှာမှ Balance ဖြည့်ပါ။","warn");
   }else if(!slipDataUrl)return showToast("ငွေပေးချေမှု စလစ်တင်ပါ။","warn");
@@ -986,7 +986,8 @@ async function submitOrder(){
       syncAccountBalance();
     }
     if(data.order){$("#searchId").value=finalId;$("#statusResult").classList.add("show");renderStatusResult(data.order);}
-    $("#modalBody").innerHTML=`သင့်အော်ဒါနံပါတ်မှာ <b class="gold">${escapeText(finalId)}</b> ဖြစ်ပါသည်။<br/>အခြေအနေ: <b>${escapeText(sLabel[data.order?.status]||data.order?.status||"တင်ပြီး")}</b><br/>ပက်ကေ့ချ်: <b>${cart.length}</b><br/>ပမာဏ: <b class="gold">${fmt(cartTotal())} Ks</b><br/><br/>နောက်မှ အော်ဒါအခြေအနေစစ်ရန် ဤအော်ဒါနံပါတ်ကို သိမ်းထားပါ။`;
+    const orderIds=data.orderIds||[finalId];
+    $("#modalBody").innerHTML=`သင့်အော်ဒါနံပါတ်မှာ <b class="gold">${orderIds.map(escapeText).join()}</b> ဖြစ်ပါသည်။<br/>အခြေအနေ: <b>${escapeText(sLabel[data.order?.status]||data.order?.status||"တင်ပြီး")}</b><br/>ပက်ကေ့ချ်: <b>${orderIds.length}</b><br/>ပမာဏ: <b class="gold">${fmt(cartTotal())} Ks</b><br/><br/>နောက်မှ အော်ဒါအခြေအနေစစ်ရန် ဤအော်ဒါနံပါတ်ကို သိမ်းထားပါ။`;
     $("#orderModal").classList.add("show");
     resetOrderForm();
   }catch(e){

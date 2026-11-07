@@ -435,8 +435,8 @@ async function createOrder(request, env) {
   const requestedItems = Array.isArray(order.items) && order.items.length ? order.items : (pkg ? [{ id: pkg.id, quantity: 1 }] : []);
   const trustedItems = trustedProduct ? requestedItems.slice(0, 10).map((item) => {
     const trustedPkg = trustedProduct.packages.find((candidate) => String(candidate.id) === String(item?.id));
-    const quantity = Math.max(1, Math.min(10, Number.parseInt(item?.quantity, 10) || 1));
-    return trustedPkg ? { pkg: trustedPkg, quantity } : null;
+    const quantity = item?.quantity === undefined ? 1 : Number(item.quantity);
+    return trustedPkg && Number.isInteger(quantity) && quantity >= 1 && quantity <= 10 ? { pkg: trustedPkg, quantity } : null;
   }) : [];
   const trustedPkg = trustedItems[0]?.pkg || null;
   const totalPrice = trustedItems.reduce((sum, item) => sum + Number(item?.pkg?.price || 0) * Number(item?.quantity || 0), 0);
@@ -450,7 +450,7 @@ async function createOrder(request, env) {
   const trustedPay = PAYMENTS[String(order.payKey || "").trim()];
   if (!trustedPay || String(order.payment || "").trim() !== trustedPay.name) return jsonResponse(400, { ok: false, error: "ငွေပေးချေမှုနည်းလမ်း မမှန်ကန်ပါ။" });
   if (trustedProduct.key === "hok" && trustedPay.key === "balance") return jsonResponse(400, { ok: false, error: "ကိုယ်တိုင်ဖြည့်ပေးရသော Honor of Kings အော်ဒါများအတွက် BestDia Balance ကို အသုံးမပြုနိုင်ပါ။" });
-  if (trustedPay.key === "balance" && trustedItems.length > 1) return jsonResponse(400, { ok: false, error: "BestDia Balance ဖြင့် အော်ဒါတစ်ခုလျှင် ပက်ကေ့ချ်တစ်ခုသာ ဝယ်နိုင်ပါသည်။" });
+  if (trustedPay.key === "balance" && (trustedItems.length > 1 || trustedItems[0].quantity !== 1)) return jsonResponse(400, { ok: false, error: "BestDia Balance ဖြင့် အော်ဒါတစ်ခုလျှင် ပက်ကေ့ချ်တစ်ခုသာ ဝယ်နိုင်ပါသည်။" });
 
   const now = new Date().toISOString();
   const initialStatus = trustedPay.key === "balance" ? "processing" : "pending";
@@ -520,7 +520,9 @@ async function createOrder(request, env) {
     balanceCharge = Math.ceil(Number(trustedPkg.priceThb || trustedPkg.supplierPriceThb || trustedPkg.price || 0));
     if (Number(balanceAccount?.balance || 0) < balanceCharge) return jsonResponse(400, { ok: false, error: "BestDia Balance မလုံလောက်ပါ။" });
   }
-  const created = await createOrderDoc(firestore, cleanOrder);
+  const orders = expandCartOrders(cleanOrder, trustedItems);
+  const createdOrders = await createCartOrderDocs(firestore, orders);
+  const created = createdOrders[0];
   let autoTopup = null;
   let finalOrder = cleanOrder;
   if (trustedPay.key === "balance") {
@@ -581,11 +583,13 @@ async function createOrder(request, env) {
 
   let notification = { ok: false, skipped: true };
   try {
-    await notifyTelegram(env, `<b>[အော်ဒါအသစ်]</b>\nအော်ဒါနံပါတ်: <code>${escapeHtml(orderId)}</code>\nဂိမ်း: ${escapeHtml(cleanOrder.gameName)}\nပက်ကေ့ချ်: ${escapeHtml(packageText(trustedPkg))}\nပမာဏ: ${escapeHtml(formatAmount(trustedPkg.price))} Ks\nကစားသူ: ${escapeHtml(cleanOrder.zoneId ? `${userId} (ဇုန် ${cleanOrder.zoneId})` : userId)}\nဂိမ်းအမည်: ${escapeHtml(cleanOrder.ign || "အတည်မပြုရသေး") }\nဒေသ: ${escapeHtml(cleanOrder.region || "မသက်ဆိုင်ပါ") }\nဆက်သွယ်ရန်: ${escapeHtml(contact)}\nငွေပေးချေမှု: ${escapeHtml(cleanOrder.payment)}`);
+    for (const child of orders) {
+    await notifyTelegram(env, `<b>[အော်ဒါအသစ်]</b>\nအော်ဒါနံပါတ်: <code>${escapeHtml(child.id)}</code>\nဂိမ်း: ${escapeHtml(child.gameName)}\nပက်ကေ့ချ်: ${escapeHtml(packageText(child.pkg))}\nပမာဏ: ${escapeHtml(formatAmount(child.pkg.price))} Ks\nကစားသူ: ${escapeHtml(child.zoneId ? `${userId} (ဇုန် ${child.zoneId})` : userId)}\nဂိမ်းအမည်: ${escapeHtml(child.ign || "အတည်မပြုရသေး") }\nဒေသ: ${escapeHtml(child.region || "မသက်ဆိုင်ပါ") }\nဆက်သွယ်ရန်: ${escapeHtml(contact)}\nငွေပေးချေမှု: ${escapeHtml(child.payment)}`);
+    }
     notification = { ok: true };
     const slipDataUrl = String(payload.slipDataUrl || "");
     if (slipDataUrl.startsWith("data:image/") && env.TELEGRAM_BOT_TOKEN && env.TELEGRAM_CHAT_ID) {
-      const photo = await sendSlipPhoto(env.TELEGRAM_BOT_TOKEN, env.TELEGRAM_CHAT_ID, slipDataUrl, cleanOrder.slip.name);
+      const photo = await sendSlipPhoto(env.TELEGRAM_BOT_TOKEN, env.TELEGRAM_CHAT_ID, slipDataUrl, cleanOrder.slip.name, `Payment slip for group ${orderId} (${orders.length} orders). Total: ${formatAmount(totalPrice)} Ks`);
       notification.photoOk = Boolean(photo.ok);
       notification.photoError = photo.ok ? "" : photo.description || photo.error || "Payment slip photo failed";
     }
@@ -593,7 +597,7 @@ async function createOrder(request, env) {
     notification = { ok: false, error: error.message || "Telegram notification failed" };
   }
 
-  return jsonResponse(200, { ok: true, orderId, docId: created.docId, order: publicOrder(finalOrder), notification, autoTopup });
+  return jsonResponse(200, { ok: true, orderId, orderIds: orders.map(child => child.id), orders: orders.map(child => publicOrder(trustedPay.key === "balance" ? finalOrder : child)), docId: created.docId, order: publicOrder(trustedPay.key === "balance" ? finalOrder : orders[0]), notification, autoTopup });
 }
 
 async function orderStatus(request, env) {
@@ -685,7 +689,7 @@ async function publicTicker(request, env) {
   const firestore = await firestoreClient(env);
   const orders = await listOrders(firestore);
   const items = orders
-    .filter((order) => !order.data.archived && order.data.pkg && order.data.status === "completed" && /^BD\d{6}$/.test(normalizeOrderId(order.data.id)))
+    .filter((order) => !order.data.archived && order.data.pkg && order.data.status === "completed" && /^BD\d{6}(?:-\d+)?$/.test(normalizeOrderId(order.data.id)))
     .slice(0, 10)
     .map((order) => publicTickerItem(order.data));
   return jsonResponse(200, { ok: true, items });
@@ -3828,13 +3832,13 @@ function onlyDigits(value) {
   return String(value || "").replace(/\D/g, "");
 }
 
-async function sendSlipPhoto(botToken, chatId, dataUrl, fileName) {
+async function sendSlipPhoto(botToken, chatId, dataUrl, fileName, caption = "Payment slip") {
   const match = dataUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
   if (!match) return { ok: false, error: "Invalid slip image" };
   const bytes = base64ToBytes(match[2]);
   const form = new FormData();
   form.append("chat_id", chatId);
-  form.append("caption", "Payment slip");
+  form.append("caption", caption);
   form.append("photo", new Blob([bytes], { type: match[1] }), fileName || "payment-slip.jpg");
 
   const response = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, { method: "POST", body: form });
@@ -4222,6 +4226,35 @@ function firestoreUpdateWrite(name, updates) {
     update: { name, fields },
     updateMask: { fieldPaths: Object.keys(fields) },
   };
+}
+
+function expandCartOrders(order, items) {
+  const packages = items.flatMap(item => Array.from({ length: item.quantity }, () => item.pkg));
+  return packages.map((pkg, index) => ({
+    ...order,
+    id: index === 0 ? order.id : `${order.id}-${index + 1}`,
+    paymentReference: index === 0 ? order.id : `${order.id}-${index + 1}`,
+    paymentGroupId: order.id,
+    paymentGroupTotal: order.totalPrice,
+    paymentGroupOrderCount: packages.length,
+    pkg,
+    items: [{ pkg, quantity: 1 }],
+    totalPrice: Number(pkg.price || 0),
+    totalPriceThb: Number(pkg.priceThb || pkg.supplierPriceThb || 0),
+    slip: { ...order.slip, paymentGroupId: order.id },
+  }));
+}
+
+async function createCartOrderDocs(firestore, orders) {
+  const root = `projects/${firestore.projectId}/databases/(default)/documents`;
+  const response = await fetch(`https://firestore.googleapis.com/v1/${root}:commit`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${firestore.token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ writes: orders.map(order => firestoreCreateWrite(`${root}/orders/${order.id}`, order)) }),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error?.message || "Could not create orders");
+  return orders.map(order => ({ docId: order.id, data: order }));
 }
 
 async function createOrderDoc(firestore, order) {
