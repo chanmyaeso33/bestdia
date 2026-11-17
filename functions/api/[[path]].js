@@ -62,6 +62,7 @@ const HOK_ENABLED = true;
 const HOK_MXSHOP_STOCK_IDX = "1712";
 const PUBG_UC_MXSHOP_STOCK_IDX = "168";
 const PUBG_PACK_MXSHOP_STOCK_IDX = "9500008";
+const PUBG_WOW_MXSHOP_STOCK_IDX = "1718";
 const FREE_FIRE_MXSHOP_STOCK_IDX = "15";
 const MXSHOP_LOW_BALANCE_THB = 300;
 const PUBG_MXSHOP_PACKAGES = Object.freeze({
@@ -101,6 +102,13 @@ const PUBG_PACK_MXSHOP_PACKAGES = Object.freeze({
   "pubg-elite-pass-plus-lv1-100": { variationId: "16802133", title: "Elite Pass Plus LV1-100", name: "One-time Pass", supplierPriceThb: 902 },
   "pubg-prime-plus-6-month": { variationId: "16801812", title: "Prime Plus (6 Months)", name: "Subscription", supplierPriceThb: 1805 },
   "pubg-prime-plus-12-month": { variationId: "16802126", title: "Prime Plus (12 Months)", name: "Subscription", supplierPriceThb: 3655 },
+});
+const PUBG_WOW_MXSHOP_PACKAGES = Object.freeze({
+  "pubg-wow-325": { variationId: "16802518", title: "325 WOW Coin", name: "WOW Coin", wowCoin: 325, supplierPriceThb: 155.50 },
+  "pubg-wow-660": { variationId: "16802519", title: "660 WOW Coin", name: "WOW Coin", wowCoin: 660, supplierPriceThb: 305.00 },
+  "pubg-wow-1800": { variationId: "16802520", title: "1800 WOW Coin", name: "WOW Coin", wowCoin: 1800, supplierPriceThb: 749.00 },
+  "pubg-wow-3850": { variationId: "16802521", title: "3850 WOW Coin", name: "WOW Coin", wowCoin: 3850, supplierPriceThb: 1485.00 },
+  "pubg-wow-8100": { variationId: "16802522", title: "8100 WOW Coin", name: "WOW Coin", wowCoin: 8100, supplierPriceThb: 2939.00 },
 });
 const HOK_MXSHOP_PACKAGES = Object.freeze({
   "hok-80": { variationId: "16802454", supplierName: "80 Tokens" },
@@ -209,6 +217,13 @@ const PRODUCTS = (() => {
     ...pkg,
     mxshopStockReleaseId: variationId,
     mxshopStockId: PUBG_PACK_MXSHOP_STOCK_IDX,
+    supplier: "mxshop",
+    checkoutAvailable: true,
+  }, pubg))).concat(Object.entries(PUBG_WOW_MXSHOP_PACKAGES).map(([id, { variationId, ...pkg }]) => withPrice({
+    id,
+    ...pkg,
+    mxshopStockReleaseId: variationId,
+    mxshopStockId: PUBG_WOW_MXSHOP_STOCK_IDX,
     supplier: "mxshop",
     checkoutAvailable: true,
   }, pubg)));
@@ -3956,7 +3971,7 @@ function parseMxStockIds(payload, env) {
   const raw = payload.stockIds ?? payload.StockIDXs ?? payload.StockIDX ?? env.MXSHOP_STOCK_IDXS ?? env.MXSHOP_STOCK_IDX ?? "17";
   const values = Array.isArray(raw) ? raw : String(raw).split(",");
   const stockIds = values.map((value) => String(value || "").trim()).filter(Boolean);
-  return [...new Set([...(stockIds.length ? stockIds : ["17"]), String(env.MXSHOP_PUBG_STOCK_IDX || PUBG_UC_MXSHOP_STOCK_IDX), String(env.MXSHOP_PUBG_PACK_STOCK_IDX || PUBG_PACK_MXSHOP_STOCK_IDX), String(env.MXSHOP_HOK_STOCK_IDX || HOK_MXSHOP_STOCK_IDX), String(env.MXSHOP_FREE_FIRE_STOCK_IDX || FREE_FIRE_MXSHOP_STOCK_IDX), "91", "89"])];
+  return [...new Set([...(stockIds.length ? stockIds : ["17"]), String(env.MXSHOP_PUBG_STOCK_IDX || PUBG_UC_MXSHOP_STOCK_IDX), String(env.MXSHOP_PUBG_PACK_STOCK_IDX || PUBG_PACK_MXSHOP_STOCK_IDX), String(env.MXSHOP_PUBG_WOW_STOCK_IDX || PUBG_WOW_MXSHOP_STOCK_IDX), String(env.MXSHOP_HOK_STOCK_IDX || HOK_MXSHOP_STOCK_IDX), String(env.MXSHOP_FREE_FIRE_STOCK_IDX || FREE_FIRE_MXSHOP_STOCK_IDX), "91", "89"])];
 }
 
 function buildMxUid(order, env) {

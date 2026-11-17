@@ -1,4 +1,4 @@
-const CACHE_NAME = "bestdia-app-v6";
+const CACHE_NAME = "bestdia-app-v7";
 const APP_SHELL = [
   "/",
   "/index.html",

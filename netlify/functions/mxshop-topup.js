@@ -42,6 +42,11 @@ const PUBG_PACKAGE_MAP = Object.freeze({
   "pubg-elite-pass-plus-lv1-100": "16802133",
   "pubg-prime-plus-6-month": "16801812",
   "pubg-prime-plus-12-month": "16802126",
+  "pubg-wow-325": "16802518",
+  "pubg-wow-660": "16802519",
+  "pubg-wow-1800": "16802520",
+  "pubg-wow-3850": "16802521",
+  "pubg-wow-8100": "16802522",
 });
 
 exports.handler = async (event) => {
