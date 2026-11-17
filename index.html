@@ -402,7 +402,7 @@ footer{position:relative;z-index:1;text-align:center;color:var(--muted);font-siz
 .banner-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;overscroll-behavior-inline:contain;scrollbar-width:none;-ms-overflow-style:none;touch-action:pan-x pan-y}
 .banner-track::-webkit-scrollbar{display:none}
 .banner-slide{flex:0 0 100%;width:100%;scroll-snap-align:start;scroll-snap-stop:always;line-height:0}
-.banner-slide img{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:contain}
+.banner-slide img{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:contain}.banner-slide.square-art{position:relative;overflow:hidden;background:#6b2014}.banner-slide.square-art::before{content:"";position:absolute;inset:-32px;background:linear-gradient(90deg,rgba(40,8,4,.42),rgba(40,8,4,.42)),url('https://d2ol7oe51mr4n9.cloudfront.net/user_3JSTNaz5rW47yrSZeqN5ABIOn19/840945d1-0980-4e9c-bf9b-42e8fe79eef4.jpg') center/cover;filter:blur(24px);opacity:.55}.banner-slide.square-art img{position:relative;z-index:1;width:auto;max-width:100%;height:auto;aspect-ratio:1;max-height:67.5vw;margin:0 auto;object-fit:contain}@media(min-width:1200px){.banner-slide.square-art img{max-height:675px}}
 .banner-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:2;display:grid;place-items:center;width:40px;height:40px;border:1px solid rgba(255,255,255,.35);border-radius:50%;background:rgba(7,9,15,.58);color:#fff;font-size:1.4rem;line-height:1;backdrop-filter:blur(7px)}
 .banner-prev{left:12px}.banner-next{right:12px}
 .banner-arrow:hover,.banner-arrow:focus-visible{border-color:var(--diamond);background:rgba(7,9,15,.85)}
@@ -429,9 +429,11 @@ footer{position:relative;z-index:1;text-align:center;color:var(--muted);font-siz
   <section class="banner-section" aria-label="BestDia ပရိုမိုးရှင်း ဘန်နာများ">
     <div class="banner-frame" id="homeBanner">
       <div class="banner-track" id="bannerTrack" role="region" aria-roledescription="carousel" aria-label="BestDia Promotion Banners" tabindex="0">
-        <div class="banner-slide" role="group" aria-roledescription="slide" aria-label="1 of 3"><img src="https://d2ol7oe51mr4n9.cloudfront.net/user_3JSTNaz5rW47yrSZeqN5ABIOn19/d54611a2-1551-492c-937a-a18ecb33c7a6.png" alt="BestDia Gaming Top-Up — MLBB Diamonds, PUBG UC, HOK Tokens" width="1536" height="864" fetchpriority="high" decoding="async"></div>
-        <div class="banner-slide" role="group" aria-roledescription="slide" aria-label="2 of 3"><img src="https://d2ol7oe51mr4n9.cloudfront.net/user_3JSTNaz5rW47yrSZeqN5ABIOn19/a151f0ff-64f7-4310-a707-6f1c49b14393.png" alt="PUBG Mobile Happy Cyber Week promotion" width="1536" height="864" loading="lazy" decoding="async"></div>
-        <div class="banner-slide" role="group" aria-roledescription="slide" aria-label="3 of 3"><img src="https://d2ol7oe51mr4n9.cloudfront.net/user_3JSTNaz5rW47yrSZeqN5ABIOn19/931f6cb9-deef-4ba6-861f-46b6dffe0819.jpg" alt="Honor of Kings Grand Hero Fiesta promotion" width="1536" height="864" loading="lazy" decoding="async"></div>
+        <div class="banner-slide" role="group" aria-roledescription="slide" aria-label="1 of 5"><img src="https://d2ol7oe51mr4n9.cloudfront.net/user_3JSTNaz5rW47yrSZeqN5ABIOn19/d54611a2-1551-492c-937a-a18ecb33c7a6.png" alt="BestDia Gaming Top-Up — MLBB Diamonds, PUBG UC, HOK Tokens" width="1536" height="864" fetchpriority="high" decoding="async"></div>
+        <div class="banner-slide" role="group" aria-roledescription="slide" aria-label="2 of 5"><img src="https://d2ol7oe51mr4n9.cloudfront.net/user_3JSTNaz5rW47yrSZeqN5ABIOn19/a151f0ff-64f7-4310-a707-6f1c49b14393.png" alt="PUBG Mobile Happy Cyber Week promotion" width="1536" height="864" loading="lazy" decoding="async"></div>
+        <div class="banner-slide" role="group" aria-roledescription="slide" aria-label="3 of 5"><img src="https://d2ol7oe51mr4n9.cloudfront.net/user_3JSTNaz5rW47yrSZeqN5ABIOn19/931f6cb9-deef-4ba6-861f-46b6dffe0819.jpg" alt="Honor of Kings Grand Hero Fiesta promotion" width="1536" height="864" loading="lazy" decoding="async"></div>
+        <div class="banner-slide square-art" role="group" aria-roledescription="slide" aria-label="4 of 5"><img src="https://d2ol7oe51mr4n9.cloudfront.net/user_3JSTNaz5rW47yrSZeqN5ABIOn19/840945d1-0980-4e9c-bf9b-42e8fe79eef4.jpg" alt="Magic Chess Go Go x Fairy Tail — Natsu, Lucy, Juvia collaboration skins" width="1024" height="1024" loading="lazy" decoding="async"></div>
+        <div class="banner-slide" role="group" aria-roledescription="slide" aria-label="5 of 5"><img src="https://d2ol7oe51mr4n9.cloudfront.net/user_3JSTNaz5rW47yrSZeqN5ABIOn19/241deb52-38b6-451a-8e38-d11364bcacbb.png" alt="Free Fire — Two Worlds, One Arena November event" width="1920" height="1080" loading="lazy" decoding="async"></div>
       </div>
       <button class="banner-arrow banner-prev" id="bannerPrev" type="button" aria-label="Previous banner">&#8249;</button>
       <button class="banner-arrow banner-next" id="bannerNext" type="button" aria-label="Next banner">&#8250;</button>
@@ -440,6 +442,8 @@ footer{position:relative;z-index:1;text-align:center;color:var(--muted);font-siz
       <button class="banner-dot active" type="button" data-banner-index="0" aria-label="Show banner 1" aria-current="true"></button>
       <button class="banner-dot" type="button" data-banner-index="1" aria-label="Show banner 2"></button>
       <button class="banner-dot" type="button" data-banner-index="2" aria-label="Show banner 3"></button>
+      <button class="banner-dot" type="button" data-banner-index="3" aria-label="Show banner 4"></button>
+      <button class="banner-dot" type="button" data-banner-index="4" aria-label="Show banner 5"></button>
     </div>
     <div id="heroGrid" hidden aria-hidden="true"></div>
   </section>
