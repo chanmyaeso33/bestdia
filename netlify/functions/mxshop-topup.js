@@ -25,6 +25,23 @@ const PUBG_PACKAGE_MAP = Object.freeze({
   "pubg-2460": "650046",
   "pubg-3850": "168013",
   "pubg-8100": "168014",
+  "pubg-prime-1-month": "16801806",
+  "pubg-first-purchase-pack": "16802127",
+  "pubg-weekly-deal-pack-1": "16802134",
+  "pubg-firearm-materials-pack": "16802129",
+  "pubg-weekly-mythic-emblem-value-pack": "16802130",
+  "pubg-weekly-deal-pack-2": "16802135",
+  "pubg-prime-3-month": "16801807",
+  "pubg-mythic-emblem-pack": "16802128",
+  "pubg-elite-pass-lv1-50": "16802131",
+  "pubg-prime-6-month": "16801808",
+  "pubg-prime-plus-1-month": "16801810",
+  "pubg-elite-pass-lv1-100": "16802132",
+  "pubg-prime-12-month": "16801809",
+  "pubg-prime-plus-3-month": "16801811",
+  "pubg-elite-pass-plus-lv1-100": "16802133",
+  "pubg-prime-plus-6-month": "16801812",
+  "pubg-prime-plus-12-month": "16802126",
 });
 
 exports.handler = async (event) => {

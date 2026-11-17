@@ -60,7 +60,8 @@ const THB_TO_KS = 133.5;
 const BALANCE_THB_TO_KS = 133.5;
 const HOK_ENABLED = true;
 const HOK_MXSHOP_STOCK_IDX = "1712";
-const PUBG_MXSHOP_STOCK_IDX = "168";
+const PUBG_UC_MXSHOP_STOCK_IDX = "168";
+const PUBG_PACK_MXSHOP_STOCK_IDX = "9500008";
 const FREE_FIRE_MXSHOP_STOCK_IDX = "15";
 const MXSHOP_LOW_BALANCE_THB = 300;
 const PUBG_MXSHOP_PACKAGES = Object.freeze({
@@ -81,6 +82,25 @@ const PUBG_MXSHOP_PACKAGES = Object.freeze({
   "2460": "650046",
   "3850": "168013",
   "8100": "168014",
+});
+const PUBG_PACK_MXSHOP_PACKAGES = Object.freeze({
+  "pubg-prime-1-month": { variationId: "16801806", title: "Prime (1 Month)", name: "Subscription", supplierPriceThb: 34 },
+  "pubg-first-purchase-pack": { variationId: "16802127", title: "First Purchase Pack", name: "One-time Pack", supplierPriceThb: 34 },
+  "pubg-weekly-deal-pack-1": { variationId: "16802134", title: "Weekly Deal Pack 1", name: "Weekly Pack", supplierPriceThb: 34 },
+  "pubg-firearm-materials-pack": { variationId: "16802129", title: "Upgradable Firearm Materials Pack", name: "One-time Pack", supplierPriceThb: 92 },
+  "pubg-weekly-mythic-emblem-value-pack": { variationId: "16802130", title: "Weekly Mythic Emblem Value Pack", name: "Weekly Pack", supplierPriceThb: 92 },
+  "pubg-weekly-deal-pack-2": { variationId: "16802135", title: "Weekly Deal Pack 2", name: "Weekly Pack", supplierPriceThb: 92 },
+  "pubg-prime-3-month": { variationId: "16801807", title: "Prime (3 Months)", name: "Subscription", supplierPriceThb: 100 },
+  "pubg-mythic-emblem-pack": { variationId: "16802128", title: "Mythic Emblem Pack", name: "One-time Pack", supplierPriceThb: 150 },
+  "pubg-elite-pass-lv1-50": { variationId: "16802131", title: "Elite Pass LV1-50", name: "One-time Pass", supplierPriceThb: 181 },
+  "pubg-prime-6-month": { variationId: "16801808", title: "Prime (6 Months)", name: "Subscription", supplierPriceThb: 187 },
+  "pubg-prime-plus-1-month": { variationId: "16801810", title: "Prime Plus (1 Month)", name: "Subscription", supplierPriceThb: 304 },
+  "pubg-elite-pass-lv1-100": { variationId: "16802132", title: "Elite Pass LV1-100", name: "One-time Pass", supplierPriceThb: 362 },
+  "pubg-prime-12-month": { variationId: "16801809", title: "Prime (12 Months)", name: "Subscription", supplierPriceThb: 366 },
+  "pubg-prime-plus-3-month": { variationId: "16801811", title: "Prime Plus (3 Months)", name: "Subscription", supplierPriceThb: 902 },
+  "pubg-elite-pass-plus-lv1-100": { variationId: "16802133", title: "Elite Pass Plus LV1-100", name: "One-time Pass", supplierPriceThb: 902 },
+  "pubg-prime-plus-6-month": { variationId: "16801812", title: "Prime Plus (6 Months)", name: "Subscription", supplierPriceThb: 1805 },
+  "pubg-prime-plus-12-month": { variationId: "16802126", title: "Prime Plus (12 Months)", name: "Subscription", supplierPriceThb: 3655 },
 });
 const HOK_MXSHOP_PACKAGES = Object.freeze({
   "hok-80": { variationId: "16802454", supplierName: "80 Tokens" },
@@ -181,10 +201,17 @@ const PRODUCTS = (() => {
     uc: Number(uc),
     supplierPriceThb: thb,
     mxshopStockReleaseId: PUBG_MXSHOP_PACKAGES[uc],
-    mxshopStockId: PUBG_MXSHOP_STOCK_IDX,
+    mxshopStockId: PUBG_UC_MXSHOP_STOCK_IDX,
     supplier: "mxshop",
     checkoutAvailable: true,
-  }, pubg));
+  }, pubg)).concat(Object.entries(PUBG_PACK_MXSHOP_PACKAGES).map(([id, { variationId, ...pkg }]) => withPrice({
+    id,
+    ...pkg,
+    mxshopStockReleaseId: variationId,
+    mxshopStockId: PUBG_PACK_MXSHOP_STOCK_IDX,
+    supplier: "mxshop",
+    checkoutAvailable: true,
+  }, pubg)));
   hok.packages = [
     ["80", 31], ["240", 91], ["400", 149], ["560", 208],
     ["2400 + 108", 871], ["4000 + 180", 1459],
@@ -3929,7 +3956,7 @@ function parseMxStockIds(payload, env) {
   const raw = payload.stockIds ?? payload.StockIDXs ?? payload.StockIDX ?? env.MXSHOP_STOCK_IDXS ?? env.MXSHOP_STOCK_IDX ?? "17";
   const values = Array.isArray(raw) ? raw : String(raw).split(",");
   const stockIds = values.map((value) => String(value || "").trim()).filter(Boolean);
-  return [...new Set([...(stockIds.length ? stockIds : ["17"]), String(env.MXSHOP_PUBG_STOCK_IDX || PUBG_MXSHOP_STOCK_IDX), String(env.MXSHOP_HOK_STOCK_IDX || HOK_MXSHOP_STOCK_IDX), String(env.MXSHOP_FREE_FIRE_STOCK_IDX || FREE_FIRE_MXSHOP_STOCK_IDX), "91", "89"])];
+  return [...new Set([...(stockIds.length ? stockIds : ["17"]), String(env.MXSHOP_PUBG_STOCK_IDX || PUBG_UC_MXSHOP_STOCK_IDX), String(env.MXSHOP_PUBG_PACK_STOCK_IDX || PUBG_PACK_MXSHOP_STOCK_IDX), String(env.MXSHOP_HOK_STOCK_IDX || HOK_MXSHOP_STOCK_IDX), String(env.MXSHOP_FREE_FIRE_STOCK_IDX || FREE_FIRE_MXSHOP_STOCK_IDX), "91", "89"])];
 }
 
 function buildMxUid(order, env) {
