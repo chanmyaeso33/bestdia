@@ -7,6 +7,25 @@ const MXSHOP_MX_KEY = process.env.MXSHOP_MX_KEY || "";
 const MXSHOP_PASSKEY = process.env.MXSHOP_PASSKEY || "";
 const MXSHOP_UID_FORMAT = process.env.MXSHOP_UID_FORMAT || "parens";
 const GAME_REQUIRES_ZONE = { mlbb: true, pubg: false };
+const PUBG_PACKAGE_MAP = Object.freeze({
+  "pubg-10": "16803185",
+  "pubg-60": "168009",
+  "pubg-120": "168008",
+  "pubg-180": "650039",
+  "pubg-325": "168010",
+  "pubg-385": "650040",
+  "pubg-660": "168011",
+  "pubg-720": "650059",
+  "pubg-985": "650041",
+  "pubg-1045": "650042",
+  "pubg-1320": "650043",
+  "pubg-1800": "168012",
+  "pubg-1920": "650044",
+  "pubg-2125": "650045",
+  "pubg-2460": "650046",
+  "pubg-3850": "168013",
+  "pubg-8100": "168014",
+});
 
 exports.handler = async (event) => {
   if (event.httpMethod === "OPTIONS") {
@@ -223,6 +242,9 @@ function getMappedStockReleaseId(pkgId, order = {}) {
       return known.includes(pkgId) && /^[1-9]\d*$/.test(process.env.MXSHOP_HOK_STOCK_IDX || "1712") && ["string", "number"].includes(typeof value) && /^[1-9]\d*$/.test(String(value)) ? String(value) : "";
     } catch { return ""; }
   }
+  if (String(pkgId).startsWith("pubg-") || order.gameKey === "pubg") {
+    return PUBG_PACKAGE_MAP[pkgId] || "";
+  }
   const raw = process.env.MXSHOP_PACKAGE_MAP || "{}";
   const defaultMap = {
     1: "169991",
@@ -249,25 +271,6 @@ function getMappedStockReleaseId(pkgId, order = {}) {
     22: "170025",
     23: "170026",
     24: "170027",
-    "pubg-60": "431",
-    "pubg-120": "452",
-    "pubg-180": "544",
-    "pubg-325": "432",
-    "pubg-385": "456",
-    "pubg-660": "433",
-    "pubg-720": "474",
-    "pubg-985": "458",
-    "pubg-1320": "460",
-    "pubg-1800": "434",
-    "pubg-2125": "660",
-    "pubg-2460": "468",
-    "pubg-3850": "435",
-    "pubg-8100": "436",
-    "pubg-16200": "466",
-    "pubg-24300": "470",
-    "pubg-prime-1-month": "190504",
-    "pubg-firearm-materials-pack": "190506",
-    "pubg-prime-plus-1-month": "190505",
   };
   try {
     const map = { ...defaultMap, ...JSON.parse(raw) };

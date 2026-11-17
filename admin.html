@@ -355,11 +355,11 @@ const PUBG_UC_ART=[
   assetUrl("assets/pubg/uc-tier-5.png")
 ];
 const PUBG_UC_ART_INDEX={
-  "60":0,"120":0,
+  "10":0,"60":0,"120":0,
   "180":1,"325":1,"385":1,
   "660":2,"720":2,"985":2,
   "1045":3,"1320":3,"1800":3,"1920":3,
-  "2125":4,"2460":4,"3850":4,"8100":4,"16200":4,"24300":4,"72900":4
+  "2125":4,"2460":4,"3850":4,"8100":4
 };
 const HOK_IMG=assetUrl("assets/hok/game-icon.png");
 const HOK_TOKEN_ART=[
@@ -418,18 +418,10 @@ const MLBB_PKGS=[
   {id:23,title:"5532 Diamonds",name:"4649 + 883 Bonus",diamonds:5532,supplierPriceThb:2322.15,img:PKG_IMG.diamonds,mxshopStockReleaseId:"170026"},
   {id:24,title:"9288 Diamonds",name:"7740 + 1548 Bonus",diamonds:9288,supplierPriceThb:3844.36,img:PKG_IMG.diamonds,mxshopStockReleaseId:"170027"}
 ].map(p=>p.diamonds?{...p,img:mlbbDiamondArt(p.id,p.diamonds),fallbackImg:PKG_IMG.diamonds}:p);
-const PUBG_MX_IDS={"60":"431","120":"452","180":"544","325":"432","385":"456","660":"433","720":"474","985":"458","1320":"460","1800":"434","2125":"660","2460":"468","3850":"435","8100":"436","16200":"466","24300":"470"};
+const PUBG_MX_IDS={"10":"16803185","60":"168009","120":"168008","180":"650039","325":"168010","385":"650040","660":"168011","720":"650059","985":"650041","1045":"650042","1320":"650043","1800":"168012","1920":"650044","2125":"650045","2460":"650046","3850":"168013","8100":"168014"};
 const PUBG_PKGS=[
-  ["60",32.10,true],["120",64.20,true],["180",96.30],["325",148.50,true],["385",180.60],["660",295.01,true],["720",325.01],["985",443.50],["1045",475.50],["1320",589.01],["1800",730.01,true],["1920",789.20],["2125",874.50],["2460",1020.01],["3850",1435.01],["8100",2835.01,true],["16200",5670.02],["24300",8505.03],["72900",25515.09]
-].map(([uc,thb,popular])=>({id:`pubg-${uc}`,title:`${uc} UC`,name:"",uc:Number(uc),supplierPriceThb:thb,img:PUBG_UC_ART[PUBG_UC_ART_INDEX[uc]],fallbackImg:pubgAsset(`uc-${uc}`),popular:Boolean(popular),mxshopStockReleaseId:PUBG_MX_IDS[uc]||""})).concat([
-  {id:"pubg-first-purchase-pack",title:"First Purchase Pack",name:"Special Pack",supplierPriceThb:32.10,img:pubgAsset("official-first-purchase-pack"),fallbackImg:pubgAsset("first-purchase-pack"),popular:true,wideArt:true},
-  {id:"pubg-prime-1-month",title:"Prime 1 Month",name:"Subscription",supplierPriceThb:33.01,img:pubgAsset("official-prime-1-month"),fallbackImg:pubgAsset("prime-1-month"),wideArt:true,mxshopStockReleaseId:"190504"},
-  {id:"pubg-firearm-materials-pack",title:"Upgradable Firearm Materials Pack",name:"Materials Pack",supplierPriceThb:89.10,img:pubgAsset("official-firearm-materials-pack"),fallbackImg:pubgAsset("firearm-materials-pack"),wideArt:true,mxshopStockReleaseId:"190506"},
-  {id:"pubg-prime-3-month",title:"Prime 3 Month",name:"Subscription",supplierPriceThb:95.01,img:pubgAsset("official-prime-3-month"),fallbackImg:pubgAsset("prime-3-month"),wideArt:true},
-  {id:"pubg-mythic-emblem-pack",title:"Mythic Emblem Pack",name:"Special Pack",supplierPriceThb:148.50,img:pubgAsset("official-mythic-emblem-pack"),fallbackImg:pubgAsset("mythic-emblem-pack"),wideArt:true},
-  {id:"pubg-prime-plus-1-month",title:"Prime Plus 1 Month",name:"Subscription",supplierPriceThb:299.01,img:pubgAsset("official-prime-plus-1-month"),fallbackImg:pubgAsset("prime-plus-1-month"),wideArt:true,mxshopStockReleaseId:"190505"},
-  {id:"pubg-prime-plus-3-month",title:"Prime Plus 3 Month",name:"Subscription",supplierPriceThb:890.01,img:pubgAsset("official-prime-plus-3-month"),fallbackImg:pubgAsset("prime-plus-3-month"),wideArt:true}
-]);
+  ["10",5.50,true],["60",32.10,true],["120",64.20,true],["180",95.30],["325",155.01,true],["385",187.10],["660",307.01,true],["720",339.10],["985",462.10],["1045",494.10],["1320",614.01],["1800",749.00,true],["1920",813.01],["2125",904.01],["2460",1056.01],["3850",1475.10],["8100",2875.10,true]
+].map(([uc,thb,popular])=>({id:`pubg-${uc}`,title:`${uc} UC`,name:"",uc:Number(uc),supplierPriceThb:thb,img:PUBG_UC_ART[PUBG_UC_ART_INDEX[uc]],fallbackImg:pubgAsset(uc==="10"?"uc-60":`uc-${uc}`),popular:Boolean(popular),mxshopStockReleaseId:PUBG_MX_IDS[uc],mxshopStockId:"168",supplier:"mxshop"}));
 const HOK_PKGS=[
   ["80",31,HOK_TOKEN_ART[1]],["240",91,HOK_TOKEN_ART[1]],["400",149,HOK_TOKEN_ART[2]],
   ["560",208,HOK_TOKEN_ART[2]],["2400 + 108",871,HOK_TOKEN_ART[3]],["4000 + 180",1459,HOK_TOKEN_ART[4]]
@@ -453,7 +445,7 @@ const FREE_FIRE_PKGS=[
 ];
 const PRODUCTS={
   mlbb:{key:"mlbb",name:"Mobile Legends",shortName:"MLBB",unit:"Diamonds",tagline:"Global, Malaysia & Singapore servers · စိန်များ၊ လက်မှတ်များနှင့် ပက်ကေ့ချ်များ",userLabel:"MLBB အသုံးပြုသူ ID",userPlaceholder:"ဥပမာ - 123456789",zoneLabel:"ဇုန် ID",zonePlaceholder:"ဥပမာ - 12345",requiresZone:true,lookup:true,heroIds:[11,7,10,5],bestIds:[11,12,13,7,5,10],img:PKG_IMG.mlbbLogo,packages:MLBB_PKGS},
-  pubg:{key:"pubg",name:"PUBG Mobile",shortName:"PUBG",unit:"UC",tagline:"UC နှင့် စာရင်းသွင်းပက်ကေ့ချ်များ",userLabel:"PUBG ကစားသူ ID",userPlaceholder:"ဥပမာ - 5123456789",requiresZone:false,lookup:false,heroIds:["pubg-60","pubg-660","pubg-1800","pubg-prime-plus-1-month"],bestIds:["pubg-60","pubg-325","pubg-660","pubg-1800","pubg-8100","pubg-prime-plus-1-month"],img:PKG_IMG.pubgLogo,packages:PUBG_PKGS},
+  pubg:{key:"pubg",name:"PUBG Mobile",shortName:"PUBG",unit:"UC",tagline:"UC ပက်ကေ့ချ်များ",userLabel:"PUBG ကစားသူ ID",userPlaceholder:"ဥပမာ - 5123456789",requiresZone:false,lookup:false,heroIds:["pubg-10","pubg-60","pubg-660","pubg-1800"],bestIds:["pubg-10","pubg-60","pubg-325","pubg-660","pubg-1800","pubg-8100"],img:PKG_IMG.pubgLogo,packages:PUBG_PKGS},
   "free-fire":{key:"free-fire",name:"Free Fire",shortName:"Free Fire",unit:"Diamonds",tagline:"Diamonds, memberships and passes",userLabel:"Free Fire Player ID",userPlaceholder:"ဥပမာ - 123456789",requiresZone:false,lookup:false,heroIds:["free-fire-68","free-fire-310","free-fire-weekly","free-fire-booyah-pass"],bestIds:["free-fire-68","free-fire-310","free-fire-690","free-fire-1801","free-fire-weekly","free-fire-booyah-pass"],img:FREE_FIRE_IMG,packages:FREE_FIRE_PKGS},
   hok:{key:"hok",name:"Honor of Kings",shortName:"HOK",unit:"Tokens",tagline:"Tokens များကို Player ID ဖြင့် တိုက်ရိုက်ဖြည့်ပါ",userLabel:"Honor of Kings Player ID",userPlaceholder:"ဥပမာ - 123456789",requiresZone:false,lookup:false,heroIds:["hok-80","hok-2400-108","hok-weekly-pass","hok-weekly-pass-plus"],bestIds:["hok-80","hok-240","hok-560","hok-2400-108","hok-weekly-pass","hok-weekly-pass-plus"],img:HOK_IMG,packages:HOK_PKGS}
 };

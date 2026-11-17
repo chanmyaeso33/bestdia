@@ -60,8 +60,28 @@ const THB_TO_KS = 133.5;
 const BALANCE_THB_TO_KS = 133.5;
 const HOK_ENABLED = true;
 const HOK_MXSHOP_STOCK_IDX = "1712";
+const PUBG_MXSHOP_STOCK_IDX = "168";
 const FREE_FIRE_MXSHOP_STOCK_IDX = "15";
 const MXSHOP_LOW_BALANCE_THB = 300;
+const PUBG_MXSHOP_PACKAGES = Object.freeze({
+  "10": "16803185",
+  "60": "168009",
+  "120": "168008",
+  "180": "650039",
+  "325": "168010",
+  "385": "650040",
+  "660": "168011",
+  "720": "650059",
+  "985": "650041",
+  "1045": "650042",
+  "1320": "650043",
+  "1800": "168012",
+  "1920": "650044",
+  "2125": "650045",
+  "2460": "650046",
+  "3850": "168013",
+  "8100": "168014",
+});
 const HOK_MXSHOP_PACKAGES = Object.freeze({
   "hok-80": { variationId: "16802454", supplierName: "80 Tokens" },
   "hok-240": { variationId: "16802455", supplierName: "240 Tokens" },
@@ -152,18 +172,19 @@ const PRODUCTS = (() => {
     { id: 23, title: "5532 Diamonds", name: "4649 + 883 Bonus", diamonds: 5532, supplierPriceThb: 2322.15, mxshopStockReleaseId: "170026" },
     { id: 24, title: "9288 Diamonds", name: "7740 + 1548 Bonus", diamonds: 9288, supplierPriceThb: 3844.36, mxshopStockReleaseId: "170027" },
   ].map((pkg) => withPrice(pkg, mlbb));
-  const pubgMxIds = { "60": "431", "120": "452", "180": "544", "325": "432", "385": "456", "660": "433", "720": "474", "985": "458", "1320": "460", "1800": "434", "2125": "660", "2460": "468", "3850": "435", "8100": "436", "16200": "466", "24300": "470" };
   pubg.packages = [
-    ["60", 32.10], ["120", 64.20], ["180", 96.30], ["325", 148.50], ["385", 180.60], ["660", 295.01], ["720", 325.01], ["985", 443.50], ["1045", 475.50], ["1320", 589.01], ["1800", 730.01], ["1920", 789.20], ["2125", 874.50], ["2460", 1020.01], ["3850", 1435.01], ["8100", 2835.01], ["16200", 5670.02], ["24300", 8505.03], ["72900", 25515.09],
-  ].map(([uc, thb]) => withPrice({ id: `pubg-${uc}`, title: `${uc} UC`, name: "", uc: Number(uc), supplierPriceThb: thb, mxshopStockReleaseId: pubgMxIds[uc] || "" }, pubg)).concat([
-    { id: "pubg-first-purchase-pack", title: "First Purchase Pack", name: "Special Pack", supplierPriceThb: 32.10 },
-    { id: "pubg-prime-1-month", title: "Prime 1 Month", name: "Subscription", supplierPriceThb: 33.01, mxshopStockReleaseId: "190504" },
-    { id: "pubg-firearm-materials-pack", title: "Upgradable Firearm Materials Pack", name: "Materials Pack", supplierPriceThb: 89.10, mxshopStockReleaseId: "190506" },
-    { id: "pubg-prime-3-month", title: "Prime 3 Month", name: "Subscription", supplierPriceThb: 95.01 },
-    { id: "pubg-mythic-emblem-pack", title: "Mythic Emblem Pack", name: "Special Pack", supplierPriceThb: 148.50 },
-    { id: "pubg-prime-plus-1-month", title: "Prime Plus 1 Month", name: "Subscription", supplierPriceThb: 299.01, mxshopStockReleaseId: "190505" },
-    { id: "pubg-prime-plus-3-month", title: "Prime Plus 3 Month", name: "Subscription", supplierPriceThb: 890.01 },
-  ].map((pkg) => withPrice(pkg, pubg)));
+    ["10", 5.50], ["60", 32.10], ["120", 64.20], ["180", 95.30], ["325", 155.01], ["385", 187.10], ["660", 307.01], ["720", 339.10], ["985", 462.10], ["1045", 494.10], ["1320", 614.01], ["1800", 749.00], ["1920", 813.01], ["2125", 904.01], ["2460", 1056.01], ["3850", 1475.10], ["8100", 2875.10],
+  ].map(([uc, thb]) => withPrice({
+    id: `pubg-${uc}`,
+    title: `${uc} UC`,
+    name: "",
+    uc: Number(uc),
+    supplierPriceThb: thb,
+    mxshopStockReleaseId: PUBG_MXSHOP_PACKAGES[uc],
+    mxshopStockId: PUBG_MXSHOP_STOCK_IDX,
+    supplier: "mxshop",
+    checkoutAvailable: true,
+  }, pubg));
   hok.packages = [
     ["80", 31], ["240", 91], ["400", 149], ["560", 208],
     ["2400 + 108", 871], ["4000 + 180", 1459],
@@ -3908,7 +3929,7 @@ function parseMxStockIds(payload, env) {
   const raw = payload.stockIds ?? payload.StockIDXs ?? payload.StockIDX ?? env.MXSHOP_STOCK_IDXS ?? env.MXSHOP_STOCK_IDX ?? "17";
   const values = Array.isArray(raw) ? raw : String(raw).split(",");
   const stockIds = values.map((value) => String(value || "").trim()).filter(Boolean);
-  return [...new Set([...(stockIds.length ? stockIds : ["17"]), String(env.MXSHOP_HOK_STOCK_IDX || HOK_MXSHOP_STOCK_IDX), String(env.MXSHOP_FREE_FIRE_STOCK_IDX || FREE_FIRE_MXSHOP_STOCK_IDX), "91", "89"])];
+  return [...new Set([...(stockIds.length ? stockIds : ["17"]), String(env.MXSHOP_PUBG_STOCK_IDX || PUBG_MXSHOP_STOCK_IDX), String(env.MXSHOP_HOK_STOCK_IDX || HOK_MXSHOP_STOCK_IDX), String(env.MXSHOP_FREE_FIRE_STOCK_IDX || FREE_FIRE_MXSHOP_STOCK_IDX), "91", "89"])];
 }
 
 function buildMxUid(order, env) {
@@ -3935,6 +3956,9 @@ function getMappedStockReleaseId(pkgId, env, order = {}) {
     const mapping = hokMapping(String(pkgId), env);
     return mapping.valid ? mapping.variationId : "";
   }
+  if (String(pkgId).startsWith("pubg-") || order.gameKey === "pubg") {
+    return PRODUCTS.pubg.packages.find((pkg) => pkg.id === String(pkgId))?.mxshopStockReleaseId || "";
+  }
   const defaultMap = {
     1: "169991",
     2: "169992",
@@ -3960,25 +3984,6 @@ function getMappedStockReleaseId(pkgId, env, order = {}) {
     22: "170025",
     23: "170026",
     24: "170027",
-    "pubg-60": "431",
-    "pubg-120": "452",
-    "pubg-180": "544",
-    "pubg-325": "432",
-    "pubg-385": "456",
-    "pubg-660": "433",
-    "pubg-720": "474",
-    "pubg-985": "458",
-    "pubg-1320": "460",
-    "pubg-1800": "434",
-    "pubg-2125": "660",
-    "pubg-2460": "468",
-    "pubg-3850": "435",
-    "pubg-8100": "436",
-    "pubg-16200": "466",
-    "pubg-24300": "470",
-    "pubg-prime-1-month": "190504",
-    "pubg-firearm-materials-pack": "190506",
-    "pubg-prime-plus-1-month": "190505",
   };
   try {
     const mapped = String({ ...defaultMap, ...JSON.parse(env.MXSHOP_PACKAGE_MAP || "{}") }[pkgId] || "").trim();
