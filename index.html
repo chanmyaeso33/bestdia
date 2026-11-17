@@ -387,6 +387,12 @@ h1 span:first-child{margin-top:0;font-size:1.08em;font-weight:800}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);opacity:0;z-index:120;max-width:calc(100% - 24px);border:1px solid rgba(91,227,255,.18);border-radius:10px;background:#11182A;color:var(--text);padding:10px 14px;box-shadow:0 18px 45px rgba(0,0,0,.35);transition:.2s}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}.toast.warn{border-color:rgba(243,156,18,.35);color:var(--warn)}
 footer{position:relative;z-index:1;text-align:center;color:var(--muted);font-size:.74rem;line-height:1.8;padding:28px 14px;border-top:1px solid rgba(91,227,255,.09)}
 @media(max-width:760px){nav{height:auto;min-height:58px;align-items:flex-start;padding-top:10px;padding-bottom:10px;flex-direction:column}.nav-tabs{width:100%}.hero{grid-template-columns:1fr;padding-top:44px;text-align:center}.hero-sub{margin-left:auto;margin-right:auto}.hero-actions{justify-content:center}.stats{grid-template-columns:repeat(2,1fr);margin:auto}.order-grid,.account-grid{grid-template-columns:1fr}.search-row,.admin-login{flex-direction:column}.topup-head{align-items:flex-start;flex-direction:column}.payment-methods{grid-template-columns:1fr}}
+/* Keep the storefront introduction aligned and easy to read on every screen. */
+.hero-copy{min-width:0}
+.hero-copy h1{max-width:15em;margin:0 0 16px;font-size:clamp(1.8rem,3.5vw,2.9rem);line-height:1.5;text-wrap:balance}
+.hero-copy h1 span:first-child{font-size:1em;font-weight:700}
+.hero-copy .hero-sub{max-width:34em;margin:0 0 24px;color:#bbc4d5;font-size:clamp(.95rem,1.25vw,1.05rem);line-height:1.9;text-wrap:pretty}
+@media(max-width:760px){.hero-copy h1{margin-left:auto;margin-right:auto;font-size:clamp(1.65rem,6.5vw,2.4rem)}.hero-copy .hero-sub{max-width:31em;margin-left:auto;margin-right:auto}}
 [hidden]{display:none!important}
 .game-card[data-game="magic-chess-go-go"]{--game-accent:#D9EC7D}.game-card[data-game="genshin-impact"]{--game-accent:#B9CFFF}
 </style>
@@ -403,7 +409,7 @@ footer{position:relative;z-index:1;text-align:center;color:var(--muted);font-siz
 
 <main id="page-shop" class="page active">
   <section class="hero">
-    <div>
+    <div class="hero-copy">
       <div class="eyebrow">မြန်မာဂိမ်းငွေဖြည့်ဆိုင်</div>
       <h1><span>မြန်ဆန်ပြီး လုံခြုံစိတ်ချစွာ</span>ဂိမ်းငွေဖြည့်ပါ</h1>
       <p class="hero-sub">အကြိုက်ဆုံး ဂိမ်းitems တွေကို အတန်ဆုံးဈေးနဲ့ အခုပဲ၀ယ်ယူလိုက်တော့နော်</p>
