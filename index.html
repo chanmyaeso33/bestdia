@@ -21,6 +21,36 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700;800&family=Noto+Sans+Myanmar:wght@400;600;700&display=swap" rel="stylesheet"/>
 <script src="firebase-config.js"></script>
+
+<script>
+/* Apply the saved color scheme before styles render to avoid a theme flash. */
+(function(){
+  var key="bestdia-theme",theme="dark";
+  try{var saved=localStorage.getItem(key);if(saved==="dark"||saved==="light")theme=saved;}catch(error){}
+  document.documentElement.setAttribute("data-theme",theme);
+  document.addEventListener("DOMContentLoaded",function(){
+    var toggle=document.getElementById("themeToggle");
+    if(!toggle)return;
+    function updateThemeControl(){
+      var active=document.documentElement.getAttribute("data-theme")==="light"?"light":"dark";
+      var next=active==="dark"?"Light":"Dark";
+      toggle.querySelector(".theme-icon").textContent=active==="dark"?"☀":"☾";
+      toggle.querySelector(".theme-label").textContent=next;
+      toggle.setAttribute("aria-label","Switch to "+next.toLowerCase()+" mode");
+      toggle.setAttribute("title","Switch to "+next.toLowerCase()+" mode");
+      var meta=document.querySelector('meta[name="theme-color"]');
+      if(meta)meta.setAttribute("content",active==="light"?"#F5F7FB":"#07090F");
+    }
+    toggle.addEventListener("click",function(){
+      var next=document.documentElement.getAttribute("data-theme")==="light"?"dark":"light";
+      document.documentElement.setAttribute("data-theme",next);
+      try{localStorage.setItem(key,next);}catch(error){}
+      updateThemeControl();
+    });
+    updateThemeControl();
+  });
+})();
+</script>
 <style>
 :root{--gold:#F5C542;--diamond:#5BE3FF;--diamond2:#00B8D9;--dark:#07090F;--dark2:#0E1220;--panel:#1A2035;--panel2:#1F2840;--text:#E8EAF0;--muted:#8B96AE;--success:#2ECC71;--warn:#F39C12;--danger:#E74C3C;--kbz:#009BDE;--wave:#E91E8C}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -413,6 +443,143 @@ footer{position:relative;z-index:1;text-align:center;color:var(--muted);font-siz
 @media(max-width:760px){.banner-section{padding:14px 8px 12px}.banner-frame{border-radius:10px}.banner-arrow{width:30px;height:30px;font-size:1.1rem}.banner-prev{left:5px}.banner-next{right:5px}.banner-dots{padding:10px 0 0}}
 @media(prefers-reduced-motion:reduce){.banner-track{scroll-behavior:auto}.banner-dot{transition:none}}
 
+
+/* BestDia color modes: retain the original dark luxury skin, add a clean light one. */
+:root{color-scheme:dark}
+:root[data-theme="light"]{
+  color-scheme:light;
+  --gold:#986200;--diamond:#006F98;--diamond2:#0088B3;
+  --panel:#FFFFFF;--panel2:#F6F8FC;
+  --text:#1B293E;--muted:#596980;
+  --success:#17764D;--warn:#946000;--danger:#B93639;
+}
+.theme-toggle{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  flex:0 0 auto;min-height:35px;padding:7px 12px;
+  border:1px solid rgba(91,227,255,.3);border-radius:999px;
+  background:rgba(91,227,255,.08);color:var(--text);
+  font:800 .74rem/1 "Chakra Petch",sans-serif;white-space:nowrap;
+  transition:background .2s,border-color .2s,color .2s;
+}
+.theme-toggle:hover{background:rgba(91,227,255,.17);border-color:var(--diamond)}
+.theme-toggle:focus-visible{outline:2px solid var(--diamond);outline-offset:3px}
+.theme-icon{display:inline-flex;align-items:center;justify-content:center;min-width:18px;font-size:1.08rem}
+.nav-tabs{align-items:center}
+:root[data-theme="light"] body{background:#F5F7FB;color:var(--text)}
+:root[data-theme="light"] body::before{
+  background:radial-gradient(circle at 18% 0%,rgba(63,159,215,.09),transparent 38%),
+    radial-gradient(circle at 85% 18%,rgba(213,163,66,.085),transparent 29%),
+    linear-gradient(180deg,#FAFBFE,#F1F5FA 55%,#FAFBFE)
+}
+:root[data-theme="light"] body::after{
+  background-image:linear-gradient(rgba(40,88,130,.032) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(40,88,130,.032) 1px,transparent 1px)
+}
+:root[data-theme="light"] nav{
+  background:rgba(255,255,255,.93);border-bottom-color:rgba(26,72,107,.13);
+  box-shadow:0 2px 14px rgba(34,64,101,.045)
+}
+:root[data-theme="light"] .nav-tab.active{border-color:rgba(0,111,152,.25);background:rgba(0,111,152,.08)}
+:root[data-theme="light"] .theme-toggle{background:#EFF6FC;border-color:#CDDEE9;color:#234C69}
+:root[data-theme="light"] .theme-toggle:hover{background:#E0EFF8;border-color:var(--diamond)}
+:root[data-theme="light"] .hero-copy .hero-sub{color:var(--muted)}
+:root[data-theme="light"] .eyebrow,
+:root[data-theme="light"] .btn{border-color:rgba(0,111,152,.2);background:rgba(0,111,152,.055)}
+:root[data-theme="light"] .btn.primary,
+:root[data-theme="light"] .submit,
+:root[data-theme="light"] .currency-btn.active,
+:root[data-theme="light"] .account-tab.active{color:#FFFFFF}
+:root[data-theme="light"] .stat{background:rgba(255,255,255,.84);border-color:#DAE3EE}
+:root[data-theme="light"] .hero-card{
+  background:linear-gradient(180deg,#FFFFFF,#F5F8FC);
+  border-color:#DDE5EF;box-shadow:0 18px 45px rgba(38,64,103,.09)
+}
+:root[data-theme="light"] .hero-product{background:#F7FAFE;border-color:#DAE3EE}
+:root[data-theme="light"] .ticker-wrap{
+  background:rgba(214,234,248,.37);border-color:#DCE7F1
+}
+:root[data-theme="light"] .section-title::after{
+  background:linear-gradient(90deg,rgba(0,111,152,.25),transparent)
+}
+:root[data-theme="light"] .game-card,
+:root[data-theme="light"] .order-box,
+:root[data-theme="light"] .status-card,
+:root[data-theme="light"] .admin-card,
+:root[data-theme="light"] .feature{
+  background:linear-gradient(160deg,#FFFFFF,#F8FAFD);
+  border-color:#D9E3EF;box-shadow:0 9px 24px rgba(29,67,103,.055)
+}
+:root[data-theme="light"] .game-card{border-color:#D7E1EC}
+:root[data-theme="light"] .game-card b{color:#1F324D}
+:root[data-theme="light"] .game-card.active{border-color:var(--game-accent)}
+:root[data-theme="light"] .pkg-card,
+:root[data-theme="light"] .best-card{
+  background:linear-gradient(155deg,#FFFFFF 0%,#FAFBFE 54%,#EFF4FA 100%);
+  border-color:#E1D7B9;
+  box-shadow:0 10px 28px rgba(36,65,97,.08),inset 0 1px rgba(255,255,255,.8)
+}
+:root[data-theme="light"] .pkg-card::before,
+:root[data-theme="light"] .best-card::before{
+  background:radial-gradient(ellipse at 50% 10%,rgba(219,174,78,.13),transparent 62%)
+}
+:root[data-theme="light"] .pkg-title,
+:root[data-theme="light"] .best-title{color:#1B293E}
+:root[data-theme="light"] .pkg-name{color:#596980}
+:root[data-theme="light"] .pkg-price,
+:root[data-theme="light"] .best-price{
+  background:linear-gradient(135deg,#FFF9E8,#F5F0DF);
+  border-color:#E9D6A5;box-shadow:inset 0 1px 0 #FFFFFF,0 5px 15px rgba(87,74,45,.06)
+}
+:root[data-theme="light"] .pkg-card.selected .pkg-price,
+:root[data-theme="light"] .best-card.selected .best-price{
+  background:linear-gradient(135deg,#FFF3CE,#F8E8BC)
+}
+:root[data-theme="light"] .price-amount{color:#805500;text-shadow:none}
+:root[data-theme="light"] .pkg-card img.pack-art,
+:root[data-theme="light"] .best-card img.pack-art{background:rgba(22,46,76,.045)}
+:root[data-theme="light"] .server-btn,
+:root[data-theme="light"] .currency-switch,
+:root[data-theme="light"] .form-input,
+:root[data-theme="light"] .slip-input,
+:root[data-theme="light"] .pay-btn,
+:root[data-theme="light"] .pay-info,
+:root[data-theme="light"] .summary-box,
+:root[data-theme="light"] .trust-item,
+:root[data-theme="light"] .detail-item,
+:root[data-theme="light"] .account-tab,
+:root[data-theme="light"] .balance-card,
+:root[data-theme="light"] .history-row,
+:root[data-theme="light"] .redeem-card,
+:root[data-theme="light"] .kpi,
+:root[data-theme="light"] .filter,
+:root[data-theme="light"] table{
+  background:#F8FAFD;border-color:#DCE5EF;color:var(--text)
+}
+:root[data-theme="light"] .server-btn.active,
+:root[data-theme="light"] .pay-btn.active{background:#E7F4FA;border-color:var(--diamond)}
+:root[data-theme="light"] .account-tab.active{border-color:transparent}
+:root[data-theme="light"] .filter.active{background:#E7F4FA;border-color:var(--diamond)}
+:root[data-theme="light"] .form-input::placeholder,
+:root[data-theme="light"] .slip-input::placeholder{color:#8390A2}
+:root[data-theme="light"] .modal-card,
+:root[data-theme="light"] .toast{
+  background:#FFFFFF;border-color:#DCE5EF;box-shadow:0 20px 50px rgba(16,42,78,.18)
+}
+:root[data-theme="light"] .modal{background:rgba(15,32,54,.52)}
+:root[data-theme="light"] .banner-frame{border-color:#D4DFEB;box-shadow:0 12px 32px rgba(31,58,94,.12)}
+:root[data-theme="light"] .banner-dot{background:#B5C4D5}
+:root[data-theme="light"] .banner-dot.active{background:var(--diamond)}
+:root[data-theme="light"] footer{border-top-color:#DCE5EF}
+@media(max-width:760px){
+  .nav-tabs{width:100%;gap:5px}
+  .theme-toggle{margin-left:auto;min-height:34px;padding:7px 10px}
+}
+@media(max-width:380px){
+  .nav-tab{padding:7px 7px}
+  .theme-toggle{gap:4px;padding:7px 8px;font-size:.67rem}
+}
+@media(prefers-reduced-motion:reduce){.theme-toggle{transition:none}}
+
 </style>
 </head>
 <body>
@@ -422,6 +589,7 @@ footer{position:relative;z-index:1;text-align:center;color:var(--muted);font-siz
     <button class="nav-tab active" type="button" data-page="shop">ဝယ်ယူရန်</button>
     <button class="nav-tab" type="button" data-page="status">အော်ဒါစစ်ရန်</button>
     <button class="nav-tab" id="accountNavBtn" type="button" data-page="account">အကောင့်</button>
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light mode" title="Switch to light mode"><span class="theme-icon" aria-hidden="true">☀</span><span class="theme-label">Light</span></button>
   </div>
 </nav>
 
