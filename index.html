@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="my">
+<html lang="my" data-theme="light">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -8,7 +8,7 @@
 <meta property="og:description" content="မြန်မာဂိမ်းကစားသူများအတွက် Mobile Legends နှင့် PUBG Mobile ငွေဖြည့်ဝန်ဆောင်မှု။"/>
 <meta property="og:type" content="website"/>
 <meta property="og:image" content="bestdia-profile.png"/>
-<meta name="theme-color" content="#07090F"/>
+<meta name="theme-color" content="#F5F7FB"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-title" content="BestDia"/>
@@ -25,7 +25,7 @@
 <script>
 /* Apply the saved color scheme before styles render to avoid a theme flash. */
 (function(){
-  var key="bestdia-theme",theme="dark";
+  var key="bestdia-theme",theme="light";
   try{var saved=localStorage.getItem(key);if(saved==="dark"||saved==="light")theme=saved;}catch(error){}
   document.documentElement.setAttribute("data-theme",theme);
   document.addEventListener("DOMContentLoaded",function(){
@@ -589,7 +589,7 @@ footer{position:relative;z-index:1;text-align:center;color:var(--muted);font-siz
     <button class="nav-tab active" type="button" data-page="shop">ဝယ်ယူရန်</button>
     <button class="nav-tab" type="button" data-page="status">အော်ဒါစစ်ရန်</button>
     <button class="nav-tab" id="accountNavBtn" type="button" data-page="account">အကောင့်</button>
-    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light mode" title="Switch to light mode"><span class="theme-icon" aria-hidden="true">☀</span><span class="theme-label">Light</span></button>
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to dark mode" title="Switch to dark mode"><span class="theme-icon" aria-hidden="true">☾</span><span class="theme-label">Dark</span></button>
   </div>
 </nav>
 
