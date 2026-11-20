@@ -169,6 +169,30 @@ const withPrice = (pkg, product, env = {}) => {
   pricingTier: { minimumProfitKs: pricing.tier.minimumProfitKs, targetMargin: pricing.tier.targetMargin },
 };
 };
+// Recharge totals exclude bonus diamonds. Each combo is fulfilled as its existing packs.
+function mlbbComboPackages(packages) {
+  return [
+    ["250-a", 250, "A", 206, [[7, 1], [12, 1], [1, 1]]],
+    ["250-b", 250, "B", 206, [[7, 1], [11, 2], [1, 1]]],
+    ["500-a", 500, "A", 440, [[7, 1], [15, 1], [1, 1]]],
+    ["500-b", 500, "B", 440, [[7, 1], [13, 1], [12, 1], [1, 1]]],
+    ["1000-a", 1000, "A", 937, [[7, 1], [19, 1]]],
+    ["1000-b", 1000, "B", 936, [[7, 1], [13, 4]]],
+  ].map(([key, rechargeTarget, variant, baseDiamonds, parts]) => {
+    const comboItems = parts.map(([id, quantity]) => ({ pkg: packages.find(pkg => pkg.id === id), quantity }));
+    const sum = field => comboItems.reduce((total, item) => total + Number(item.pkg[field] || 0) * item.quantity, 0);
+    return {
+      id: `mlbb-combo-${key}`, title: `${rechargeTarget} Recharge Combo ${variant}`,
+      name: `WP 80 + Base ${baseDiamonds} = ${80 + baseDiamonds}`,
+      gameKey: "mlbb", gameName: "Mobile Legends", unit: "Diamonds",
+      rechargeTarget, wpRecharge: 80, baseDiamonds, rechargeTotal: 80 + baseDiamonds,
+      comboItems, componentLabel: comboItems.map(({ pkg, quantity }) => `${pkg.title}${quantity > 1 ? ` ×${quantity}` : ""}`).join(" + "),
+      supplierPriceThb: Math.round(sum("supplierPriceThb") * 100) / 100,
+      price: sum("price"), priceThb: sum("priceThb"),
+    };
+  });
+}
+
 const PRODUCTS = (() => {
   const mlbb = { key: "mlbb", name: "Mobile Legends", unit: "Diamonds", requiresZone: true };
   const pubg = { key: "pubg", name: "PUBG Mobile", unit: "UC", requiresZone: false };
@@ -200,6 +224,7 @@ const PRODUCTS = (() => {
     { id: 23, title: "5532 Diamonds", name: "4649 + 883 Bonus", diamonds: 5532, supplierPriceThb: 2322.15, mxshopStockReleaseId: "170026" },
     { id: 24, title: "9288 Diamonds", name: "7740 + 1548 Bonus", diamonds: 9288, supplierPriceThb: 3844.36, mxshopStockReleaseId: "170027" },
   ].map((pkg) => withPrice(pkg, mlbb));
+  mlbb.packages.push(...mlbbComboPackages(mlbb.packages));
   pubg.packages = [
     ["10", 5.50], ["60", 32.10], ["120", 64.20], ["180", 95.30], ["325", 155.01], ["385", 187.10], ["660", 307.01], ["720", 339.10], ["985", 462.10], ["1045", 494.10], ["1320", 614.01], ["1800", 749.00], ["1920", 813.01], ["2125", 904.01], ["2460", 1056.01], ["3850", 1475.10], ["8100", 2875.10],
   ].map(([uc, thb]) => withPrice({
@@ -306,7 +331,7 @@ async function productsWithSupplierPrices(env) {
   const supplierPrices = await getSupplierPrices(env);
   const products = Object.fromEntries(Object.entries(PRODUCTS).map(([key, product]) => [key, {
     ...product,
-    packages: product.packages.map((pkg) => {
+    packages: product.packages.filter(pkg => !pkg.comboItems).map((pkg) => {
       const supplierPriceThb = supplierPrices.prices[String(pkg.mxshopStockReleaseId)] ?? pkg.supplierPriceThb;
       const mapping = key === "hok" ? hokMapping(pkg.id, env) : null;
       return withPrice({ ...pkg, supplierPriceThb, ...(mapping ? {
@@ -315,6 +340,7 @@ async function productsWithSupplierPrices(env) {
       } : {}) }, product, env);
     }),
   }]));
+  products.mlbb.packages.push(...mlbbComboPackages(products.mlbb.packages));
   return { products, supplierUpdated: supplierPrices.updated };
 }
 
@@ -515,7 +541,7 @@ async function createOrder(request, env) {
   const trustedPay = PAYMENTS[String(order.payKey || "").trim()];
   if (!trustedPay || String(order.payment || "").trim() !== trustedPay.name) return jsonResponse(400, { ok: false, error: "ငွေပေးချေမှုနည်းလမ်း မမှန်ကန်ပါ။" });
   if (trustedProduct.key === "hok" && trustedPay.key === "balance") return jsonResponse(400, { ok: false, error: "ကိုယ်တိုင်ဖြည့်ပေးရသော Honor of Kings အော်ဒါများအတွက် BestDia Balance ကို အသုံးမပြုနိုင်ပါ။" });
-  if (trustedPay.key === "balance" && (trustedItems.length > 1 || trustedItems[0].quantity !== 1)) return jsonResponse(400, { ok: false, error: "BestDia Balance ဖြင့် အော်ဒါတစ်ခုလျှင် ပက်ကေ့ချ်တစ်ခုသာ ဝယ်နိုင်ပါသည်။" });
+  if (trustedPay.key === "balance" && (trustedItems.length > 1 || trustedItems[0].quantity !== 1 || trustedPkg.comboItems)) return jsonResponse(400, { ok: false, error: "BestDia Balance ဖြင့် အော်ဒါတစ်ခုလျှင် ပက်ကေ့ချ်တစ်ခုသာ ဝယ်နိုင်ပါသည်။" });
 
   const now = new Date().toISOString();
   const initialStatus = trustedPay.key === "balance" ? "processing" : "pending";
@@ -4278,9 +4304,14 @@ function firestoreUpdateWrite(name, updates) {
 }
 
 function expandCartOrders(order, items) {
-  const packages = items.flatMap(item => Array.from({ length: item.quantity }, () => item.pkg));
-  return packages.map((pkg, index) => ({
+  const packages = items.flatMap(item => Array.from({ length: item.quantity }, () =>
+    item.pkg.comboItems
+      ? item.pkg.comboItems.flatMap(part => Array.from({ length: part.quantity }, () => ({ pkg: part.pkg, comboId: item.pkg.id, comboTitle: item.pkg.title })))
+      : [{ pkg: item.pkg }]
+  ).flat());
+  return packages.map(({ pkg, ...combo }, index) => ({
     ...order,
+    ...combo,
     id: index === 0 ? order.id : `${order.id}-${index + 1}`,
     paymentReference: index === 0 ? order.id : `${order.id}-${index + 1}`,
     paymentGroupId: order.id,
